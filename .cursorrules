@@ -1,0 +1,10 @@
+# Read and strictly adhere to AGENTS.md located at the project root.
+# Key rules:
+# 1. Plan before code (read-only discovery phase).
+# 2. Break down into atomic, testable steps.
+# 3. ANTI-MONOLITH: Strictly keep files under 150-200 lines. Never approach 500-1000 lines. Split into sub-components/hooks.
+# 4. REUSE-FIRST: Always search existing components/helpers before writing new ones to avoid code duplication.
+# 5. Separation of Concerns: UI must not contain business/query logic.
+# 6. No monkey-patching; fix root causes.
+# 7. Early returns (max nesting depth = 2).
+# 8. Verify with lint/typecheck/build before completing tasks.

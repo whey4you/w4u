@@ -1,0 +1,181 @@
+'use client';
+
+import React, { useState } from 'react';
+import Image from 'next/image';
+import Link from 'next/link';
+import { Check, Plus } from 'lucide-react';
+import { Product, ProductFlavor } from '@/types/product';
+import { useCart } from '@/context/cart-context';
+import { formatPrice } from '@/lib/utils';
+import { AppleButton } from '@/components/ui/apple-button';
+import { getProductHUDStats } from '@/lib/nutrition-helpers';
+
+interface AppleProductCardProps {
+  product: Product;
+}
+
+export function AppleProductCard({ product }: AppleProductCardProps) {
+  const { addItem } = useCart();
+  const [selectedFlavor, setSelectedFlavor] = useState<ProductFlavor>(
+    product.flavors?.[0] || { id: 'std', name: 'Tiêu Chuẩn', colorHex: '#0071e3' }
+  );
+  const [isAdded, setIsAdded] = useState(false);
+  const hudStats = getProductHUDStats(product);
+
+  const handleAddToCart = () => {
+    if (!product.inStock) return;
+    addItem({
+      productId: product.id,
+      productName: product.name,
+      brand: product.brand,
+      price: product.price,
+      flavor: selectedFlavor,
+      image: selectedFlavor.image || product.defaultImage,
+    });
+    setIsAdded(true);
+    setTimeout(() => setIsAdded(false), 1500);
+  };
+
+  const productUrl = `/products/${product.slug || product.id}`;
+
+  return (
+    <div className="bg-white rounded-2xl sm:rounded-3xl p-3 sm:p-5 lg:p-7 border border-black/[0.05] shadow-xs hover:shadow-md transition-all duration-300 flex flex-col justify-between group">
+      <div>
+        {/* Badges & Meta */}
+        <div className="flex items-center justify-between gap-1 mb-2 sm:mb-3">
+          <span className="text-[10px] sm:text-[11px] font-bold text-apple-subhead tracking-wider uppercase truncate max-w-[90px] sm:max-w-none">
+            {product.brand}
+          </span>
+          {product.badge && (
+            <span className="text-[9px] sm:text-[10px] font-semibold text-apple-blue bg-apple-blue/10 px-2 py-0.5 rounded-full whitespace-nowrap">
+              {product.badge}
+            </span>
+          )}
+        </div>
+
+        {/* Product Image */}
+        <Link
+          href={productUrl}
+          className="relative h-36 sm:h-52 lg:h-56 w-full my-1 sm:my-2 flex items-center justify-center block group/img cursor-pointer"
+        >
+          <div className="relative h-full w-full group-hover/img:scale-105 transition-transform duration-300">
+            <Image
+              src={product.defaultImage}
+              alt={product.name}
+              fill
+              quality={85}
+              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 300px"
+              className={`object-contain ${!product.inStock ? 'opacity-50 grayscale-20' : ''}`}
+            />
+          </div>
+          {!product.inStock && (
+            <span className="absolute px-2.5 py-0.5 sm:px-3 sm:py-1 bg-slate-900/80 text-white text-[10px] sm:text-[11px] font-bold rounded-full backdrop-blur-xs whitespace-nowrap">
+              Tạm Hết Hàng
+            </span>
+          )}
+        </Link>
+
+        {/* Title */}
+        <Link href={productUrl}>
+          <h3 className="text-xs sm:text-base font-semibold text-apple-dark line-clamp-2 min-h-[32px] sm:min-h-[44px] leading-snug hover:text-apple-blue transition-colors">
+            {product.name}
+          </h3>
+        </Link>
+
+        {/* Macro HUD */}
+        <div className="mt-2.5 sm:mt-3 bg-apple-canvas rounded-xl sm:rounded-2xl p-1.5 sm:p-2.5 grid grid-cols-3 gap-0.5 sm:gap-1 text-center text-xs">
+          <div className="min-w-0 px-0.5">
+            <span className="block text-[9px] sm:text-[10px] text-apple-subhead font-medium truncate" title={hudStats[0].label}>
+              {hudStats[0].label}
+            </span>
+            <span className="font-bold text-[10px] sm:text-xs text-apple-dark truncate block" title={hudStats[0].value}>
+              {hudStats[0].value}
+            </span>
+          </div>
+          <div className="border-x border-black/[0.08] min-w-0 px-0.5">
+            <span className="block text-[9px] sm:text-[10px] text-apple-subhead font-medium truncate" title={hudStats[1].label}>
+              {hudStats[1].label}
+            </span>
+            <span className="font-bold text-[10px] sm:text-xs text-apple-dark truncate block" title={hudStats[1].value}>
+              {hudStats[1].value}
+            </span>
+          </div>
+          <div className="min-w-0 px-0.5">
+            <span className="block text-[9px] sm:text-[10px] text-apple-subhead font-medium truncate" title={hudStats[2].label}>
+              {hudStats[2].label}
+            </span>
+            <span className="font-bold text-[10px] sm:text-xs text-apple-dark truncate block" title={hudStats[2].value}>
+              {hudStats[2].value}
+            </span>
+          </div>
+        </div>
+
+        {/* Flavor Selector */}
+        <div className="mt-2.5 sm:mt-4 flex items-center justify-between gap-1.5 text-xs min-h-[1.75rem] sm:min-h-[2rem]">
+          <div className="min-w-0 flex-1 pr-1">
+            <span
+              data-flavor-name
+              className="block text-[10px] sm:text-[11px] font-medium sm:font-semibold text-apple-dark leading-tight line-clamp-2 break-words"
+              title={selectedFlavor.name}
+            >
+              {selectedFlavor.name}
+            </span>
+          </div>
+          <div className="flex items-center gap-1 sm:gap-1.5 shrink-0 flex-shrink-0">
+            {product.flavors?.map((flavor) => (
+              <button
+                key={flavor.id}
+                type="button"
+                onClick={() => setSelectedFlavor(flavor)}
+                title={flavor.name}
+                aria-label={flavor.name}
+                className={`h-3 w-3 sm:h-3.5 sm:w-3.5 rounded-full border transition-all ${
+                  selectedFlavor.id === flavor.id
+                    ? 'ring-2 ring-apple-blue ring-offset-1 scale-110'
+                    : 'border-black/20 hover:scale-105'
+                }`}
+                style={{ backgroundColor: flavor.colorHex }}
+              />
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Pricing & CTA */}
+      <div className="pt-3 sm:pt-6 mt-2.5 sm:mt-4 border-t border-black/[0.05] flex items-center justify-between gap-1.5">
+        <div className="min-w-0">
+          <span className="text-xs sm:text-base font-bold text-apple-dark block truncate">
+            {formatPrice(product.price)}
+          </span>
+          {product.originalPrice && product.originalPrice > product.price && (
+            <span className="text-[10px] sm:text-xs text-apple-subhead line-through block truncate">
+              {formatPrice(product.originalPrice)}
+            </span>
+          )}
+        </div>
+
+        <AppleButton
+          variant={!product.inStock ? 'secondary' : isAdded ? 'dark' : 'primary'}
+          size="sm"
+          onClick={handleAddToCart}
+          disabled={!product.inStock}
+          className="px-2.5 sm:px-4 py-1 h-8 sm:h-9 min-h-0 flex-shrink-0"
+        >
+          {!product.inStock ? (
+            <span className="text-slate-400 text-[10px] sm:text-xs">Hết</span>
+          ) : isAdded ? (
+            <span className="inline-flex items-center gap-1 text-[11px] sm:text-xs">
+              <Check className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Đã thêm</span>
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-1 text-[11px] sm:text-xs">
+              <Plus className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Thêm Giỏ</span>
+            </span>
+          )}
+        </AppleButton>
+      </div>
+    </div>
+  );
+}
