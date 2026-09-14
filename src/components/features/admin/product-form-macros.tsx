@@ -131,6 +131,14 @@ export function ProductFormMacros({
         brand={brand}
         category={category}
         onApplyAll={(data) => {
+          if (data.protein) setProtein(data.protein);
+          if (data.bcaa) setBcaa(data.bcaa);
+          if (data.calories) setCalories(data.calories);
+          if (data.sugar) setSugar(data.sugar);
+          if (data.servings) setServings(data.servings);
+          if (data.nutritionTable && data.nutritionTable.length > 0) {
+            setTableRows(data.nutritionTable);
+          }
           if (data.ingredients) setIngredients(data.ingredients);
           if (data.allergens) setAllergens(data.allergens);
           if (data.description) setDescription(data.description);

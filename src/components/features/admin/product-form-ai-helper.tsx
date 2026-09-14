@@ -2,18 +2,26 @@
 
 import React, { useState } from 'react';
 import { Sparkles, Globe, Loader2, ExternalLink, CheckCircle2 } from 'lucide-react';
-import { generateProductDetails } from '@/services/ai-product.service';
+import { generateProductDetails, GeneratedNutritionItem } from '@/services/ai-product.service';
+
+export interface AiApplyAllData {
+  protein?: string;
+  bcaa?: string;
+  calories?: string;
+  sugar?: string;
+  servings?: string;
+  nutritionTable?: GeneratedNutritionItem[];
+  ingredients: string;
+  allergens: string;
+  description: string;
+  howToUse: string;
+}
 
 interface ProductFormAiHelperProps {
   productName: string;
   brand?: string;
   category?: string;
-  onApplyAll: (data: {
-    ingredients: string;
-    allergens: string;
-    description: string;
-    howToUse: string;
-  }) => void;
+  onApplyAll: (data: AiApplyAllData) => void;
   disabled?: boolean;
 }
 
@@ -28,6 +36,12 @@ export function ProductFormAiHelper({
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [sources, setSources] = useState<Array<{ title: string; url: string }>>([]);
+  const [scrapedSummary, setScrapedSummary] = useState<{
+    protein?: string;
+    bcaa?: string;
+    calories?: string;
+    rowsCount?: number;
+  } | null>(null);
 
   const handleGenerateAll = async () => {
     if (!productName.trim()) {
@@ -48,15 +62,27 @@ export function ProductFormAiHelper({
       });
 
       onApplyAll({
+        protein: data.protein,
+        bcaa: data.bcaa,
+        calories: data.calories,
+        sugar: data.sugar,
+        servings: data.servings,
+        nutritionTable: data.nutritionTable,
         ingredients: data.ingredients,
         allergens: data.allergens,
         description: data.description,
         howToUse: data.howToUse,
       });
 
+      setScrapedSummary({
+        protein: data.protein,
+        bcaa: data.bcaa,
+        calories: data.calories,
+        rowsCount: data.nutritionTable?.length || 0,
+      });
       setSources(data.sources || []);
       setSuccess(true);
-      setTimeout(() => setSuccess(false), 5000);
+      setTimeout(() => setSuccess(false), 8000);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Có lỗi xảy ra khi gọi AI.');
     } finally {
@@ -70,10 +96,10 @@ export function ProductFormAiHelper({
         <div className="space-y-0.5">
           <div className="flex items-center gap-1.5 text-indigo-950 font-bold text-xs">
             <Sparkles className="w-3.5 h-3.5 text-indigo-600 animate-pulse" />
-            <span>Trợ Lý AI & Web Search Thông Tin Chính Hãng</span>
+            <span>Trợ Lý AI & Web Search Cào Dinh Dưỡng + HDSD</span>
           </div>
           <p className="text-[11px] text-slate-500">
-            Tự động tra cứu nhãn thành phần (Supplement Facts) từ Internet và viết chuẩn SEO
+            Tự động tra cứu nhãn Supplement Facts từ Internet để điền Protein, BCAA, Calo, Bảng thành phần & HDSD
           </p>
         </div>
 
@@ -86,12 +112,12 @@ export function ProductFormAiHelper({
           {loading ? (
             <>
               <Loader2 className="w-3.5 h-3.5 animate-spin" />
-              <span>Đang tra cứu Web & Viết...</span>
+              <span>Đang tra cứu Web & Điền...</span>
             </>
           ) : (
             <>
               <Sparkles className="w-3.5 h-3.5" />
-              <span>Viết Cả 4 Mục Bằng AI</span>
+              <span>AI Cào Dinh Dưỡng & HDSD</span>
             </>
           )}
         </button>
@@ -104,9 +130,35 @@ export function ProductFormAiHelper({
       )}
 
       {success && (
-        <div className="flex items-center gap-1.5 text-[11px] text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg p-2">
-          <CheckCircle2 className="w-3.5 h-3.5 flex-shrink-0 text-emerald-600" />
-          <span>Đã hoàn tất tra cứu và điền tự động 4 mục thành công!</span>
+        <div className="space-y-1.5 bg-emerald-50 border border-emerald-200 rounded-lg p-2 text-[11px] text-emerald-800">
+          <div className="flex items-center gap-1.5 font-semibold">
+            <CheckCircle2 className="w-3.5 h-3.5 flex-shrink-0 text-emerald-600" />
+            <span>Đã cào dữ liệu Web & tự động điền thành công toàn bộ chỉ số!</span>
+          </div>
+          {scrapedSummary && (
+            <div className="flex flex-wrap gap-2 text-[10px] text-emerald-700 pt-0.5">
+              {scrapedSummary.protein && (
+                <span className="bg-emerald-100/80 px-1.5 py-0.5 rounded font-medium">
+                  Protein: <b>{scrapedSummary.protein}</b>
+                </span>
+              )}
+              {scrapedSummary.bcaa && (
+                <span className="bg-emerald-100/80 px-1.5 py-0.5 rounded font-medium">
+                  BCAA: <b>{scrapedSummary.bcaa}</b>
+                </span>
+              )}
+              {scrapedSummary.calories && (
+                <span className="bg-emerald-100/80 px-1.5 py-0.5 rounded font-medium">
+                  Calo: <b>{scrapedSummary.calories}</b>
+                </span>
+              )}
+              {Boolean(scrapedSummary.rowsCount) && (
+                <span className="bg-emerald-100/80 px-1.5 py-0.5 rounded font-medium">
+                  Bảng chi tiết: <b>{scrapedSummary.rowsCount} chỉ số</b>
+                </span>
+              )}
+            </div>
+          )}
         </div>
       )}
 
@@ -132,3 +184,4 @@ export function ProductFormAiHelper({
     </div>
   );
 }
+

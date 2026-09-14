@@ -7,7 +7,7 @@ import { getAdminProducts } from '@/services/product.service';
 import { BLOG_GENERATOR_SYSTEM_PROMPT } from '@/lib/ai/prompts/blog-generator.prompt';
 import { PRODUCT_REVIEW_BLOG_PROMPT } from '@/lib/ai/prompts/product-review-blog.prompt';
 import { parseStructuredBlogOutput } from '@/lib/ai/json-sanitizer';
-import { slugify } from '@/lib/utils';
+import { slugify, extractProductIdsFromContent } from '@/lib/utils';
 
 const requestSchema = z.object({
   topic: z.string().trim().min(2).max(300),
@@ -147,7 +147,22 @@ ${keywords ? `<keywords>${keywords}</keywords>` : ''}
       const rawTitle = typeof parsedBlogData.title === 'string' ? parsedBlogData.title : '';
       parsedBlogData.slug = slugify(rawSlug || rawTitle || 'bai-viet-moi');
       parsedBlogData.sources = scrapedSources;
+
+      // Đảm bảo relatedProductIds luôn đầy đủ và loại bỏ placeholder rác
+      const blogContent = typeof parsedBlogData.content === 'string' ? parsedBlogData.content : '';
+      const contentProductIds = extractProductIdsFromContent(blogContent);
+      const rawRelated = Array.isArray(parsedBlogData.relatedProductIds) ? parsedBlogData.relatedProductIds : [];
+      const validRelated = rawRelated.filter(
+        (id) => typeof id === 'string' && id && !id.includes('id-san-pham')
+      );
+      const combined = [
+        ...(targetProductId ? [targetProductId] : []),
+        ...validRelated,
+        ...contentProductIds,
+      ];
+      parsedBlogData.relatedProductIds = Array.from(new Set(combined));
     }
+
 
     return NextResponse.json({
       success: true,

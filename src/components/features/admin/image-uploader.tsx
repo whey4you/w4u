@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { Upload, Link as LinkIcon, Loader2, Image as ImageIcon, Images } from 'lucide-react';
 import { uploadProductImage } from '@/lib/image-utils';
 import { MediaPickerModal } from '@/components/features/admin/media/media-picker-modal';
+import { useFileDropzone } from '@/hooks/use-file-dropzone';
 
 interface ImageUploaderProps {
   label: string;
@@ -18,15 +19,12 @@ export function ImageUploader({ label, value, onChange, placeholder }: ImageUplo
   const [isPickerOpen, setIsPickerOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
+  const processFile = async (file: File) => {
     try {
       setUploading(true);
       const publicUrl = await uploadProductImage(file);
       onChange(publicUrl);
-    } catch (err) {
+    } catch {
       alert('Không thể tải ảnh lên Supabase Storage. Vui lòng kiểm tra lại kết nối!');
     } finally {
       setUploading(false);
@@ -34,12 +32,37 @@ export function ImageUploader({ label, value, onChange, placeholder }: ImageUplo
     }
   };
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) processFile(file);
+  };
+
+  const { isDragging, dropzoneProps } = useFileDropzone({
+    onFilesDrop: (files) => {
+      if (files[0]) processFile(files[0]);
+    },
+    accept: ['image/*'],
+    disabled: uploading,
+    onError: (err) => alert(err),
+  });
+
   return (
     <div className="space-y-2 text-xs">
       <label className="block font-semibold text-slate-700">{label}</label>
-      <div className="flex items-center gap-3">
+      <div
+        {...dropzoneProps}
+        className={`flex items-center gap-3 p-1.5 rounded-2xl transition-all ${
+          isDragging ? 'bg-blue-50/80 ring-2 ring-blue-500 ring-dashed' : ''
+        }`}
+      >
         {/* Thumbnail Preview */}
-        <div className="relative w-12 h-12 rounded-xl bg-slate-100 border border-slate-200 overflow-hidden flex-shrink-0 flex items-center justify-center">
+        <div
+          onClick={() => !uploading && fileInputRef.current?.click()}
+          className={`relative w-12 h-12 rounded-xl bg-slate-100 border overflow-hidden flex-shrink-0 flex items-center justify-center cursor-pointer transition-all ${
+            isDragging ? 'border-blue-500 ring-2 ring-blue-400/50 scale-105' : 'border-slate-200'
+          }`}
+          title="Bấm hoặc kéo thả ảnh vào đây"
+        >
           {value ? (
             <Image src={value} alt="Preview" fill className="object-contain" sizes="48px" />
           ) : (

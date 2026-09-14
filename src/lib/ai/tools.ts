@@ -39,7 +39,7 @@ export const MISTRAL_TOOLS = [
         properties: {
           query: {
             type: 'string',
-            description: 'Tên sản phẩm, thương hiệu hoặc mục tiêu cần tìm (vd: "Rule 1", "ISO 100", "tăng cân", "tăng cơ", "creatine")',
+            description: 'Tên sản phẩm, thương hiệu hoặc mục tiêu cần tìm (vd: "Whey Verifyst", "Nuto", "tăng cơ", "giảm mỡ", "whey protein")',
           },
         },
         required: ['query'],

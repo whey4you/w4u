@@ -2,10 +2,23 @@ export interface GenerateProductParams {
   productName: string;
   brand?: string;
   category?: string;
-  targetField?: 'all' | 'ingredients' | 'allergens' | 'description' | 'howToUse';
+  targetField?: 'all' | 'ingredients' | 'allergens' | 'description' | 'howToUse' | 'macros';
+}
+
+export interface GeneratedNutritionItem {
+  id?: string;
+  name: string;
+  perServing: string;
+  per100g?: string;
 }
 
 export interface GeneratedProductResponse {
+  protein?: string;
+  bcaa?: string;
+  calories?: string;
+  sugar?: string;
+  servings?: string;
+  nutritionTable?: GeneratedNutritionItem[];
   ingredients: string;
   allergens: string;
   description: string;

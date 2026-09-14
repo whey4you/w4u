@@ -4,6 +4,7 @@ import React, { useState, useRef } from 'react';
 import { Upload, Link as LinkIcon, Loader2, Plus, Images } from 'lucide-react';
 import { uploadProductImage } from '@/lib/image-utils';
 import { MediaPickerModal } from '@/components/features/admin/media/media-picker-modal';
+import { useFileDropzone } from '@/hooks/use-file-dropzone';
 import { ProductImageCard } from './product-image-card';
 
 interface ProductImageManagerProps {
@@ -52,13 +53,19 @@ export function ProductImageManager({
     setNewUrl('');
   };
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  const processFiles = async (files: File[]) => {
+    if (files.length === 0) return;
     try {
       setUploading(true);
-      const publicUrl = await uploadProductImage(file);
-      handleAddImage(publicUrl);
+      const uploadedUrls: string[] = [];
+      for (const file of files) {
+        const url = await uploadProductImage(file);
+        uploadedUrls.push(url);
+      }
+      const uniqueNew = uploadedUrls.filter((u) => !allImages.includes(u));
+      if (uniqueNew.length > 0) {
+        syncImages([...allImages, ...uniqueNew]);
+      }
     } catch {
       alert('Không thể tải ảnh lên. Vui lòng kiểm tra lại kết nối!');
     } finally {
@@ -66,6 +73,23 @@ export function ProductImageManager({
       if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const rawFiles = Array.from(e.target.files || []);
+    if (rawFiles.length > 0) {
+      processFiles(rawFiles);
+    }
+  };
+
+  const { isDragging, dropzoneProps } = useFileDropzone({
+    onFilesDrop: (files) => {
+      processFiles(files);
+    },
+    accept: ['image/*'],
+    multiple: true,
+    disabled: uploading,
+    onError: (err) => alert(err),
+  });
 
   const moveImage = (fromIndex: number, toIndex: number) => {
     if (toIndex < 0 || toIndex >= allImages.length) return;
@@ -85,18 +109,32 @@ export function ProductImageManager({
   };
 
   return (
-    <div className="space-y-3 rounded-2xl border border-slate-200 bg-slate-50/50 p-3.5 text-xs">
+    <div
+      {...dropzoneProps}
+      className={`space-y-3 rounded-2xl border p-3.5 text-xs transition-all ${
+        isDragging
+          ? 'border-blue-500 bg-blue-50/70 ring-2 ring-blue-400/30'
+          : 'border-slate-200 bg-slate-50/50'
+      }`}
+    >
       <div>
         <div className="flex items-center justify-between">
-          <label className="font-semibold text-slate-800">
-            Bộ Sưu Tập Hình Ảnh Sản Phẩm ({allImages.length})
+          <label className="font-semibold text-slate-800 flex items-center gap-1.5">
+            <span>Bộ Sưu Tập Hình Ảnh Sản Phẩm ({allImages.length})</span>
+            {isDragging && (
+              <span className="px-2 py-0.5 rounded-full bg-blue-600 text-white text-[10px] font-bold animate-pulse">
+                Thả ảnh vào đây!
+              </span>
+            )}
           </label>
           <span className="text-[10px] text-slate-400">
             Ảnh #1 là đại diện • Kéo thả hoặc bấm mũi tên để đổi vị trí
           </span>
         </div>
         <p className="text-[11px] text-slate-500 mt-0.5">
-          Tải ảnh lên hoặc dán link URL. Bấm &quot;Đại diện&quot; hoặc di chuyển ảnh về ô đầu tiên để làm ảnh chính.
+          {isDragging
+            ? 'Thả một hoặc nhiều ảnh vào đây để tự động nén WebP và thêm vào bộ sưu tập.'
+            : 'Tải ảnh lên hoặc dán link URL. Bấm "Đại diện" hoặc di chuyển ảnh về ô đầu tiên để làm ảnh chính.'}
         </p>
       </div>
 
@@ -129,6 +167,7 @@ export function ProductImageManager({
           ref={fileInputRef}
           type="file"
           accept="image/*"
+          multiple
           onChange={handleFileUpload}
           className="hidden"
         />

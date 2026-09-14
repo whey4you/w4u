@@ -57,7 +57,7 @@ You MUST partition your response into exactly two distinct sections separated by
   "title": "Tiêu đề khoa học chuẩn SEO bằng tiếng Việt, chứa từ khóa chính",
   "slug": "tieu-de-khong-dau-chuan-seo",
   "category": "Dinh Dưỡng Thể Thao & Sinh Lý Vận Động",
-  "readTime": "5 phút đọc",
+  "readTime": "[số phút đọc] phút đọc",
   "excerpt": "Tóm tắt súc tích 150-160 ký tự về cơ chế sinh học phân tử bằng tiếng Việt.",
   "keyTakeaways": [
     "Khám phá y sinh cốt lõi 1 (dưới 25 từ)",

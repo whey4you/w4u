@@ -21,3 +21,18 @@ export function slugify(text: string): string {
     .replace(/-+/g, '-')
     .replace(/^-+|-+$/g, '');
 }
+
+export function extractProductIdsFromContent(content?: string): string[] {
+  if (!content) return [];
+  const regex = /:::product\{id=["'](.*?)["']\}:::/g;
+  const ids = new Set<string>();
+  let match: RegExpExecArray | null;
+  while ((match = regex.exec(content)) !== null) {
+    const id = match[1]?.trim();
+    if (id && !id.includes('id-san-pham')) {
+      ids.add(id);
+    }
+  }
+  return Array.from(ids);
+}
+

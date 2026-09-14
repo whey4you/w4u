@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { callMistralChat } from '@/lib/ai/mistral-client';
 import { streamMistralChat } from '@/lib/ai/stream-client';
-import { WHEY4YOU_CONSULTANT_SYSTEM_PROMPT } from '@/lib/ai/prompts/consultant.prompt';
+import { buildConsultantSystemPrompt } from '@/lib/ai/prompts/consultant.prompt';
+import { getShopCatalogSummary } from '@/lib/ai/product-catalog';
 import { evaluateCustomerIntent } from '@/lib/ai/evaluator-agent';
 
 const requestSchema = z.object({
@@ -33,15 +34,22 @@ export async function POST(req: NextRequest) {
 
   const rawMessages = parsed.data.messages.slice(-12);
 
-  // TẦNG 1: AI Đánh Giá (Evaluator Agent) phân tích câu hỏi & kích hoạt tool
-  const evaluation = await evaluateCustomerIntent(rawMessages, req.signal);
+  // TẦNG 1: Phân tích ý định người dùng & lấy danh mục sản phẩm từ Supabase (song song)
+  const [evaluation, catalogSummary] = await Promise.all([
+    evaluateCustomerIntent(rawMessages, req.signal),
+    getShopCatalogSummary(req.signal),
+  ]);
 
   // TẦNG 2: Xây dựng ngữ cảnh kèm dữ liệu cho AI Tư Vấn (Chat AI)
-  let systemPrompt = WHEY4YOU_CONSULTANT_SYSTEM_PROMPT;
+  let systemPrompt = buildConsultantSystemPrompt(catalogSummary);
   systemPrompt += complexityHints[evaluation.decision.complexity] || '';
 
   if (evaluation.toolData) {
-    systemPrompt += `\n\n[VERIFIED DATA FROM TOOL ${evaluation.decision.tool}]:\n${evaluation.toolData}\nUse the factual information above to advise the user. If the inquiry relates to supplements, include the appropriate [PRODUCT_CARD:id] tag at the end of your response.`;
+    if (evaluation.decision.tool === 'web_search') {
+      systemPrompt += `\n\n[VERIFIED REAL-TIME DATA FROM WEB SEARCH]:\n${evaluation.toolData}\nUse the factual real-time web search findings above to provide an accurate, evidence-based answer. Do NOT attach any product cards unless the user specifically asked for product purchase recommendations.`;
+    } else {
+      systemPrompt += `\n\n[VERIFIED DATA FROM SHOP CATALOG]:\n${evaluation.toolData}\nUse the verified store product information above to advise the user and include the appropriate [PRODUCT_CARD:id] tag at the end of your response.`;
+    }
   }
 
   const options = {

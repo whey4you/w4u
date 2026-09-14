@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Check, Plus } from 'lucide-react';
@@ -19,8 +19,18 @@ export function AppleProductCard({ product }: AppleProductCardProps) {
   const [selectedFlavor, setSelectedFlavor] = useState<ProductFlavor>(
     product.flavors?.[0] || { id: 'std', name: 'Tiêu Chuẩn', colorHex: '#0071e3' }
   );
+
+  useEffect(() => {
+    if (product.flavors && product.flavors.length > 0) {
+      if (!product.flavors.some((f) => f.id === selectedFlavor.id)) {
+        setSelectedFlavor(product.flavors[0]);
+      }
+    }
+  }, [product.flavors, selectedFlavor.id]);
+
   const [isAdded, setIsAdded] = useState(false);
   const hudStats = getProductHUDStats(product);
+  const currentImage = selectedFlavor.image || product.defaultImage;
 
   const handleAddToCart = () => {
     if (!product.inStock) return;
@@ -60,12 +70,12 @@ export function AppleProductCard({ product }: AppleProductCardProps) {
         >
           <div className="relative h-full w-full group-hover/img:scale-105 transition-transform duration-300">
             <Image
-              src={product.defaultImage}
-              alt={product.name}
+              src={currentImage}
+              alt={`${product.name} - ${selectedFlavor.name}`}
               fill
               quality={85}
               sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 300px"
-              className={`object-contain ${!product.inStock ? 'opacity-50 grayscale-20' : ''}`}
+              className={`object-contain transition-opacity duration-200 ${!product.inStock ? 'opacity-50 grayscale-20' : ''}`}
             />
           </div>
           {!product.inStock && (

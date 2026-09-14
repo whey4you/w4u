@@ -52,11 +52,11 @@ export function ChatProductCarousel({ productIds }: ChatProductCarouselProps) {
           </span>
         </div>
         {validProducts.length > 1 && (
-          <span className="text-[10px] text-slate-400">Vuốt ngang để xem thêm →</span>
+          <span className="text-[10px] text-slate-400">Vuốt ngang →</span>
         )}
       </div>
 
-      <div className="flex gap-2.5 overflow-x-auto pb-1 pt-0.5 no-scrollbar snap-x snap-mandatory -mx-1 px-1 scroll-smooth">
+      <div className="flex gap-2 overflow-x-auto pb-1 pt-0.5 no-scrollbar snap-x snap-mandatory -mx-1 px-1 scroll-smooth">
         {validProducts.map((product) => (
           <ChatProductCard key={product.id} product={product} />
         ))}

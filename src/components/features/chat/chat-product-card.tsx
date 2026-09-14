@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { ArrowRight, Flame } from 'lucide-react';
+import { ChevronRight } from 'lucide-react';
 import { Product } from '@/types/product';
 import { getProductBySlug } from '@/services/product.service';
 
@@ -32,59 +32,46 @@ export function ChatProductCard({ productId, product: propProduct }: ChatProduct
 
   if (!product) return null;
 
+  const productUrl = product.slug ? `/products/${product.slug}` : `/products/${product.id}`;
+
   return (
-    <div className="flex w-[185px] sm:w-[195px] shrink-0 snap-start flex-col rounded-xl border border-slate-200/90 bg-white p-2.5 shadow-2xs transition hover:border-brand-500 hover:shadow-xs">
-      {/* Product Image */}
-      <div className="relative h-24 w-full overflow-hidden rounded-lg bg-slate-50/80 border border-slate-100/80 mb-2">
+    <Link
+      href={productUrl}
+      target="_blank"
+      className="group flex w-[230px] sm:w-[245px] shrink-0 snap-start items-center gap-2.5 rounded-xl border border-slate-200/90 bg-white p-2 shadow-2xs transition-all hover:border-brand-500 hover:shadow-xs active:scale-[0.99]"
+      title={`Xem chi tiết ${product.name}`}
+    >
+      {/* Product Image (Trái) */}
+      <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-lg bg-slate-50 border border-slate-100 p-1">
         <Image
           src={product.defaultImage}
           alt={product.name}
           fill
-          className="object-contain p-1.5"
-          sizes="180px"
+          className="object-contain p-0.5 group-hover:scale-105 transition-transform duration-200"
+          sizes="56px"
         />
-        {product.badge && (
-          <span className="absolute top-1 left-1 inline-flex items-center gap-0.5 rounded-md bg-brand-50 px-1.5 py-0.5 text-[8.5px] font-semibold text-brand-700 border border-brand-200/60">
-            <Flame className="h-2 w-2 text-brand-600" />
-            {product.badge}
+      </div>
+
+      {/* Product Content (Phải) */}
+      <div className="min-w-0 flex-1 flex flex-col justify-center">
+        {product.brand && (
+          <span className="text-[9px] font-bold uppercase tracking-wider text-brand-600 truncate">
+            {product.brand}
           </span>
         )}
-      </div>
-
-      {/* Brand & Name */}
-      <span className="text-[9.5px] font-bold uppercase tracking-wider text-brand-600 truncate">
-        {product.brand}
-      </span>
-      <h4
-        className="text-[11.5px] font-semibold text-slate-800 line-clamp-2 leading-snug mt-0.5 min-h-[30px]"
-        title={product.name}
-      >
-        {product.name}
-      </h4>
-
-      {/* Protein & Price */}
-      <div className="mt-2 pt-2 border-t border-slate-100 flex items-center justify-between">
-        <div>
-          <div className="text-[12px] font-bold text-red-600">
+        <h4 className="text-[12px] font-semibold text-slate-800 line-clamp-1 group-hover:text-brand-600 transition-colors">
+          {product.name}
+        </h4>
+        <div className="mt-0.5 flex items-center">
+          <span className="text-[12px] font-bold text-red-600">
             {product.price.toLocaleString('vi-VN')}đ
-          </div>
-          {product.macros?.protein && (
-            <span className="text-[9.5px] font-medium text-slate-400">
-              {product.macros.protein} Protein
-            </span>
-          )}
+          </span>
         </div>
-
-        <Link
-          href={product.slug ? `/products/${product.slug}` : `/products/${product.id}`}
-          target="_blank"
-          className="inline-flex items-center gap-1 rounded-lg bg-brand-50 px-2 py-1 text-[10.5px] font-semibold text-brand-600 hover:bg-brand-600 hover:text-white transition"
-          title="Xem chi tiết"
-        >
-          Xem
-          <ArrowRight className="h-3 w-3" />
-        </Link>
       </div>
-    </div>
+
+      {/* Mũi tên chỉ hướng tinh tế */}
+      <ChevronRight className="h-4 w-4 shrink-0 text-slate-300 group-hover:text-brand-600 group-hover:translate-x-0.5 transition-all mr-0.5" />
+    </Link>
   );
 }
+

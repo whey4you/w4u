@@ -3,6 +3,7 @@
 import React, { useState, useRef } from 'react';
 import { Video, Loader2, Trash2, CheckCircle, Info } from 'lucide-react';
 import { uploadBannerVideo, deleteBannerMedia, OPTIMAL_VIDEO_SPEC } from '@/lib/banner-storage';
+import { useFileDropzone } from '@/hooks/use-file-dropzone';
 
 interface AdminBannerVideoUploaderProps {
   currentVideoUrl: string;
@@ -21,10 +22,7 @@ export function AdminBannerVideoUploader({
 
   const isSupabaseVideo = currentVideoUrl?.includes('supabase.co/storage/v1/object/public/');
 
-  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
+  const processFile = async (file: File) => {
     // Kiểm tra dung lượng
     if (file.size > OPTIMAL_VIDEO_SPEC.maxSizeMB * 1024 * 1024) {
       alert(`Dung lượng video (${(file.size / (1024 * 1024)).toFixed(1)}MB) vượt quá giới hạn tối đa ${OPTIMAL_VIDEO_SPEC.maxSizeMB}MB.`);
@@ -49,6 +47,21 @@ export function AdminBannerVideoUploader({
       if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) processFile(file);
+  };
+
+  const { isDragging, dropzoneProps } = useFileDropzone({
+    onFilesDrop: (files) => {
+      if (files[0]) processFile(files[0]);
+    },
+    accept: ['video/*'],
+    maxSizeMB: OPTIMAL_VIDEO_SPEC.maxSizeMB,
+    disabled: isUploading,
+    onError: (err) => alert(err),
+  });
 
   const handleDeleteFromStorage = async () => {
     if (!isSupabaseVideo) return;
@@ -80,10 +93,13 @@ export function AdminBannerVideoUploader({
 
       {/* Vùng Dropzone Upload Video */}
       <div
+        {...dropzoneProps}
         onClick={() => !isUploading && fileInputRef.current?.click()}
         className={`border-2 border-dashed rounded-xl p-4 text-center cursor-pointer transition-all flex flex-col items-center justify-center gap-1.5 ${
           isUploading
             ? 'border-indigo-400 bg-indigo-50/40 pointer-events-none'
+            : isDragging
+            ? 'border-indigo-500 bg-indigo-50/80 scale-[1.01]'
             : 'border-slate-300 hover:border-indigo-500 hover:bg-slate-50'
         }`}
       >

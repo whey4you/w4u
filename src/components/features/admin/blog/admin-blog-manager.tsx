@@ -8,6 +8,8 @@ import { AdminBlogForm } from './admin-blog-form';
 import { AdminBlogEditor } from './admin-blog-editor';
 import { AIBlogGeneratorModal } from './ai-blog-generator-modal';
 import { Plus, Sparkles, ArrowLeft, Save, Loader2, CheckCircle2 } from 'lucide-react';
+import { extractProductIdsFromContent } from '@/lib/utils';
+
 
 const EMPTY_POST: Partial<BlogPost> = {
   title: '',
@@ -77,15 +79,25 @@ export function AdminBlogManager({ initialPosts, products }: AdminBlogManagerPro
 
     setIsSaving(true);
     try {
+      const contentProductIds = extractProductIdsFromContent(currentPost.content);
+      const validExplicit = (currentPost.relatedProductIds || []).filter(
+        (id) => typeof id === 'string' && id && !id.includes('id-san-pham')
+      );
+      const postToSave = {
+        ...currentPost,
+        relatedProductIds: Array.from(new Set([...validExplicit, ...contentProductIds])),
+      };
+
       const res = await fetch('/api/admin/blogs', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(currentPost),
+        body: JSON.stringify(postToSave),
       });
       const json = await res.json();
       if (!res.ok || !json.success) throw new Error(json.error || 'Lỗi khi lưu bài viết.');
 
-      const savedPost = currentPost as BlogPost;
+      const savedPost = postToSave as BlogPost;
+
       setPosts((prev) => {
         const idx = prev.findIndex((p) => p.slug === savedPost.slug);
         if (idx >= 0) {

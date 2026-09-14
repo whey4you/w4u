@@ -1,6 +1,6 @@
 import { supabase } from '@/lib/supabase/client';
 import { BlogPost, BlogSource } from '@/types/blog';
-import { slugify } from '@/lib/utils';
+import { slugify, extractProductIdsFromContent } from '@/lib/utils';
 
 export interface RawBlogRow {
   id: string;
@@ -64,10 +64,18 @@ export function mapRowToBlogPost(row: RawBlogRow): BlogPost {
       verified: ext.authorVerified ?? (row.author_verified !== false),
     },
     keyTakeaways: ext.keyTakeaways || row.key_takeaways || [],
-    relatedProductIds: ext.relatedProductIds || row.related_product_ids || [],
+    relatedProductIds: Array.from(
+      new Set([
+        ...(ext.relatedProductIds || row.related_product_ids || []).filter(
+          (id) => typeof id === 'string' && id && !id.includes('id-san-pham')
+        ),
+        ...extractProductIdsFromContent(cleanContent),
+      ])
+    ),
     sources: ext.sources || (row.sources as BlogSource[]) || [],
   };
 }
+
 
 export async function getBlogs(): Promise<BlogPost[]> {
   try {
@@ -112,6 +120,11 @@ export async function saveBlog(post: BlogPost): Promise<{ success: boolean; erro
     const cleanSlug = slugify(post.slug || post.title || 'bai-viet-moi');
     const id = post.id || cleanSlug;
     const publishedAt = new Date().toISOString();
+    const contentProductIds = extractProductIdsFromContent(post.content);
+    const validExplicit = (post.relatedProductIds || []).filter(
+      (id) => typeof id === 'string' && id && !id.includes('id-san-pham')
+    );
+    const mergedRelatedProductIds = Array.from(new Set([...validExplicit, ...contentProductIds]));
 
     // 1. Thử lưu dạng mở rộng (nếu database đã chạy migration đầy đủ)
     const fullPayload = {
@@ -129,7 +142,7 @@ export async function saveBlog(post: BlogPost): Promise<{ success: boolean; erro
       read_time: post.readTime,
       featured: Boolean(post.featured),
       key_takeaways: post.keyTakeaways || [],
-      related_product_ids: post.relatedProductIds || [],
+      related_product_ids: mergedRelatedProductIds,
       sources: post.sources || [],
       published_at: publishedAt,
     };
@@ -143,13 +156,14 @@ export async function saveBlog(post: BlogPost): Promise<{ success: boolean; erro
     // Mã hóa các trường mở rộng vào thẻ METADATA_EXT ở đầu content
     const extData: ExtMetadata = {
       keyTakeaways: post.keyTakeaways,
-      relatedProductIds: post.relatedProductIds,
+      relatedProductIds: mergedRelatedProductIds,
       authorRole: post.author?.role,
       authorAvatar: post.author?.avatar,
       authorVerified: post.author?.verified,
       featured: post.featured,
       sources: post.sources,
     };
+
 
     const corePayload = {
       id,

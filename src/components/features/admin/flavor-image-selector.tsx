@@ -4,6 +4,7 @@ import React, { useState, useRef } from 'react';
 import Image from 'next/image';
 import { Upload, Loader2, Check, Sparkles } from 'lucide-react';
 import { uploadProductImage } from '@/lib/image-utils';
+import { useFileDropzone } from '@/hooks/use-file-dropzone';
 
 interface FlavorImageSelectorProps {
   value: string;
@@ -19,9 +20,7 @@ export function FlavorImageSelector({
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  const processFile = async (file: File) => {
     try {
       setUploading(true);
       const url = await uploadProductImage(file);
@@ -33,6 +32,20 @@ export function FlavorImageSelector({
       if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) processFile(file);
+  };
+
+  const { isDragging, dropzoneProps } = useFileDropzone({
+    onFilesDrop: (files) => {
+      if (files[0]) processFile(files[0]);
+    },
+    accept: ['image/*'],
+    disabled: uploading,
+    onError: (err) => alert(err),
+  });
 
   return (
     <div className="space-y-2 text-xs">
@@ -95,7 +108,12 @@ export function FlavorImageSelector({
       )}
 
       {/* Custom URL or Upload option */}
-      <div className="flex items-center gap-2">
+      <div
+        {...dropzoneProps}
+        className={`flex items-center gap-2 p-1 rounded-xl transition-all ${
+          isDragging ? 'bg-blue-50/80 ring-2 ring-blue-500 ring-dashed' : ''
+        }`}
+      >
         <input
           type="text"
           value={value}

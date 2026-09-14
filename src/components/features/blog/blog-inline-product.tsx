@@ -80,11 +80,11 @@ export function BlogInlineProduct({ productId }: BlogInlineProductProps) {
           className="relative h-28 w-24 xs:h-32 xs:w-28 sm:h-44 sm:w-36 shrink-0 bg-slate-50/80 rounded-xl sm:rounded-2xl overflow-hidden border border-slate-100 p-1 sm:p-2 flex items-center justify-center group/img block"
         >
           <Image
-            src={product.defaultImage}
-            alt={product.name}
+            src={activeFlavor.image || product.defaultImage}
+            alt={`${product.name} - ${activeFlavor.name}`}
             fill
             sizes="(max-width: 640px) 112px, 144px"
-            className="object-contain p-1 group-hover/img:scale-105 transition-transform duration-300"
+            className="object-contain p-1 group-hover/img:scale-105 transition-all duration-300"
           />
         </Link>
 

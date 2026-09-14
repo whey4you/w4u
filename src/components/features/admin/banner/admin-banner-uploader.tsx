@@ -3,6 +3,7 @@
 import React, { useState, useRef } from 'react';
 import { UploadCloud, Loader2, Trash2, CheckCircle, Info } from 'lucide-react';
 import { uploadBannerImage, deleteBannerImage, OPTIMAL_BANNER_SPEC } from '@/lib/banner-storage';
+import { useFileDropzone } from '@/hooks/use-file-dropzone';
 
 interface AdminBannerUploaderProps {
   currentImageUrl: string;
@@ -21,10 +22,7 @@ export function AdminBannerUploader({
 
   const isSupabaseImage = currentImageUrl?.includes('supabase.co/storage/v1/object/public/');
 
-  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
+  const processFile = async (file: File) => {
     setIsUploading(true);
     setUploadStatus('Đang nén WebP & tối ưu chuẩn 1920x640px...');
 
@@ -43,6 +41,21 @@ export function AdminBannerUploader({
       if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) processFile(file);
+  };
+
+  const { isDragging, dropzoneProps } = useFileDropzone({
+    onFilesDrop: (files) => {
+      if (files[0]) processFile(files[0]);
+    },
+    accept: ['image/*'],
+    maxSizeMB: 10,
+    disabled: isUploading,
+    onError: (err) => alert(err),
+  });
 
   const handleDeleteFromStorage = async () => {
     if (!isSupabaseImage) return;
@@ -74,10 +87,13 @@ export function AdminBannerUploader({
 
       {/* Vùng Dropzone & Upload Button */}
       <div
+        {...dropzoneProps}
         onClick={() => !isUploading && fileInputRef.current?.click()}
         className={`border-2 border-dashed rounded-xl p-4 text-center cursor-pointer transition-all flex flex-col items-center justify-center gap-1.5 ${
           isUploading
             ? 'border-blue-400 bg-blue-50/40 pointer-events-none'
+            : isDragging
+            ? 'border-blue-500 bg-blue-50/80 scale-[1.01]'
             : 'border-slate-300 hover:border-blue-500 hover:bg-slate-50'
         }`}
       >

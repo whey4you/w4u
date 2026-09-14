@@ -9,6 +9,7 @@ import { BlogContentRenderer } from './blog-content-renderer';
 import { BlogSidebarCommerce } from './blog-sidebar-commerce';
 import { BlogMobileBottomBar } from './blog-mobile-bottom-bar';
 import { slugifyHeading, parseInlineFormatting } from './markdown-parser';
+import { extractProductIdsFromContent } from '@/lib/utils';
 
 interface BlogDetailLayoutProps {
   post: BlogPost;
@@ -35,7 +36,15 @@ export function BlogDetailLayout({ post }: BlogDetailLayoutProps) {
     return items;
   }, [post.content]);
 
-  const primaryProductId = post.relatedProductIds?.[0];
+  const productIds = useMemo(() => {
+    const extracted = extractProductIdsFromContent(post.content);
+    const validExplicit = (post.relatedProductIds || []).filter(
+      (id) => typeof id === 'string' && id && !id.includes('id-san-pham')
+    );
+    return Array.from(new Set([...validExplicit, ...extracted]));
+  }, [post.content, post.relatedProductIds]);
+
+  const primaryProductId = productIds[0];
 
   return (
     <div className="pt-1 sm:pt-2 pb-8 sm:pb-12 relative">
@@ -55,7 +64,7 @@ export function BlogDetailLayout({ post }: BlogDetailLayoutProps) {
         {/* Right Column (3 Parts - 30%): Sticky Sidebar (TOC + Commerce Hub) */}
         <aside className="hidden lg:block lg:col-span-3 sticky top-20 space-y-4 max-h-[calc(100vh-5.5rem)] overflow-y-auto pr-0.5">
           <BlogToc items={tocItems} />
-          <BlogSidebarCommerce productIds={post.relatedProductIds} />
+          <BlogSidebarCommerce productIds={productIds} />
         </aside>
       </div>
 
@@ -63,4 +72,5 @@ export function BlogDetailLayout({ post }: BlogDetailLayoutProps) {
       <BlogMobileBottomBar productId={primaryProductId} />
     </div>
   );
+
 }

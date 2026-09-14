@@ -4,6 +4,7 @@ import React, { useState, useRef } from 'react';
 import { X, Link as LinkIcon, Upload, Loader2, PlusCircle } from 'lucide-react';
 import { uploadProductImage } from '@/lib/image-utils';
 import { MediaItem, AddMediaPayload } from '@/types/media';
+import { useFileDropzone } from '@/hooks/use-file-dropzone';
 
 interface MediaAddModalProps {
   isOpen: boolean;
@@ -71,10 +72,7 @@ export function MediaAddModal({ isOpen, onClose, onAdded }: MediaAddModalProps) 
     }
   };
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
+  const processFile = async (file: File) => {
     try {
       setIsSubmitting(true);
       setErrorMsg('');
@@ -91,6 +89,20 @@ export function MediaAddModal({ isOpen, onClose, onAdded }: MediaAddModalProps) 
       if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) processFile(file);
+  };
+
+  const { isDragging, dropzoneProps } = useFileDropzone({
+    onFilesDrop: (files) => {
+      if (files[0]) processFile(files[0]);
+    },
+    accept: ['image/*'],
+    disabled: isSubmitting,
+    onError: (err) => setErrorMsg(err),
+  });
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
@@ -135,7 +147,15 @@ export function MediaAddModal({ isOpen, onClose, onAdded }: MediaAddModalProps) 
         )}
 
         {tab === 'upload' ? (
-          <div className="py-8 flex flex-col items-center justify-center border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50 text-center">
+          <div
+            {...dropzoneProps}
+            onClick={() => !isSubmitting && fileInputRef.current?.click()}
+            className={`py-8 flex flex-col items-center justify-center border-2 border-dashed rounded-2xl text-center transition-all cursor-pointer ${
+              isDragging
+                ? 'border-blue-500 bg-blue-50/70 scale-[1.01]'
+                : 'border-slate-200 bg-slate-50 hover:border-slate-300 hover:bg-slate-100/60'
+            }`}
+          >
             <input
               ref={fileInputRef}
               type="file"
@@ -143,17 +163,20 @@ export function MediaAddModal({ isOpen, onClose, onAdded }: MediaAddModalProps) 
               onChange={handleFileUpload}
               className="hidden"
             />
-            <Upload className="w-10 h-10 text-slate-400 mb-3" />
-            <p className="text-sm font-semibold text-slate-700">Tải ảnh lên Supabase Storage</p>
-            <p className="text-xs text-slate-400 mt-1 mb-4">Tự động nén WebP chuẩn nét cao và lưu link tái sử dụng</p>
+            <Upload className={`w-10 h-10 mb-3 transition-all ${isDragging ? 'text-blue-600 scale-110' : 'text-slate-400'}`} />
+            <p className="text-sm font-semibold text-slate-700">
+              {isDragging ? 'Thả ảnh vào đây để tải lên' : 'Tải ảnh lên Supabase Storage'}
+            </p>
+            <p className="text-xs text-slate-400 mt-1 mb-4">
+              {isDragging ? 'Thả tệp ra để bắt đầu nén WebP' : 'Tự động nén WebP chuẩn nét cao và lưu link tái sử dụng'}
+            </p>
             <button
               type="button"
               disabled={isSubmitting}
-              onClick={() => fileInputRef.current?.click()}
-              className="px-4 py-2 bg-slate-900 hover:bg-black text-white rounded-xl text-xs font-semibold inline-flex items-center gap-2 shadow-sm disabled:opacity-50"
+              className="px-4 py-2 bg-slate-900 hover:bg-black text-white rounded-xl text-xs font-semibold inline-flex items-center gap-2 shadow-sm disabled:opacity-50 pointer-events-none"
             >
               {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
-              <span>{isSubmitting ? 'Đang Xử Lý Nén...' : 'Chọn File Ảnh'}</span>
+              <span>{isSubmitting ? 'Đang Xử Lý Nén...' : 'Chọn File Ảnh Hoặc Kéo Thả'}</span>
             </button>
           </div>
         ) : (

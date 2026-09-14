@@ -1,11 +1,10 @@
 'use client';
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { ChatMessage } from '@/types/chat';
 import Image from 'next/image';
-import { User } from 'lucide-react';
+import { User, ChevronDown } from 'lucide-react';
 import { ChatMarkdown } from './chat-markdown';
-
 
 interface ChatMessageListProps {
   messages: ChatMessage[];
@@ -18,14 +17,74 @@ export function ChatMessageList({
   isLoading,
   onSendMessage,
 }: ChatMessageListProps) {
-  const bottomRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const isAtBottomRef = useRef(true);
+  const [showScrollBottom, setShowScrollBottom] = useState(false);
+  const prevMsgCountRef = useRef(0);
+
+  // Phát hiện khi người dùng chủ động cuộn lên / xuống
+  const handleScroll = () => {
+    const el = containerRef.current;
+    if (!el) return;
+    const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
+    const atBottom = distanceFromBottom <= 80;
+    isAtBottomRef.current = atBottom;
+    setShowScrollBottom(!atBottom);
+  };
+
+  // Cuộn xuống đáy khi mới mở danh sách tin nhắn
+  useEffect(() => {
+    const el = containerRef.current;
+    if (el) {
+      el.scrollTop = el.scrollHeight;
+    }
+  }, []);
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+    const el = containerRef.current;
+    if (!el) return;
+
+    const isNewMessageAdded = messages.length > prevMsgCountRef.current;
+    prevMsgCountRef.current = messages.length;
+
+    // 1. Khi có tin nhắn mới (user vừa gửi hoặc tin nhắn mới xuất hiện):
+    // Luôn ưu tiên cuộn xuống đáy để xem tin nhắn mới
+    if (isNewMessageAdded) {
+      isAtBottomRef.current = true;
+      setShowScrollBottom(false);
+      el.scrollTop = el.scrollHeight;
+      requestAnimationFrame(() => {
+        if (el) el.scrollTop = el.scrollHeight;
+      });
+      return;
+    }
+
+    // 2. Khi tin nhắn đang streaming nội dung:
+    // CHỈ tự cuộn theo nếu người dùng đang ở sát đáy (không cuộn lên đọc tin cũ)
+    if (isAtBottomRef.current) {
+      el.scrollTop = el.scrollHeight;
+    }
   }, [messages, isLoading]);
 
+  const scrollToBottom = () => {
+    const el = containerRef.current;
+    if (!el) return;
+    isAtBottomRef.current = true;
+    setShowScrollBottom(false);
+    el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
+    setTimeout(() => {
+      isAtBottomRef.current = true;
+      if (el) el.scrollTop = el.scrollHeight;
+    }, 300);
+  };
+
   return (
-    <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4 text-sm">
+    <div className="relative flex-1 min-h-0 flex flex-col">
+      <div
+        ref={containerRef}
+        onScroll={handleScroll}
+        className="flex-1 overflow-y-auto px-4 py-4 space-y-4 text-sm"
+      >
       {messages.map((msg, idx) => {
         const isUser = msg.role === 'user';
         const isLast = idx === messages.length - 1;
@@ -106,8 +165,20 @@ export function ChatMessageList({
         </div>
       )}
 
+      </div>
 
-      <div ref={bottomRef} />
+      {/* Nút cuộn nhanh xuống tin nhắn mới nhất khi đang xem nội dung phía trên */}
+      {showScrollBottom && (
+        <button
+          type="button"
+          onClick={scrollToBottom}
+          aria-label="Cuộn xuống tin nhắn mới nhất"
+          className="absolute bottom-2 right-4 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-white text-slate-600 shadow-md border border-slate-200/90 hover:bg-slate-50 hover:text-brand-600 active:scale-90 transition-all animate-in fade-in zoom-in-90 duration-150"
+        >
+          <ChevronDown className="h-4 w-4" />
+        </button>
+      )}
     </div>
   );
 }
+

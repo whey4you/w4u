@@ -48,7 +48,7 @@ You MUST partition your response into exactly two distinct sections separated by
   "title": "Đánh Giá Chi Tiết [Tên Sản Phẩm]: Bóc Tách Thành Phần & Hiệu Quả Thực Tế",
   "slug": "danh-gia-chi-tiet-ten-san-pham",
   "category": "Review",
-  "readTime": "5 phút đọc",
+  "readTime": "[số phút đọc] phút đọc",
   "excerpt": "Bóc tách chuyên sâu công thức, công nghệ lọc CFM và hiệu quả thực nghiệm của [Tên Sản Phẩm] dựa trên tư liệu quốc tế.",
   "keyTakeaways": [
     "Đặc điểm cốt lõi 1 của công thức (dưới 25 từ)",

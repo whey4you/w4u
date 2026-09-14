@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { getProductCatalogRows } from '@/services/product.service';
+import { formatPrice } from '@/lib/utils';
 
 const text = z.string().nullish();
 const amount = z.number().finite().nonnegative().nullish();
@@ -63,3 +64,41 @@ export async function searchShopProducts(query: string, signal?: AbortSignal) {
     .sort((a, b) => b.score - a.score || Number(b.product.in_stock) - Number(a.product.in_stock))
     .slice(0, 4).map(({ product }) => productFacts(product));
 }
+
+let cachedSummary: { text: string; expiresAt: number } | null = null;
+const SUMMARY_TTL_MS = 60_000;
+
+/** Trích xuất tóm tắt danh mục sản phẩm Supabase (kèm thẻ ID) với bộ nhớ đệm 60s cho AI prompt. */
+export async function getShopCatalogSummary(signal?: AbortSignal): Promise<string> {
+  const now = Date.now();
+  if (cachedSummary && cachedSummary.expiresAt > now) {
+    return cachedSummary.text;
+  }
+  try {
+    const rawRows = await getProductCatalogRows(signal);
+    const products = z.array(productSchema).parse(rawRows);
+    if (products.length === 0) {
+      return '(Kho hàng hiện tại chưa có sản phẩm nào được kích hoạt.)';
+    }
+    const lines = products.map((p) => {
+      const macros = Array.isArray(p.product_macros) ? p.product_macros[0] : p.product_macros;
+      const details: string[] = [
+        `[PRODUCT_CARD:${p.id}] : ${p.name}`,
+        `Brand: ${p.brand}`,
+        `Danh mục: ${p.category}`,
+        `Giá: ${formatPrice(p.price ?? 0)}`,
+        p.in_stock ? 'Còn hàng' : 'Tạm hết hàng',
+      ];
+      if (macros?.protein) details.push(`Protein: ${macros.protein}`);
+      if (macros?.servings) details.push(`${macros.servings} lần dùng`);
+      return `- ${details.join(' | ')}`;
+    });
+    const summary = lines.join('\n');
+    cachedSummary = { text: summary, expiresAt: now + SUMMARY_TTL_MS };
+    return summary;
+  } catch (err) {
+    console.error('[ProductCatalog] Failed to load catalog summary:', err);
+    return cachedSummary?.text || '(Không thể tải danh mục sản phẩm từ Supabase lúc này.)';
+  }
+}
+
