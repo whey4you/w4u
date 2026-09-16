@@ -1,4 +1,4 @@
-import { Product, ProductSize, WorkoutGoal, NutritionTableRow, ProductFAQ } from '@/types/product';
+import { Product, ProductSize, WorkoutGoal, NutritionTableRow, ProductFAQ, MacroNutrients } from '@/types/product';
 
 interface RawProductMacro {
   protein: string;
@@ -48,6 +48,7 @@ export interface RawProductRow {
     servings: number;
     price: number;
     original_price?: number;
+    flavor_prices?: Record<string, { price: number; originalPrice?: number }>;
     in_stock?: boolean;
     sort_order?: number;
   }[];
@@ -61,21 +62,31 @@ const VALID_GOALS: WorkoutGoal[] = [
   'fat-loss',
 ];
 
-function getMacros(value?: RawProductMacro | RawProductMacro[]) {
+function getMacros(value?: RawProductMacro | RawProductMacro[]): MacroNutrients {
   const macros = Array.isArray(value) ? value[0] : value;
-  if (!macros) return { protein: '25g', servings: 60 };
+  if (!macros) {
+    return {
+      protein: '25g',
+      servings: 50,
+      bcaa: '',
+      calories: '',
+      sugar: '',
+      nutritionTable: [],
+    };
+  }
+
   return {
     protein: macros.protein || '25g',
-    bcaa: macros.bcaa,
-    calories: macros.calories,
-    sugar: macros.sugar,
-    servings: Number(macros.servings || 60),
+    servings: Number(macros.servings || 50),
+    bcaa: macros.bcaa || undefined,
+    calories: macros.calories || undefined,
+    sugar: macros.sugar || undefined,
     proteinLabel: macros.protein_label,
     bcaaLabel: macros.bcaa_label,
     caloriesLabel: macros.calories_label,
     sugarLabel: macros.sugar_label,
     servingsLabel: macros.servings_label,
-    nutritionTable: macros.nutrition_table,
+    nutritionTable: Array.isArray(macros.nutrition_table) ? macros.nutrition_table : [],
     ingredients: macros.ingredients,
     allergens: macros.allergens,
   };
@@ -99,6 +110,7 @@ export function mapRowToProduct(row: RawProductRow): Product {
       servings: Number(size.servings || 60),
       price: Number(size.price),
       originalPrice: size.original_price ? Number(size.original_price) : undefined,
+      flavorPrices: size.flavor_prices || undefined,
       inStock: size.in_stock !== false,
       sortOrder: size.sort_order !== undefined ? Number(size.sort_order) : index,
     }))

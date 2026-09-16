@@ -54,7 +54,7 @@ export function ProductFormFlavors({
         <label className="block font-semibold text-slate-700 mb-2">
           Danh Sách Hương Vị Đang Có ({flavors.length})
         </label>
-        <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
+        <div className="space-y-2">
           {flavors.map((flv) => (
             <ProductFlavorItem
               key={flv.id}

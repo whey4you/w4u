@@ -1,16 +1,17 @@
 'use client';
 
 import React, { useState } from 'react';
-import { ProductSize } from '@/types/product';
+import { ProductSize, ProductFlavor } from '@/types/product';
 import { ProductSizeItem } from './product-size-item';
 import { ProductSizeAddForm } from './product-size-add-form';
 
 interface ProductFormSizesProps {
   sizes: ProductSize[];
   setSizes: React.Dispatch<React.SetStateAction<ProductSize[]>>;
+  flavors?: ProductFlavor[];
 }
 
-export function ProductFormSizes({ sizes, setSizes }: ProductFormSizesProps) {
+export function ProductFormSizes({ sizes, setSizes, flavors = [] }: ProductFormSizesProps) {
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
 
   const moveSize = (fromIndex: number, toIndex: number) => {
@@ -53,11 +54,12 @@ export function ProductFormSizes({ sizes, setSizes }: ProductFormSizesProps) {
             Chưa có kích cỡ nào. Vui lòng thêm ít nhất một kích cỡ kèm giá bán ở form bên dưới.
           </p>
         ) : (
-          <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
+          <div className="space-y-2.5">
             {sizes.map((s, index) => (
               <ProductSizeItem
                 key={s.id}
                 size={s}
+                flavors={flavors}
                 index={index}
                 isFirst={index === 0}
                 isLast={index === sizes.length - 1}
@@ -80,7 +82,7 @@ export function ProductFormSizes({ sizes, setSizes }: ProductFormSizesProps) {
       </div>
 
       {/* Add New Size Subform */}
-      <ProductSizeAddForm existingCount={sizes.length} onAdd={handleAddSize} />
+      <ProductSizeAddForm existingCount={sizes.length} flavors={flavors} onAdd={handleAddSize} />
     </div>
   );
 }

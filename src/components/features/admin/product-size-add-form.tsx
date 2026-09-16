@@ -2,19 +2,22 @@
 
 import React, { useState } from 'react';
 import { Plus, Scale } from 'lucide-react';
-import { ProductSize } from '@/types/product';
+import { ProductSize, ProductFlavor, ProductSizeFlavorPrice } from '@/types/product';
 import { PriceInput } from '@/components/ui/price-input';
+import { ProductSizeFlavorPrices } from './product-size-flavor-prices';
 
 interface ProductSizeAddFormProps {
   existingCount: number;
+  flavors?: ProductFlavor[];
   onAdd: (size: ProductSize) => void;
 }
 
-export function ProductSizeAddForm({ existingCount, onAdd }: ProductSizeAddFormProps) {
+export function ProductSizeAddForm({ existingCount, flavors = [], onAdd }: ProductSizeAddFormProps) {
   const [sizeName, setSizeName] = useState('');
   const [servings, setServings] = useState('70');
   const [price, setPrice] = useState('');
   const [originalPrice, setOriginalPrice] = useState('');
+  const [flavorPrices, setFlavorPrices] = useState<Record<string, ProductSizeFlavorPrice>>({});
 
   const handleAdd = () => {
     if (!sizeName.trim() || !price) {
@@ -28,6 +31,7 @@ export function ProductSizeAddForm({ existingCount, onAdd }: ProductSizeAddFormP
       servings: Number(servings) || 60,
       price: Number(price),
       originalPrice: originalPrice ? Number(originalPrice) : undefined,
+      flavorPrices: Object.keys(flavorPrices).length > 0 ? flavorPrices : undefined,
       inStock: true,
       sortOrder: existingCount,
     });
@@ -35,6 +39,7 @@ export function ProductSizeAddForm({ existingCount, onAdd }: ProductSizeAddFormP
     setSizeName('');
     setPrice('');
     setOriginalPrice('');
+    setFlavorPrices({});
   };
 
   return (
@@ -81,6 +86,16 @@ export function ProductSizeAddForm({ existingCount, onAdd }: ProductSizeAddFormP
           placeholder="1,750,000"
         />
       </div>
+
+      {flavors.length > 0 && (
+        <ProductSizeFlavorPrices
+          flavors={flavors}
+          defaultPrice={price}
+          defaultOriginalPrice={originalPrice}
+          flavorPrices={flavorPrices}
+          onChange={setFlavorPrices}
+        />
+      )}
 
       <div className="pt-1 flex justify-end">
         <button

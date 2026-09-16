@@ -1,13 +1,15 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Trash2, GripVertical, ChevronUp, ChevronDown, CheckCircle2, Pencil } from 'lucide-react';
-import { ProductSize } from '@/types/product';
+import { Trash2, GripVertical, ChevronUp, ChevronDown, CheckCircle2, Pencil, Tag } from 'lucide-react';
+import { ProductSize, ProductFlavor } from '@/types/product';
 import { formatPrice } from '@/lib/utils';
+import { countCustomFlavorPrices } from '@/lib/product-pricing';
 import { ProductSizeEditInline } from './product-size-edit-inline';
 
 interface ProductSizeItemProps {
   size: ProductSize;
+  flavors?: ProductFlavor[];
   index: number;
   isFirst: boolean;
   isLast: boolean;
@@ -22,6 +24,7 @@ interface ProductSizeItemProps {
 
 export function ProductSizeItem({
   size,
+  flavors = [],
   isFirst,
   isLast,
   isDragging,
@@ -33,11 +36,13 @@ export function ProductSizeItem({
   onUpdate,
 }: ProductSizeItemProps) {
   const [isEditing, setIsEditing] = useState(false);
+  const customFlavorCount = countCustomFlavorPrices(size);
 
   if (isEditing) {
     return (
       <ProductSizeEditInline
         size={size}
+        flavors={flavors}
         onSave={(updated) => {
           onUpdate(updated);
           setIsEditing(false);
@@ -67,12 +72,18 @@ export function ProductSizeItem({
         </div>
 
         <div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <span className="font-bold text-slate-900">{size.name}</span>
             {isFirst && (
               <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-100/70 px-2 py-0.5 rounded-full">
                 <CheckCircle2 className="w-3 h-3" />
                 <span>Mặc Định (#1)</span>
+              </span>
+            )}
+            {customFlavorCount > 0 && (
+              <span className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-700 bg-amber-100/80 px-2 py-0.5 rounded-full">
+                <Tag className="w-2.5 h-2.5" />
+                <span>{customFlavorCount} vị có giá riêng</span>
               </span>
             )}
           </div>

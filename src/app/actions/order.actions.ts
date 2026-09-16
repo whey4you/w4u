@@ -11,7 +11,12 @@ interface ProductRow {
   default_image: string;
   in_stock: boolean;
   product_flavors: { id: string; name: string; image?: string }[];
-  product_sizes: { id: string; price: number; in_stock: boolean }[];
+  product_sizes: {
+    id: string;
+    price: number;
+    in_stock: boolean;
+    flavor_prices?: Record<string, { price: number; originalPrice?: number }>;
+  }[];
 }
 
 interface ValidatedOrderItem {
@@ -41,11 +46,19 @@ function findVariant(item: CheckoutItemInput, products: ProductRow[]): Validated
     : undefined;
   if (!flavor || (item.sizeId && (!size || !size.in_stock))) return null;
 
+  let unitPrice = Number(size?.price ?? product.price);
+  if (size?.flavor_prices && size.flavor_prices[flavor.id]) {
+    const customFp = size.flavor_prices[flavor.id];
+    if (typeof customFp.price === 'number' && customFp.price > 0) {
+      unitPrice = customFp.price;
+    }
+  }
+
   return {
     product_id: product.id,
     product_name: product.name,
     flavor_name: flavor.name,
-    price: Number(size?.price ?? product.price),
+    price: unitPrice,
     quantity: item.quantity,
     image: flavor.image || product.default_image,
   };
@@ -55,7 +68,7 @@ async function loadProducts(items: CheckoutItemInput[]) {
   const ids = Array.from(new Set(items.map(({ productId }) => productId)));
   return supabaseAdmin
     .from('products')
-    .select('id,name,price,default_image,in_stock,product_flavors(id,name,image),product_sizes(id,price,in_stock)')
+    .select('id,name,price,default_image,in_stock,product_flavors(id,name,image),product_sizes(id,price,in_stock,flavor_prices)')
     .in('id', ids);
 }
 

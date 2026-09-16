@@ -57,16 +57,24 @@ async function syncProductDetails(id: string, payload: Partial<Product>) {
   if (payload.sizes) {
     await supabase.from('product_sizes').delete().eq('product_id', id);
     if (payload.sizes.length > 0) {
-      await supabase.from('product_sizes').insert(payload.sizes.map((size, index) => ({
+      const records = payload.sizes.map((size, index) => ({
         product_id: id,
         id: size.id || slugify(size.name),
         name: size.name,
         servings: size.servings || 60,
         price: size.price,
         original_price: size.originalPrice || null,
+        flavor_prices: size.flavorPrices || {},
         in_stock: size.inStock !== false,
         sort_order: index,
-      })));
+      }));
+
+      const { error } = await supabase.from('product_sizes').insert(records);
+      if (error && error.message?.includes('flavor_prices')) {
+        // Fallback cho schema cũ nếu chưa có cột flavor_prices
+        const legacyRecords = records.map(({ flavor_prices, ...rest }) => rest);
+        await supabase.from('product_sizes').insert(legacyRecords);
+      }
     }
   }
 }

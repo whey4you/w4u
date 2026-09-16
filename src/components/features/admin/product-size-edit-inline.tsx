@@ -2,21 +2,26 @@
 
 import React, { useState } from 'react';
 import { Check, X, Scale } from 'lucide-react';
-import { ProductSize } from '@/types/product';
+import { ProductSize, ProductFlavor, ProductSizeFlavorPrice } from '@/types/product';
 import { PriceInput } from '@/components/ui/price-input';
+import { ProductSizeFlavorPrices } from './product-size-flavor-prices';
 
 interface ProductSizeEditInlineProps {
   size: ProductSize;
+  flavors?: ProductFlavor[];
   onSave: (updated: ProductSize) => void;
   onCancel: () => void;
 }
 
-export function ProductSizeEditInline({ size, onSave, onCancel }: ProductSizeEditInlineProps) {
+export function ProductSizeEditInline({ size, flavors = [], onSave, onCancel }: ProductSizeEditInlineProps) {
   const [sizeName, setSizeName] = useState(size.name);
   const [servings, setServings] = useState(String(size.servings));
   const [price, setPrice] = useState(String(size.price));
   const [originalPrice, setOriginalPrice] = useState(
     size.originalPrice ? String(size.originalPrice) : ''
+  );
+  const [flavorPrices, setFlavorPrices] = useState<Record<string, ProductSizeFlavorPrice>>(
+    size.flavorPrices || {}
   );
 
   const handleSave = () => {
@@ -31,6 +36,7 @@ export function ProductSizeEditInline({ size, onSave, onCancel }: ProductSizeEdi
       servings: Number(servings) || size.servings,
       price: Number(price),
       originalPrice: originalPrice ? Number(originalPrice) : undefined,
+      flavorPrices: Object.keys(flavorPrices).length > 0 ? flavorPrices : undefined,
     });
   };
 
@@ -92,6 +98,16 @@ export function ProductSizeEditInline({ size, onSave, onCancel }: ProductSizeEdi
           placeholder="1,750,000"
         />
       </div>
+
+      {flavors.length > 0 && (
+        <ProductSizeFlavorPrices
+          flavors={flavors}
+          defaultPrice={price}
+          defaultOriginalPrice={originalPrice}
+          flavorPrices={flavorPrices}
+          onChange={setFlavorPrices}
+        />
+      )}
 
       <div className="pt-1 flex items-center justify-end gap-2">
         <button

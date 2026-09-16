@@ -53,6 +53,7 @@ CREATE TABLE IF NOT EXISTS public.product_sizes (
   servings INTEGER NOT NULL DEFAULT 1,
   price NUMERIC NOT NULL,
   original_price NUMERIC,
+  flavor_prices JSONB DEFAULT '{}'::jsonb,
   in_stock BOOLEAN DEFAULT true,
   sort_order INTEGER DEFAULT 0,
   PRIMARY KEY (product_id, id)

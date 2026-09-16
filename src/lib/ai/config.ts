@@ -1,4 +1,8 @@
 export const AI_CONFIG = {
+  ZAI_API_URL: 'https://api.z.ai/api/paas/v4',
+  ZAI_PRIMARY_MODEL: process.env.ZAI_PRIMARY_MODEL || 'glm-4.7-flash',
+  ZAI_SECONDARY_MODEL: process.env.ZAI_SECONDARY_MODEL || 'glm-4.5-flash',
+  ZAI_DEFAULT_MODEL: process.env.ZAI_DEFAULT_MODEL || 'glm-4.7-flash',
   MISTRAL_API_URL: 'https://api.mistral.ai/v1',
   DEFAULT_MODEL: process.env.MISTRAL_DEFAULT_MODEL || 'ministral-8b-latest',
   TEMPERATURE: 0.3, // 0.3: Giảm mơ hồ, bám sát dữ liệu sản phẩm nhưng vẫn giữ độ tự nhiên tiếng Việt

@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { ChevronDown, Check } from 'lucide-react';
 import { ProductFlavor, ProductSize } from '@/types/product';
 import { formatPrice } from '@/lib/utils';
+import { getVariantPrice } from '@/lib/product-pricing';
 
 interface ProductOptionSelectorsProps {
   flavors: ProductFlavor[];
@@ -24,8 +25,12 @@ export function ProductOptionSelectors({
 }: ProductOptionSelectorsProps) {
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
-  const pricePerServing = selectedSize?.servings && selectedSize.price
-    ? Math.round(selectedSize.price / selectedSize.servings)
+  const effectivePrice = selectedSize
+    ? getVariantPrice({ price: selectedSize.price }, selectedSize, selectedFlavor.id).price
+    : null;
+
+  const pricePerServing = selectedSize?.servings && effectivePrice
+    ? Math.round(effectivePrice / selectedSize.servings)
     : null;
 
   return (

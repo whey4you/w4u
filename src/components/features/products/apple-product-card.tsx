@@ -10,6 +10,7 @@ import { formatPrice } from '@/lib/utils';
 import { AppleButton } from '@/components/ui/apple-button';
 import { getProductHUDStats } from '@/lib/nutrition-helpers';
 import { ProductCardOptions } from './product-card-options';
+import { getVariantPrice } from '@/lib/product-pricing';
 
 interface AppleProductCardProps {
   product: Product;
@@ -18,10 +19,12 @@ interface AppleProductCardProps {
 export function AppleProductCard({ product }: AppleProductCardProps) {
   const { addItem } = useCart();
   const [selectedFlavor, setSelectedFlavor] = useState<ProductFlavor>(
-    product.flavors?.[0] || { id: 'std', name: 'Tiêu Chuẩn', colorHex: '#0071e3' }
+    product.flavors[0] || { id: 'std', name: 'Tiêu chuẩn', colorHex: '#0071e3' }
   );
   const [selectedSize, setSelectedSize] = useState<ProductSize | undefined>(
-    product.sizes?.find((s) => s.inStock !== false) || product.sizes?.[0]
+    product.sizes && product.sizes.length > 0
+      ? product.sizes.find((s) => s.inStock !== false) || product.sizes[0]
+      : undefined
   );
 
   useEffect(() => {
@@ -46,8 +49,9 @@ export function AppleProductCard({ product }: AppleProductCardProps) {
   const hudStats = getProductHUDStats(product);
   const currentImage = selectedFlavor.image || product.defaultImage;
 
-  const price = selectedSize?.price ?? product.price;
-  const originalPrice = selectedSize?.originalPrice ?? product.originalPrice;
+  const variantPricing = getVariantPrice(product, selectedSize, selectedFlavor.id);
+  const price = variantPricing.price;
+  const originalPrice = variantPricing.originalPrice;
   const isAvailable = product.inStock && (selectedSize ? selectedSize.inStock !== false : true);
 
   const handleAddToCart = () => {

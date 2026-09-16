@@ -35,12 +35,18 @@ export interface MacroNutrients {
   allergens?: string;
 }
 
+export interface ProductSizeFlavorPrice {
+  price: number;
+  originalPrice?: number;
+}
+
 export interface ProductSize {
   id: string;
   name: string;
   servings: number;
   price: number;
   originalPrice?: number;
+  flavorPrices?: Record<string, ProductSizeFlavorPrice>;
   inStock?: boolean;
   sortOrder?: number;
 }
