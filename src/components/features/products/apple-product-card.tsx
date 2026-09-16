@@ -4,11 +4,12 @@ import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Check, Plus } from 'lucide-react';
-import { Product, ProductFlavor } from '@/types/product';
+import { Product, ProductFlavor, ProductSize } from '@/types/product';
 import { useCart } from '@/context/cart-context';
 import { formatPrice } from '@/lib/utils';
 import { AppleButton } from '@/components/ui/apple-button';
 import { getProductHUDStats } from '@/lib/nutrition-helpers';
+import { ProductCardOptions } from './product-card-options';
 
 interface AppleProductCardProps {
   product: Product;
@@ -19,6 +20,9 @@ export function AppleProductCard({ product }: AppleProductCardProps) {
   const [selectedFlavor, setSelectedFlavor] = useState<ProductFlavor>(
     product.flavors?.[0] || { id: 'std', name: 'Tiêu Chuẩn', colorHex: '#0071e3' }
   );
+  const [selectedSize, setSelectedSize] = useState<ProductSize | undefined>(
+    product.sizes?.find((s) => s.inStock !== false) || product.sizes?.[0]
+  );
 
   useEffect(() => {
     if (product.flavors && product.flavors.length > 0) {
@@ -28,18 +32,33 @@ export function AppleProductCard({ product }: AppleProductCardProps) {
     }
   }, [product.flavors, selectedFlavor.id]);
 
+  useEffect(() => {
+    if (product.sizes && product.sizes.length > 0) {
+      if (!selectedSize || !product.sizes.some((s) => s.id === selectedSize.id)) {
+        setSelectedSize(product.sizes.find((s) => s.inStock !== false) || product.sizes[0]);
+      }
+    } else {
+      setSelectedSize(undefined);
+    }
+  }, [product.sizes, selectedSize?.id]);
+
   const [isAdded, setIsAdded] = useState(false);
   const hudStats = getProductHUDStats(product);
   const currentImage = selectedFlavor.image || product.defaultImage;
 
+  const price = selectedSize?.price ?? product.price;
+  const originalPrice = selectedSize?.originalPrice ?? product.originalPrice;
+  const isAvailable = product.inStock && (selectedSize ? selectedSize.inStock !== false : true);
+
   const handleAddToCart = () => {
-    if (!product.inStock) return;
+    if (!isAvailable) return;
     addItem({
       productId: product.id,
       productName: product.name,
       brand: product.brand,
-      price: product.price,
+      price,
       flavor: selectedFlavor,
+      size: selectedSize,
       image: selectedFlavor.image || product.defaultImage,
     });
     setIsAdded(true);
@@ -120,58 +139,38 @@ export function AppleProductCard({ product }: AppleProductCardProps) {
           </div>
         </div>
 
-        {/* Flavor Selector */}
-        <div className="mt-2.5 sm:mt-4 flex items-center justify-between gap-1.5 text-xs min-h-[1.75rem] sm:min-h-[2rem]">
-          <div className="min-w-0 flex-1 pr-1">
-            <span
-              data-flavor-name
-              className="block text-[10px] sm:text-[11px] font-medium sm:font-semibold text-apple-dark leading-tight line-clamp-2 break-words"
-              title={selectedFlavor.name}
-            >
-              {selectedFlavor.name}
-            </span>
-          </div>
-          <div className="flex items-center gap-1 sm:gap-1.5 shrink-0 flex-shrink-0">
-            {product.flavors?.map((flavor) => (
-              <button
-                key={flavor.id}
-                type="button"
-                onClick={() => setSelectedFlavor(flavor)}
-                title={flavor.name}
-                aria-label={flavor.name}
-                className={`h-3 w-3 sm:h-3.5 sm:w-3.5 rounded-full border transition-all ${
-                  selectedFlavor.id === flavor.id
-                    ? 'ring-2 ring-apple-blue ring-offset-1 scale-110'
-                    : 'border-black/20 hover:scale-105'
-                }`}
-                style={{ backgroundColor: flavor.colorHex }}
-              />
-            ))}
-          </div>
-        </div>
+        {/* Size & Flavor Options */}
+        <ProductCardOptions
+          flavors={product.flavors}
+          sizes={product.sizes}
+          selectedFlavor={selectedFlavor}
+          selectedSize={selectedSize}
+          onSelectFlavor={setSelectedFlavor}
+          onSelectSize={setSelectedSize}
+        />
       </div>
 
       {/* Pricing & CTA */}
       <div className="pt-3 sm:pt-6 mt-2.5 sm:mt-4 border-t border-black/[0.05] flex items-center justify-between gap-1.5">
         <div className="min-w-0">
           <span className="text-xs sm:text-base font-bold text-apple-dark block truncate">
-            {formatPrice(product.price)}
+            {formatPrice(price)}
           </span>
-          {product.originalPrice && product.originalPrice > product.price && (
+          {originalPrice && originalPrice > price && (
             <span className="text-[10px] sm:text-xs text-apple-subhead line-through block truncate">
-              {formatPrice(product.originalPrice)}
+              {formatPrice(originalPrice)}
             </span>
           )}
         </div>
 
         <AppleButton
-          variant={!product.inStock ? 'secondary' : isAdded ? 'dark' : 'primary'}
+          variant={!isAvailable ? 'secondary' : isAdded ? 'dark' : 'primary'}
           size="sm"
           onClick={handleAddToCart}
-          disabled={!product.inStock}
+          disabled={!isAvailable}
           className="px-2.5 sm:px-4 py-1 h-8 sm:h-9 min-h-0 flex-shrink-0"
         >
-          {!product.inStock ? (
+          {!isAvailable ? (
             <span className="text-slate-400 text-[10px] sm:text-xs">Hết</span>
           ) : isAdded ? (
             <span className="inline-flex items-center gap-1 text-[11px] sm:text-xs">

@@ -1,4 +1,5 @@
 import { supabase, isSupabaseConfigured } from '@/lib/supabase/client';
+import { supabaseAdmin, isSupabaseAdminConfigured } from '@/lib/supabase/server';
 import { MediaItem, AddMediaPayload } from '@/types/media';
 import { getAdminProducts } from './product.service';
 import { getHeroBanners } from './banner.service';
@@ -12,18 +13,22 @@ import {
   recordDeletedMediaUrl,
 } from '@/lib/media-fallback';
 
+// Client tối ưu ưu tiên Admin Service Role khi chạy phía server
+const getDb = () => (isSupabaseAdminConfigured ? supabaseAdmin : supabase);
+const hasDbConfig = () => Boolean(isSupabaseAdminConfigured || isSupabaseConfigured);
+
 /**
  * Lấy các ảnh được admin lưu riêng trong bảng media_library (kèm dự phòng fallback)
  */
 export async function getCustomMediaItems(): Promise<MediaItem[]> {
-  if (isSupabaseConfigured) {
+  if (hasDbConfig()) {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await getDb()
         .from('media_library')
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (!error && data && data.length > 0) {
+      if (!error && Array.isArray(data)) {
         return data.map((row) => ({
           id: row.id,
           title: row.title || 'Ảnh liên kết',
@@ -34,20 +39,20 @@ export async function getCustomMediaItems(): Promise<MediaItem[]> {
           isDeletable: true,
         }));
       }
-    } catch {
-      // Bỏ qua lỗi schema và chuyển sang fallback
+    } catch (err) {
+      console.warn('[MediaService] getCustomMediaItems lỗi kết nối DB, chuyển sang fallback:', err);
     }
   }
   return getFallbackMediaItems();
 }
 
 /**
- * Thêm ảnh từ link vào bảng media_library (kèm fallback nếu chưa tạo bảng)
+ * Thêm ảnh từ link/upload vào bảng media_library (kèm fallback nếu DB lỗi)
  */
 export async function addMediaItem(payload: AddMediaPayload): Promise<MediaItem | null> {
-  if (isSupabaseConfigured) {
+  if (hasDbConfig()) {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await getDb()
         .from('media_library')
         .insert({
           title: payload.title.trim() || 'Ảnh liên kết',
@@ -69,8 +74,11 @@ export async function addMediaItem(payload: AddMediaPayload): Promise<MediaItem 
           isDeletable: true,
         };
       }
-    } catch {
-      // Fallback
+      if (error) {
+        console.warn('[MediaService] addMediaItem lỗi CSDL:', error.message);
+      }
+    } catch (err) {
+      console.warn('[MediaService] addMediaItem lỗi ngoại lệ:', err);
     }
   }
   return addFallbackMediaItem(payload);
@@ -83,15 +91,26 @@ export async function deleteMediaItem(id: string, url?: string): Promise<boolean
   if (url) {
     await recordDeletedMediaUrl(url);
     if (url.includes('supabase.co/storage/v1/object/public/')) {
-      await deleteBannerMedia(url);
+      try {
+        const parts = url.split('/storage/v1/object/public/');
+        if (parts.length >= 2) {
+          const [bucket, ...pathParts] = parts[1].split('/');
+          const filePath = pathParts.join('/');
+          if (bucket && filePath) {
+            await getDb().storage.from(bucket).remove([filePath]);
+          }
+        }
+      } catch (err) {
+        console.warn('[MediaService] Không thể xóa tệp storage:', err);
+      }
     }
   }
 
-  if (isSupabaseConfigured && !id.startsWith('local-')) {
+  if (hasDbConfig() && !id.startsWith('local-')) {
     try {
-      await supabase.from('media_library').delete().eq('id', id);
-    } catch {
-      // Fallback
+      await getDb().from('media_library').delete().eq('id', id);
+    } catch (err) {
+      console.warn('[MediaService] deleteMediaItem lỗi DB:', err);
     }
   }
 

@@ -62,28 +62,57 @@ export async function convertToWebP(
   });
 }
 
+export function sanitizeFileName(name: string): string {
+  const base = name.replace(/\.[^/.]+$/, '');
+  const normalized = base
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/đ/g, 'd')
+    .replace(/Đ/g, 'D')
+    .replace(/[^a-zA-Z0-9.-]/g, '_')
+    .replace(/_+/g, '_')
+    .replace(/^_|_$/g, '');
+  return normalized || 'image';
+}
+
 export async function uploadProductImage(file: File): Promise<string> {
   try {
     const webpFile = await convertToWebP(file);
-    const cleanName = webpFile.name.replace(/[^a-zA-Z0-9.-]/g, '_');
-    const filePath = `uploads/${Date.now()}-${cleanName}`;
+    const cleanBaseName = sanitizeFileName(webpFile.name);
+    const fileName = `${Date.now()}-${cleanBaseName}.webp`;
+    const filePath = `uploads/${fileName}`;
 
-    const { error } = await supabase.storage
-      .from('products')
+    let bucketName = 'products';
+    let { error } = await supabase.storage
+      .from(bucketName)
       .upload(filePath, webpFile, {
         contentType: 'image/webp',
         upsert: true,
       });
 
-    if (error) {
-      console.error('Lỗi upload ảnh lên Supabase Storage:', error);
-      throw error;
+    // Fallback sang bucket banners nếu bucket products gặp trục trặc
+    if (error && (error.message.includes('not found') || error.message.includes('Bucket'))) {
+      bucketName = 'banners';
+      const fallbackResult = await supabase.storage
+        .from(bucketName)
+        .upload(`products/${fileName}`, webpFile, {
+          contentType: 'image/webp',
+          upsert: true,
+        });
+      error = fallbackResult.error;
     }
 
-    const { data } = supabase.storage.from('products').getPublicUrl(filePath);
+    if (error) {
+      console.error('Lỗi upload ảnh lên Supabase Storage:', error);
+      throw new Error(error.message || 'Lỗi khi tải ảnh lên kho lưu trữ');
+    }
+
+    const { data } = supabase.storage.from(bucketName).getPublicUrl(filePath);
     return data.publicUrl;
   } catch (err) {
-    console.error('Lỗi khi nén và tải ảnh:', err);
-    throw err;
+    const message = err instanceof Error ? err.message : 'Lỗi khi nén và tải ảnh';
+    console.error('Lỗi khi nén và tải ảnh:', message);
+    throw new Error(message);
   }
 }
+
