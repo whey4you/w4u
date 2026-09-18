@@ -62,19 +62,8 @@ export function ProductCardOptions({
 
       {/* 2. Flavor Selector */}
       {hasFlavors && (
-        <div className="space-y-1">
-          <div className="flex items-center justify-between text-[10px] sm:text-[11px] leading-none">
-            <span className="text-apple-subhead font-medium">Vị</span>
-            <span
-              data-flavor-name
-              className="font-semibold text-apple-dark truncate max-w-[120px]"
-              title={selectedFlavor.name}
-            >
-              {selectedFlavor.name}
-            </span>
-          </div>
-
-          <div className="flex items-center gap-1 sm:gap-1.5 flex-wrap pt-0.5">
+        <div className="flex items-center justify-between gap-1.5 pt-0.5">
+          <div className="flex items-center gap-1 sm:gap-1.5 flex-wrap min-w-0">
             {flavors!.map((flavor) => {
               const isSelected = selectedFlavor.id === flavor.id;
               return (
@@ -87,7 +76,7 @@ export function ProductCardOptions({
                   }}
                   title={flavor.name}
                   aria-label={flavor.name}
-                  className={`h-3.5 w-3.5 sm:h-4 sm:w-4 rounded-full border transition-all ${
+                  className={`h-3.5 w-3.5 sm:h-4 sm:w-4 rounded-full border transition-all shrink-0 ${
                     isSelected
                       ? 'ring-2 ring-apple-blue ring-offset-1 scale-110'
                       : 'border-black/20 hover:scale-105'
@@ -97,6 +86,14 @@ export function ProductCardOptions({
               );
             })}
           </div>
+
+          <span
+            data-flavor-name
+            className="text-[10px] sm:text-[11px] font-semibold text-apple-dark truncate max-w-[130px] text-right shrink-0 leading-none"
+            title={selectedFlavor.name}
+          >
+            {selectedFlavor.name}
+          </span>
         </div>
       )}
     </div>
