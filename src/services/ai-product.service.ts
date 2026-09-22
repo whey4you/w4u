@@ -14,10 +14,15 @@ export interface GeneratedNutritionItem {
 
 export interface GeneratedProductResponse {
   protein?: string;
+  proteinLabel?: string;
   bcaa?: string;
+  bcaaLabel?: string;
   calories?: string;
+  caloriesLabel?: string;
   sugar?: string;
+  sugarLabel?: string;
   servings?: string;
+  servingsLabel?: string;
   nutritionTable?: GeneratedNutritionItem[];
   ingredients: string;
   allergens: string;

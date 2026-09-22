@@ -60,8 +60,15 @@ export function OrderTable({ orders, onRefresh }: OrderTableProps) {
                 const isUpdating = updatingId === order.id;
                 return (
                   <tr key={order.id} className="hover:bg-slate-50/60 transition-colors">
-                    <td className="py-3.5 px-6 font-mono font-bold text-blue-600">
-                      {order.order_code}
+                    <td className="py-3.5 px-6">
+                      <p className="font-mono font-bold text-blue-600">{order.order_code}</p>
+                      <span className={`inline-block mt-1 text-[10px] font-sans font-semibold px-1.5 py-0.5 rounded ${
+                        order.payment_method === 'payos'
+                          ? 'bg-blue-100 text-blue-800'
+                          : 'bg-slate-100 text-slate-600'
+                      }`}>
+                        {order.payment_method === 'payos' ? '⚡ PayOS QR' : '💵 COD'}
+                      </span>
                     </td>
 
                     <td className="py-3.5 px-4">

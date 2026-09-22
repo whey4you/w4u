@@ -6,10 +6,15 @@ import { generateProductDetails, GeneratedNutritionItem } from '@/services/ai-pr
 
 export interface AiApplyAllData {
   protein?: string;
+  proteinLabel?: string;
   bcaa?: string;
+  bcaaLabel?: string;
   calories?: string;
+  caloriesLabel?: string;
   sugar?: string;
+  sugarLabel?: string;
   servings?: string;
+  servingsLabel?: string;
   nutritionTable?: GeneratedNutritionItem[];
   ingredients: string;
   allergens: string;
@@ -63,10 +68,15 @@ export function ProductFormAiHelper({
 
       onApplyAll({
         protein: data.protein,
+        proteinLabel: data.proteinLabel,
         bcaa: data.bcaa,
+        bcaaLabel: data.bcaaLabel,
         calories: data.calories,
+        caloriesLabel: data.caloriesLabel,
         sugar: data.sugar,
+        sugarLabel: data.sugarLabel,
         servings: data.servings,
+        servingsLabel: data.servingsLabel,
         nutritionTable: data.nutritionTable,
         ingredients: data.ingredients,
         allergens: data.allergens,

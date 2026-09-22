@@ -71,25 +71,26 @@ export const CATEGORY_MACRO_PRESETS: Record<'whey' | 'strength' | 'vitamins', Ma
   },
   vitamins: {
     labels: {
-      protein: 'Thành Phần Chủ Đạo',
-      bcaa: 'Dạng Bào Chế',
+      protein: 'Hoạt Chất Chính 1',
+      bcaa: 'Hoạt Chất Chính 2',
       calories: 'Năng Lượng',
-      sugar: 'Liều Dùng',
+      sugar: 'Hoạt Chất Chính 3',
       servings: 'Quy Cách (Viên)',
     },
     defaults: {
-      protein: '23+ Loại Vitamin',
-      bcaa: 'Viên Nang Nhanh',
-      calories: '0 Cal',
-      sugar: '1 viên/ngày',
+      protein: '15 mg',
+      bcaa: '60 mcg',
+      calories: '0.9 kcal',
+      sugar: '50 mcg',
       servings: 90,
     },
     defaultTable: [
-      { name: 'Vitamin Tổng Hợp (A, C, D3, E, Nhóm B)', perServing: 'Đạt chuẩn 100% RDA', per100g: '—' },
-      { name: 'Khoáng chất Vi lượng (Kẽm, Magie, Canxi)', perServing: 'Hấp thu sinh học cao', per100g: '—' },
-      { name: 'Hợp chất chống oxy hóa tự nhiên', perServing: 'Tăng đề kháng tối đa', per100g: '—' },
+      { name: 'Kẽm (Zinc Gluconate)', perServing: '15 mg', per100g: '—' },
+      { name: 'Crom (Chromium yeast)', perServing: '60 mcg', per100g: '—' },
+      { name: 'Selen (Selenium yeast)', perServing: '50 mcg', per100g: '—' },
+      { name: 'Năng lượng (Calories)', perServing: '0.9 kcal', per100g: '—' },
     ],
-    defaultIngredients: 'Hỗn hợp Vitamin & Khoáng chất thiết yếu, Vỏ nang Gelatin thực vật, Magnesi stearat, Cellulose vi tinh thể.',
+    defaultIngredients: 'Chiết xuất vi chất dinh dưỡng thiết yếu (Kẽm, Crom, Selen), Vỏ nang thực vật, Magnesi stearat, Cellulose vi tinh thể.',
     defaultAllergens: 'Chiết xuất tự nhiên, an toàn cho hệ tiêu hóa, không chứa chất gây dị ứng.',
   },
 };
@@ -111,10 +112,10 @@ export function getProductHUDStats(product: Product): { label: string; value: st
   const macros = product.macros || ({} as Partial<MacroNutrients>);
 
   const label1 = macros.proteinLabel || (isWhey ? 'Protein' : preset.labels.protein.split('/')[0].trim());
-  const val1 = macros.protein && macros.protein !== '0g' ? macros.protein : preset.defaults.protein;
+  const val1 = macros.protein && (isWhey ? macros.protein !== '0g' : true) ? macros.protein : preset.defaults.protein;
 
   const label2 = macros.bcaaLabel || (isWhey ? 'BCAA' : preset.labels.bcaa.split('/')[0].trim());
-  const val2 = macros.bcaa && macros.bcaa !== '0g' ? macros.bcaa : (isWhey ? '5.5g' : preset.defaults.bcaa);
+  const val2 = macros.bcaa && (isWhey ? macros.bcaa !== '0g' : true) ? macros.bcaa : (isWhey ? '5.5g' : preset.defaults.bcaa);
 
   const label3 = macros.servingsLabel || 'Lần dùng';
   const val3 = String(macros.servings || preset.defaults.servings);
@@ -134,19 +135,19 @@ export function getProductQuickMetrics(product: Product): { label: string; value
   return [
     {
       label: macros.proteinLabel || (isWhey ? 'Protein' : preset.labels.protein),
-      value: macros.protein && macros.protein !== '0g' ? macros.protein : preset.defaults.protein,
+      value: macros.protein && (isWhey ? macros.protein !== '0g' : true) ? macros.protein : preset.defaults.protein,
     },
     {
       label: macros.bcaaLabel || (isWhey ? 'BCAA' : preset.labels.bcaa),
-      value: macros.bcaa && macros.bcaa !== '0g' ? macros.bcaa : preset.defaults.bcaa,
+      value: macros.bcaa && (isWhey ? macros.bcaa !== '0g' : true) ? macros.bcaa : preset.defaults.bcaa,
     },
     {
       label: macros.caloriesLabel || (isWhey ? 'Năng Lượng' : preset.labels.calories),
-      value: macros.calories && macros.calories !== '0' ? macros.calories : preset.defaults.calories,
+      value: macros.calories !== undefined && macros.calories !== '' ? macros.calories : preset.defaults.calories,
     },
     {
       label: macros.sugarLabel || (isWhey ? 'Đường' : preset.labels.sugar),
-      value: macros.sugar && macros.sugar !== '0g' ? macros.sugar : preset.defaults.sugar,
+      value: macros.sugar !== undefined && macros.sugar !== '' ? macros.sugar : preset.defaults.sugar,
     },
   ];
 }

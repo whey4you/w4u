@@ -7,6 +7,7 @@ import { ProductFormMetricItems } from './product-form-metric-items';
 import { ProductFormAiHelper } from './product-form-ai-helper';
 import { ProductFormAiFieldButton } from './product-form-ai-field-button';
 import { ProductMarkdown } from '@/components/ui/product-markdown';
+import { extractHighlightMetricsFromTable } from '@/lib/nutrition-extractor';
 
 interface ProductFormMacrosProps {
   productName?: string;
@@ -69,6 +70,21 @@ export function ProductFormMacros({
   const [previewDesc, setPreviewDesc] = useState(false);
   const [previewUsage, setPreviewUsage] = useState(false);
 
+  const handleSyncTableToMetrics = () => {
+    if (!tableRows || tableRows.length === 0) return;
+    const extracted = extractHighlightMetricsFromTable(tableRows, category);
+    if (extracted.protein) setProtein(extracted.protein);
+    if (extracted.proteinLabel) setProteinLabel(extracted.proteinLabel);
+    if (extracted.bcaa) setBcaa(extracted.bcaa);
+    if (extracted.bcaaLabel) setBcaaLabel(extracted.bcaaLabel);
+    if (extracted.calories) setCalories(extracted.calories);
+    if (extracted.caloriesLabel) setCaloriesLabel(extracted.caloriesLabel);
+    if (extracted.sugar) setSugar(extracted.sugar);
+    if (extracted.sugarLabel) setSugarLabel(extracted.sugarLabel);
+    if (extracted.servings) setServings(extracted.servings);
+    if (extracted.servingsLabel) setServingsLabel(extracted.servingsLabel);
+  };
+
   return (
     <div className="space-y-4 text-xs">
       {/* 1. Quick Presets */}
@@ -123,6 +139,7 @@ export function ProductFormMacros({
         bcaa={bcaa}
         calories={calories}
         sugar={sugar}
+        onSyncToMetrics={handleSyncTableToMetrics}
       />
 
       {/* 4. AI Generator & Web Search Helper */}
@@ -132,10 +149,15 @@ export function ProductFormMacros({
         category={category}
         onApplyAll={(data) => {
           if (data.protein) setProtein(data.protein);
+          if (data.proteinLabel) setProteinLabel(data.proteinLabel);
           if (data.bcaa) setBcaa(data.bcaa);
+          if (data.bcaaLabel) setBcaaLabel(data.bcaaLabel);
           if (data.calories) setCalories(data.calories);
+          if (data.caloriesLabel) setCaloriesLabel(data.caloriesLabel);
           if (data.sugar) setSugar(data.sugar);
+          if (data.sugarLabel) setSugarLabel(data.sugarLabel);
           if (data.servings) setServings(data.servings);
+          if (data.servingsLabel) setServingsLabel(data.servingsLabel);
           if (data.nutritionTable && data.nutritionTable.length > 0) {
             setTableRows(data.nutritionTable);
           }

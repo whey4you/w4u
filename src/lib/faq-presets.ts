@@ -84,4 +84,23 @@ export const FAQ_PRESETS: FAQCategoryPreset[] = [
       },
     ],
   },
+  {
+    id: 'eaa_bcaa',
+    name: 'EAA & BCAA',
+    icon: '🧬',
+    items: [
+      {
+        question: 'EAA và BCAA khác nhau như thế nào, nên chọn loại nào?',
+        answer: 'BCAA gồm 3 axit amin chuỗi nhánh (Leucine, Isoleucine, Valine) tập trung kích thích tổng hợp protein cơ bắp. Trong khi đó, EAA cung cấp trọn bộ 9 axit amin thiết yếu mà cơ thể không tự tổng hợp được, mang lại nguồn nguyên liệu hoàn chỉnh hơn để phục hồi và phát triển cơ bắp tối ưu.',
+      },
+      {
+        question: 'Nên uống EAA / BCAA vào thời điểm nào để đạt hiệu quả tốt nhất?',
+        answer: 'Thời điểm lý tưởng nhất là uống trong lúc tập (intra-workout) hoặc ngay sau khi tập để giảm dị hóa cơ bắp, chống mệt mỏi thể lực và hỗ trợ bù nước điện giải. Ngoài ra, bạn cũng có thể uống giữa các bữa ăn để duy trì môi trường đồng hóa cơ.',
+      },
+      {
+        question: 'Đã uống Whey Protein thì có cần bổ sung thêm EAA / BCAA không?',
+        answer: 'Whey Protein đã có sẵn hàm lượng EAA và BCAA tự nhiên. Tuy nhiên, bổ sung thêm EAA/BCAA chuyên biệt rất hữu ích khi bạn tập luyện cường độ cao kéo dài, cần hấp thu axit amin tức thì trong buổi tập mà không gây cảm giác đầy bụng, hoặc trong giai đoạn siết cân (cutting) kiểm soát calo nghiêm ngặt.',
+      },
+    ],
+  },
 ];

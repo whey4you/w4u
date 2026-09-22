@@ -2,7 +2,8 @@
 
 import { revalidatePath } from 'next/cache';
 import { isSupabaseAdminConfigured, supabaseAdmin } from '@/lib/supabase/server';
-import { CheckoutInput, CheckoutItemInput, CheckoutResult } from '@/types/checkout';
+import { CheckoutInput, CheckoutItemInput, CheckoutResult, PaymentMethod } from '@/types/checkout';
+import { getPayOS, isPayOSConfigured } from '@/lib/payos';
 
 interface ProductRow {
   id: string;
@@ -72,10 +73,36 @@ async function loadProducts(items: CheckoutItemInput[]) {
     .in('id', ids);
 }
 
-function createOrderCode() {
-  const timestamp = Date.now().toString().slice(-7);
-  const suffix = crypto.randomUUID().slice(0, 4).toUpperCase();
-  return `W4U-${timestamp}-${suffix}`;
+function generateOrderCode(): { orderCode: string; numericCode: number } {
+  const timePart = Date.now() % 10000000;
+  const randPart = Math.floor(10 + Math.random() * 90);
+  const numericCode = Number(`${timePart}${randPart}`);
+  return { orderCode: `W4U-${numericCode}`, numericCode };
+}
+
+async function createPayOSLink(
+  numericCode: number,
+  totalAmount: number,
+  validItems: ValidatedOrderItem[],
+  input: CheckoutInput
+) {
+  const payos = getPayOS();
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+  return payos.paymentRequests.create({
+    orderCode: numericCode,
+    amount: totalAmount,
+    description: `W4U ${numericCode}`.slice(0, 25),
+    cancelUrl: `${appUrl}/orders`,
+    returnUrl: `${appUrl}/orders`,
+    items: validItems.map((item) => ({
+      name: item.product_name.slice(0, 50),
+      quantity: item.quantity,
+      price: item.price,
+    })),
+    buyerName: input.customerName.trim(),
+    buyerPhone: input.customerPhone.trim(),
+    buyerAddress: input.customerAddress.trim(),
+  });
 }
 
 export async function createOrderAction(input: CheckoutInput): Promise<CheckoutResult> {
@@ -95,18 +122,21 @@ export async function createOrderAction(input: CheckoutInput): Promise<CheckoutR
 
   const validItems = orderItems as ValidatedOrderItem[];
   const totalAmount = validItems.reduce((total, item) => total + item.price * item.quantity, 0);
-  const orderCode = createOrderCode();
+  const { orderCode, numericCode } = generateOrderCode();
+  const paymentMethod: PaymentMethod = input.paymentMethod === 'payos' ? 'payos' : 'cod';
+
   const { data: order, error: orderError } = await supabaseAdmin.from('orders').insert({
     order_code: orderCode,
     customer_name: input.customerName.trim(),
     customer_phone: input.customerPhone.trim(),
     customer_address: input.customerAddress.trim(),
     total_amount: totalAmount,
-    payment_method: 'cod',
+    payment_method: paymentMethod,
     notes: input.notes?.trim() || null,
   }).select('id').single();
 
   if (orderError || !order) return { success: false, error: 'Không thể tạo đơn hàng lúc này.' };
+
   const { error: itemError } = await supabaseAdmin.from('order_items').insert(
     validItems.map((item) => ({ ...item, order_id: order.id }))
   );
@@ -117,5 +147,35 @@ export async function createOrderAction(input: CheckoutInput): Promise<CheckoutR
 
   revalidatePath('/admin/orders');
   revalidatePath('/admin');
-  return { success: true, orderCode, totalAmount };
+
+  if (paymentMethod === 'payos') {
+    try {
+      const payosResponse = await createPayOSLink(numericCode, totalAmount, validItems, input);
+      return {
+        success: true,
+        orderCode,
+        totalAmount,
+        paymentMethod: 'payos',
+        payos: {
+          checkoutUrl: payosResponse.checkoutUrl,
+          qrCode: payosResponse.qrCode,
+          accountNumber: payosResponse.accountNumber,
+          accountName: payosResponse.accountName,
+          bin: payosResponse.bin,
+          numericOrderCode: payosResponse.orderCode,
+          amount: payosResponse.amount,
+          description: payosResponse.description,
+        },
+      };
+    } catch (payosError: any) {
+      console.error('Lỗi khi tạo payment link PayOS:', payosError);
+      return {
+        success: false,
+        error: `Tạo đơn thành công nhưng không thể kết nối PayOS: ${payosError?.message || 'Lỗi kết nối'}`,
+      };
+    }
+  }
+
+  return { success: true, orderCode, totalAmount, paymentMethod: 'cod' };
 }
+

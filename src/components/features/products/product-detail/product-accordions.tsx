@@ -53,6 +53,9 @@ export function ProductAccordions({ product, activeId: externalActiveId }: Produ
         if (nameLower.includes('pre') || nameLower.includes('c4') || nameLower.includes('pump')) {
           return FAQ_PRESETS.find((p) => p.id === 'preworkout')?.items || [];
         }
+        if (nameLower.includes('eaa') || nameLower.includes('bcaa') || nameLower.includes('amino')) {
+          return FAQ_PRESETS.find((p) => p.id === 'eaa_bcaa')?.items || [];
+        }
         return FAQ_PRESETS.find((p) => p.id === 'whey')?.items || [];
       })();
 

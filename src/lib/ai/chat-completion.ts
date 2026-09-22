@@ -1,6 +1,5 @@
 import { AI_CONFIG, AIMessage, AIToolCall, ChatOptions } from './config';
-import { contentText, mergeToolCalls, mistralChunkSchema } from './mistral-protocol';
-import { requestAIStream } from './provider-stream';
+import { contentText, mergeToolCalls, mistralChunkSchema, requestMistralStream } from './mistral-protocol';
 import { readSSEData } from './sse';
 import { executeAITool } from './tools';
 
@@ -41,7 +40,7 @@ export async function* generateChatCompletion(options: ChatOptions): AsyncGenera
   for (let step = 0; step <= AI_CONFIG.MAX_TOOL_ROUNDS; step++) {
     signal.throwIfAborted();
     const toolsEnabled = options.enableTools !== false && step < AI_CONFIG.MAX_TOOL_ROUNDS;
-    const body = await requestAIStream({ ...options, signal }, messages, toolsEnabled);
+    const body = await requestMistralStream({ ...options, signal }, messages, toolsEnabled);
     const round: CompletionRound = { content: '', calls: new Map(), finish: null };
     yield* readRound(body, round);
     if (round.calls.size === 0) {

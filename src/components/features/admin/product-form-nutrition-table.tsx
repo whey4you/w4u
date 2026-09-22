@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Plus, Trash2, Calculator, RefreshCw, Sparkles } from 'lucide-react';
+import { Plus, Trash2, Calculator, RefreshCw, Sparkles, ArrowUpCircle } from 'lucide-react';
 import { NutritionTableRow } from '@/types/product';
 import {
   calculatePer100g,
@@ -16,6 +16,7 @@ interface ProductFormNutritionTableProps {
   bcaa?: string;
   calories?: string;
   sugar?: string;
+  onSyncToMetrics?: () => void;
 }
 
 const COMMON_SCOOPS = ['30', '33', '35', '25', '5'];
@@ -27,6 +28,7 @@ export function ProductFormNutritionTable({
   bcaa,
   calories,
   sugar,
+  onSyncToMetrics,
 }: ProductFormNutritionTableProps) {
   const [scoopWeight, setScoopWeight] = useState('30');
   const [autoCalc, setAutoCalc] = useState(true);
@@ -112,6 +114,17 @@ export function ProductFormNutritionTable({
         </div>
 
         <div className="flex items-center gap-1.5">
+          {onSyncToMetrics && (
+            <button
+              type="button"
+              onClick={onSyncToMetrics}
+              className="inline-flex items-center gap-1 rounded-lg bg-emerald-50 px-2 py-1 text-xs font-semibold text-emerald-700 hover:bg-emerald-100 border border-emerald-200/60 transition-colors shadow-2xs"
+              title="Trích xuất các chỉ số Protein, BCAA, Calo, Đường, Lần dùng từ bảng chi tiết lên 5 thông số nổi bật phía trên"
+            >
+              <ArrowUpCircle className="h-3.5 w-3.5 text-emerald-600" />
+              Lấy Lên 5 Chỉ Số
+            </button>
+          )}
           <button
             type="button"
             onClick={handleSyncFromMetrics}
