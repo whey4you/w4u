@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getPayOS, isPayOSConfigured } from '@/lib/payos';
-import { supabaseAdmin, isSupabaseAdminConfigured } from '@/lib/supabase/server';
+import { isSupabaseAdminConfigured } from '@/lib/supabase/server';
+import { commitPaidOrder } from '@/services/checkout-committer.service';
 
 export async function POST(req: NextRequest) {
   if (!isPayOSConfigured || !isSupabaseAdminConfigured) {
@@ -25,38 +26,11 @@ export async function POST(req: NextRequest) {
 
     // code === '00' biểu thị giao dịch thanh toán thành công
     if (code === '00') {
-      const orderSearchCode = `W4U-${orderCode}`;
-
-      // Tìm đơn hàng tương ứng theo order_code
-      const { data: order, error: findError } = await supabaseAdmin
-        .from('orders')
-        .select('id, status, notes')
-        .eq('order_code', orderSearchCode)
-        .maybeSingle();
-
-      if (findError) {
-        console.error('[PayOS Webhook] Lỗi truy vấn đơn hàng:', findError);
-      }
-
-      if (order && order.status === 'pending') {
-        const updatedNotes = order.notes
-          ? `${order.notes} | [PayOS: Đã nhận thanh toán qua VietQR lúc ${new Date().toLocaleString('vi-VN')}]`
-          : `[PayOS: Đã nhận thanh toán qua VietQR lúc ${new Date().toLocaleString('vi-VN')}]`;
-
-        const { error: updateError } = await supabaseAdmin
-          .from('orders')
-          .update({
-            status: 'processing',
-            notes: updatedNotes,
-            updated_at: new Date().toISOString(),
-          })
-          .eq('id', order.id);
-
-        if (updateError) {
-          console.error('[PayOS Webhook] Lỗi cập nhật trạng thái đơn:', updateError);
-        } else {
-          console.log(`[PayOS Webhook] Đơn hàng ${orderSearchCode} đã chuyển sang "processing"`);
-        }
+      const commitRes = await commitPaidOrder(orderCode);
+      if (!commitRes.success) {
+        console.error('[PayOS Webhook] Lỗi lưu đơn hàng:', commitRes.error);
+      } else {
+        console.log(`[PayOS Webhook] Đơn hàng W4U-${orderCode} đã được lưu chính thức vào orders và kích hoạt AllinGo!`);
       }
     }
 

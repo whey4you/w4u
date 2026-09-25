@@ -42,6 +42,7 @@ export function BlogSidebarCommerce({ productIds = [] }: BlogSidebarCommerceProp
       price: p.price,
       flavor: p.flavors?.[0] || { id: 'std', name: 'Tiêu Chuẩn', colorHex: '#0071e3' },
       image: p.defaultImage,
+      weightKg: p.weightKg || 1.0,
     });
     setAddedId(p.id);
     setTimeout(() => setAddedId(null), 1500);

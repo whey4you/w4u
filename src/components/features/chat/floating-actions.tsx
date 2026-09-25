@@ -51,7 +51,7 @@ export function FloatingActions() {
       {/* 3 Floating Bubble Buttons: Hidden when chat window is open */}
       {!isChatOpen && (
         <div
-          className={`fixed right-3 sm:right-5 z-40 flex flex-col items-end gap-2 transition-all duration-300 ${
+          className={`fixed right-3 sm:right-5 z-40 flex flex-col items-end gap-2 transition-all duration-300 print:hidden ${
             hasStickyBar ? 'bottom-[4.75rem] lg:bottom-6' : 'bottom-4 sm:bottom-5 lg:bottom-6'
           }`}
         >

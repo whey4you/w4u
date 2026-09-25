@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { Inter, Lora } from 'next/font/google';
+import { Inter, Lora, IBM_Plex_Sans } from 'next/font/google';
 import './globals.css';
 import { CartProvider } from '@/context/cart-context';
 import { StoreShell } from '@/components/layout/store-shell';
@@ -13,6 +13,13 @@ const inter = Inter({
 const lora = Lora({
   subsets: ['latin', 'vietnamese'],
   variable: '--font-serif',
+  display: 'swap',
+});
+
+const ibmPlexSans = IBM_Plex_Sans({
+  subsets: ['latin', 'vietnamese'],
+  weight: ['400', '500', '600', '700'],
+  variable: '--font-invoice',
   display: 'swap',
 });
 
@@ -32,7 +39,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="vi" className={`${inter.variable} ${lora.variable}`}>
+    <html lang="vi" className={`${inter.variable} ${lora.variable} ${ibmPlexSans.variable}`}>
       <body className="min-h-screen flex flex-col font-sans bg-apple-canvas text-apple-dark antialiased">
         <CartProvider>
           <StoreShell>{children}</StoreShell>

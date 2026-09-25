@@ -1,7 +1,11 @@
 'use client';
 
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { CartItem } from '@/types/product';
+import { AppliedCoupon } from '@/types/coupon';
+
+const CART_STORAGE_KEY = 'whey4you_cart_v1';
+const COUPON_STORAGE_KEY = 'whey4you_applied_coupon_v1';
 
 interface CartContextType {
   items: CartItem[];
@@ -14,6 +18,11 @@ interface CartContextType {
   updateQuantity: (productId: string, flavorId: string, sizeId: string | undefined, delta: number) => void;
   totalItems: number;
   totalAmount: number;
+  appliedCoupon: AppliedCoupon | null;
+  applyCoupon: (coupon: AppliedCoupon) => void;
+  removeCoupon: () => void;
+  discountAmount: number;
+  finalTotal: number;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -26,7 +35,44 @@ function isSameCartLine(item: CartItem, productId: string, flavorId: string, siz
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
+  const [appliedCoupon, setAppliedCoupon] = useState<AppliedCoupon | null>(null);
   const [isOpen, setIsOpen] = useState(false);
+  const isHydrated = useRef(false);
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem(CART_STORAGE_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed)) {
+          setItems(parsed);
+        }
+      }
+      const storedCoupon = localStorage.getItem(COUPON_STORAGE_KEY);
+      if (storedCoupon) {
+        setAppliedCoupon(JSON.parse(storedCoupon));
+      }
+    } catch (err) {
+      console.error('Lỗi khi đọc giỏ hàng:', err);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!isHydrated.current) {
+      isHydrated.current = true;
+      return;
+    }
+    try {
+      localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items));
+      if (appliedCoupon) {
+        localStorage.setItem(COUPON_STORAGE_KEY, JSON.stringify(appliedCoupon));
+      } else {
+        localStorage.removeItem(COUPON_STORAGE_KEY);
+      }
+    } catch (err) {
+      console.error('Lỗi khi lưu giỏ hàng:', err);
+    }
+  }, [items, appliedCoupon]);
 
   const addItem = (newItem: Omit<CartItem, 'quantity'>, quantity = 1) => {
     setItems((prev) => {
@@ -78,6 +124,29 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
   const totalAmount = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
+  // Tính lại tiền giảm giá theo giá trị giỏ hàng thực tế
+  let discountAmount = 0;
+  if (appliedCoupon && totalAmount >= (appliedCoupon.minOrderValue || 0)) {
+    if (appliedCoupon.discountType === 'fixed') {
+      discountAmount = Math.min(appliedCoupon.discountValue, totalAmount);
+    } else if (appliedCoupon.discountType === 'percent') {
+      const raw = (totalAmount * appliedCoupon.discountValue) / 100;
+      if (appliedCoupon.maxDiscountAmount && appliedCoupon.maxDiscountAmount > 0) {
+        discountAmount = Math.min(raw, appliedCoupon.maxDiscountAmount);
+      } else {
+        discountAmount = raw;
+      }
+    }
+    discountAmount = Math.max(0, Math.min(Math.round(discountAmount), totalAmount));
+  }
+
+  const finalTotal = Math.max(0, totalAmount - discountAmount);
+
+  const clearCart = () => {
+    setItems([]);
+    setAppliedCoupon(null);
+  };
+
   return (
     <CartContext.Provider
       value={{
@@ -85,12 +154,17 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         isOpen,
         openCart: () => setIsOpen(true),
         closeCart: () => setIsOpen(false),
-        clearCart: () => setItems([]),
+        clearCart,
         addItem,
         removeItem,
         updateQuantity,
         totalItems,
         totalAmount,
+        appliedCoupon,
+        applyCoupon: (coupon: AppliedCoupon) => setAppliedCoupon(coupon),
+        removeCoupon: () => setAppliedCoupon(null),
+        discountAmount,
+        finalTotal,
       }}
     >
       {children}

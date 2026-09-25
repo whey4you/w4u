@@ -5,6 +5,7 @@ import { Check, X, Scale } from 'lucide-react';
 import { ProductSize, ProductFlavor, ProductSizeFlavorPrice } from '@/types/product';
 import { PriceInput } from '@/components/ui/price-input';
 import { ProductSizeFlavorPrices } from './product-size-flavor-prices';
+import { parseWeightKgFromText } from '@/lib/weight-helper';
 
 interface ProductSizeEditInlineProps {
   size: ProductSize;
@@ -16,6 +17,9 @@ interface ProductSizeEditInlineProps {
 export function ProductSizeEditInline({ size, flavors = [], onSave, onCancel }: ProductSizeEditInlineProps) {
   const [sizeName, setSizeName] = useState(size.name);
   const [servings, setServings] = useState(String(size.servings));
+  const [weightKg, setWeightKg] = useState(
+    size.weightKg !== undefined && size.weightKg !== null ? String(size.weightKg) : '1.0'
+  );
   const [price, setPrice] = useState(String(size.price));
   const [originalPrice, setOriginalPrice] = useState(
     size.originalPrice ? String(size.originalPrice) : ''
@@ -23,6 +27,14 @@ export function ProductSizeEditInline({ size, flavors = [], onSave, onCancel }: 
   const [flavorPrices, setFlavorPrices] = useState<Record<string, ProductSizeFlavorPrice>>(
     size.flavorPrices || {}
   );
+
+  const handleSizeNameChange = (val: string) => {
+    setSizeName(val);
+    const detected = parseWeightKgFromText(val);
+    if (detected !== null) {
+      setWeightKg(String(detected));
+    }
+  };
 
   const handleSave = () => {
     if (!sizeName.trim() || !price) {
@@ -34,6 +46,7 @@ export function ProductSizeEditInline({ size, flavors = [], onSave, onCancel }: 
       ...size,
       name: sizeName.trim(),
       servings: Number(servings) || size.servings,
+      weightKg: Number(weightKg) > 0 ? Number(weightKg) : 1.0,
       price: Number(price),
       originalPrice: originalPrice ? Number(originalPrice) : undefined,
       flavorPrices: Object.keys(flavorPrices).length > 0 ? flavorPrices : undefined,
@@ -57,17 +70,31 @@ export function ProductSizeEditInline({ size, flavors = [], onSave, onCancel }: 
         </button>
       </div>
 
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
         <div>
           <label className="block text-[11px] font-semibold text-slate-600 mb-1">
-            Tên Kích Cỡ / Trọng Lượng
+            Tên Kích Cỡ / Quy Cách *
           </label>
           <input
             type="text"
             value={sizeName}
-            onChange={(e) => setSizeName(e.target.value)}
-            placeholder="VD: 5lbs (2.27kg)"
+            onChange={(e) => handleSizeNameChange(e.target.value)}
+            placeholder="VD: 2,56kg, 5lbs hoặc 60 viên"
             className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-900 text-xs font-medium focus:border-blue-500"
+          />
+        </div>
+        <div>
+          <label className="block text-[11px] font-semibold text-slate-600 mb-1">
+            Khối Lượng Đóng Gói (kg) *
+          </label>
+          <input
+            type="number"
+            step="0.05"
+            min="0.05"
+            value={weightKg}
+            onChange={(e) => setWeightKg(e.target.value)}
+            placeholder="VD: 2.3"
+            className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-900 text-xs font-semibold text-blue-600 focus:border-blue-500"
           />
         </div>
         <div>

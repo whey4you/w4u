@@ -1,6 +1,6 @@
 import { supabase } from '@/lib/supabase/client';
 import { Product } from '@/types/product';
-import { slugify } from '@/lib/utils';
+import { slugify, parseWeightKg } from '@/lib/utils';
 
 function getPrimaryPrice(payload: Partial<Product>) {
   const primarySize = payload.sizes?.[0];
@@ -67,12 +67,17 @@ async function syncProductDetails(id: string, payload: Partial<Product>) {
         flavor_prices: size.flavorPrices || {},
         in_stock: size.inStock !== false,
         sort_order: index,
+        weight_kg: Number(size.weightKg) > 0 ? Number(size.weightKg) : parseWeightKg(size.name, 1.0),
       }));
 
-      const { error } = await supabase.from('product_sizes').insert(records);
+      let { error } = await supabase.from('product_sizes').insert(records);
+      if (error && error.message?.includes('weight_kg')) {
+        const legacy = records.map(({ weight_kg, ...rest }) => rest);
+        const retry = await supabase.from('product_sizes').insert(legacy);
+        error = retry.error;
+      }
       if (error && error.message?.includes('flavor_prices')) {
-        // Fallback cho schema cũ nếu chưa có cột flavor_prices
-        const legacyRecords = records.map(({ flavor_prices, ...rest }) => rest);
+        const legacyRecords = records.map(({ flavor_prices, weight_kg, ...rest }) => rest);
         await supabase.from('product_sizes').insert(legacyRecords);
       }
     }
@@ -94,7 +99,7 @@ export async function toggleProductStock(id: string, inStock: boolean): Promise<
 export async function updateProduct(id: string, payload: Partial<Product>): Promise<boolean> {
   try {
     const pricing = getPrimaryPrice(payload);
-    const { error } = await supabase.from('products').update({
+    const updateData: Record<string, any> = {
       name: payload.name,
       brand: payload.brand,
       category: payload.category,
@@ -102,6 +107,7 @@ export async function updateProduct(id: string, payload: Partial<Product>): Prom
       original_price: pricing.originalPrice,
       discount_percent: pricing.discountPercent,
       badge: payload.badge,
+      weight_kg: Number(payload.weightKg) > 0 ? Number(payload.weightKg) : 1.0,
       default_image: payload.defaultImage,
       images: payload.images || [],
       slug: payload.slug || (payload.name ? slugify(payload.name) : undefined),
@@ -109,7 +115,14 @@ export async function updateProduct(id: string, payload: Partial<Product>): Prom
       how_to_use: payload.howToUse,
       faq: payload.faq || [],
       updated_at: new Date().toISOString(),
-    }).eq('id', id);
+    };
+
+    let { error } = await supabase.from('products').update(updateData).eq('id', id);
+    if (error && error.message?.includes('weight_kg')) {
+      delete updateData.weight_kg;
+      const retry = await supabase.from('products').update(updateData).eq('id', id);
+      error = retry.error;
+    }
 
     if (error) return false;
     await syncProductDetails(id, payload);
@@ -125,7 +138,7 @@ export async function createProduct(payload: Partial<Product>): Promise<boolean>
     const id = payload.id || `prod-${Date.now()}`;
     const slug = payload.slug || (payload.name ? slugify(payload.name) : id);
     const pricing = getPrimaryPrice(payload);
-    const { error } = await supabase.from('products').insert({
+    const insertData: Record<string, any> = {
       id,
       name: payload.name,
       brand: payload.brand,
@@ -133,6 +146,7 @@ export async function createProduct(payload: Partial<Product>): Promise<boolean>
       price: pricing.price || 0,
       original_price: pricing.originalPrice || null,
       discount_percent: pricing.discountPercent,
+      weight_kg: Number(payload.weightKg) > 0 ? Number(payload.weightKg) : 1.0,
       default_image: payload.defaultImage || '/products/r1-protein.jpg',
       images: payload.images || [],
       badge: payload.badge || null,
@@ -141,7 +155,14 @@ export async function createProduct(payload: Partial<Product>): Promise<boolean>
       how_to_use: payload.howToUse || '',
       faq: payload.faq || [],
       in_stock: true,
-    });
+    };
+
+    let { error } = await supabase.from('products').insert(insertData);
+    if (error && error.message?.includes('weight_kg')) {
+      delete insertData.weight_kg;
+      const retry = await supabase.from('products').insert(insertData);
+      error = retry.error;
+    }
 
     if (error) return false;
     await syncProductDetails(id, payload);

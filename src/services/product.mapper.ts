@@ -1,4 +1,5 @@
 import { Product, ProductSize, WorkoutGoal, NutritionTableRow, ProductFAQ, MacroNutrients } from '@/types/product';
+import { parseWeightKg } from '@/lib/utils';
 
 interface RawProductMacro {
   protein: string;
@@ -27,6 +28,7 @@ export interface RawProductRow {
   rating: number;
   review_count: number;
   badge?: string;
+  weight_kg?: number;
   default_image: string;
   images?: string[];
   in_stock: boolean;
@@ -51,6 +53,7 @@ export interface RawProductRow {
     flavor_prices?: Record<string, { price: number; originalPrice?: number }>;
     in_stock?: boolean;
     sort_order?: number;
+    weight_kg?: number;
   }[];
 }
 
@@ -113,6 +116,9 @@ export function mapRowToProduct(row: RawProductRow): Product {
       flavorPrices: size.flavor_prices || undefined,
       inStock: size.in_stock !== false,
       sortOrder: size.sort_order !== undefined ? Number(size.sort_order) : index,
+      weightKg: size.weight_kg !== undefined && size.weight_kg !== null && Number(size.weight_kg) > 0
+        ? Number(size.weight_kg)
+        : parseWeightKg(size.name, 1.0),
     }))
     .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
   const goals = (row.product_goals || []).map(({ goal }) => goal).filter(isWorkoutGoal);
@@ -141,5 +147,8 @@ export function mapRowToProduct(row: RawProductRow): Product {
     sizes: sizes.length > 0 ? sizes : undefined,
     goals: goals.length > 0 ? goals : ['lean-muscle'],
     faq: Array.isArray(row.faq) ? row.faq : [],
+    weightKg: row.weight_kg !== undefined && row.weight_kg !== null && Number(row.weight_kg) > 0
+      ? Number(row.weight_kg)
+      : parseWeightKg(row.name, sizes[0]?.weightKg ?? 1.0),
   };
 }

@@ -112,3 +112,45 @@ img.object-cover {
   transform: translateZ(0);
 }
 
+/* Print optimization for high-fidelity invoices & receipts */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 12mm 14mm;
+  }
+
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    font-size: 10px !important;
+  }
+
+  /* Ẩn triệt để toàn bộ trang web khi in hóa đơn từ Modal */
+  body:has(#order-invoice-portal-root) > *:not(#order-invoice-portal-root),
+  body.printing-invoice > *:not(#order-invoice-portal-root) {
+    display: none !important;
+  }
+
+  #order-invoice-portal-root {
+    position: static !important;
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: transparent !important;
+  }
+
+  /* Đảm bảo bill fit 1 trang A4 */
+  .receipt-root,
+  [class*="rounded-2xl"],
+  [class*="shadow-lg"] {
+    box-shadow: none !important;
+    border-radius: 0 !important;
+  }
+}
+
+
+

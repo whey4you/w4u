@@ -86,6 +86,9 @@ export function ProductSizeItem({
                 <span>{customFlavorCount} vị có giá riêng</span>
               </span>
             )}
+            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-blue-700 bg-blue-100/80 px-2 py-0.5 rounded-full">
+              <span>⚖️ {size.weightKg ? `${size.weightKg}kg` : '1.0kg'}</span>
+            </span>
           </div>
 
           <p className="text-[11px] text-slate-500 font-medium mt-0.5">

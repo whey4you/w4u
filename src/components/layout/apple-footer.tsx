@@ -4,7 +4,7 @@ import { Container } from '@/components/ui/container';
 
 export function AppleFooter() {
   return (
-    <footer className="bg-apple-canvas text-apple-subhead text-[11px] border-t border-black/[0.08] pt-6 sm:pt-8 lg:pt-10 pb-16 lg:pb-12">
+    <footer className="bg-apple-canvas text-apple-subhead text-[11px] border-t border-black/[0.08] pt-6 sm:pt-8 lg:pt-10 pb-16 lg:pb-12 print:hidden">
       <Container className="space-y-6">
         {/* Footnotes / Disclaimers */}
         <div className="space-y-2 border-b border-black/[0.08] pb-6 leading-relaxed">
@@ -54,7 +54,7 @@ export function AppleFooter() {
               <li>Kênh hỗ trợ: <a href="https://zalo.me/g/hqwqsqcnpgik9n3zo0nk" target="_blank" rel="noopener noreferrer" className="text-apple-blue hover:underline">Cộng đồng Zalo Whey4You</a></li>
               <li>Fanpage: <a href="https://www.facebook.com/people/Whey4You/61563177707517/" target="_blank" rel="noopener noreferrer" className="text-apple-blue hover:underline">Whey4You Official</a></li>
               <li>Trợ lý AI: <span className="text-apple-dark">Tư vấn dinh dưỡng 24/7</span></li>
-              <li>Giao hàng toàn quốc: <Link href="/orders" className="text-apple-blue hover:underline">Tra cứu SPX / Đơn hàng</Link></li>
+              <li>Giao hàng toàn quốc: <Link href="/orders" className="text-apple-blue hover:underline">Tra cứu vận đơn / Đơn hàng</Link></li>
             </ul>
           </div>
         </div>

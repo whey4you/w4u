@@ -74,6 +74,7 @@ export function BlogMobileBottomBar({ productId }: BlogMobileBottomBarProps) {
       price: product.price,
       flavor: product.flavors?.[0] || { id: 'std', name: 'Tiêu Chuẩn', colorHex: '#0071e3' },
       image: product.defaultImage,
+      weightKg: product.weightKg || 1.0,
     });
     setIsAdded(true);
     setTimeout(() => setIsAdded(false), 1800);

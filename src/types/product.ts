@@ -49,6 +49,7 @@ export interface ProductSize {
   flavorPrices?: Record<string, ProductSizeFlavorPrice>;
   inStock?: boolean;
   sortOrder?: number;
+  weightKg?: number;
 }
 
 export interface ProductFAQ {
@@ -79,6 +80,7 @@ export interface Product {
   description?: string;
   howToUse?: string;
   faq?: ProductFAQ[];
+  weightKg?: number;
 }
 
 export interface CartItem {
@@ -90,6 +92,7 @@ export interface CartItem {
   size?: ProductSize;
   quantity: number;
   image: string;
+  weightKg?: number;
 }
 
 export type ProductSortOption = 'price-asc' | 'price-desc';

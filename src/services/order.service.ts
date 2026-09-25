@@ -18,13 +18,30 @@ export interface Order {
   order_code: string;
   customer_name: string;
   customer_phone: string;
+  customer_email?: string;
   customer_address: string;
   total_amount: number;
   status: OrderStatus;
   payment_method?: string;
   notes?: string;
   created_at: string;
+  deposit_amount?: number;
+  cod_remaining?: number;
+  tracking_code?: string;
+  carrier_name?: string;
+  allingo_order_id?: string;
+  allingo_track_id?: string;
+  tracking_url?: string;
+  shipping_fee?: number;
+  coupon_code?: string;
+  discount_amount?: number;
   order_items?: OrderItem[];
+  province_code?: string;
+  district_code?: string;
+  ward_code?: string;
+  city_id?: string;
+  district_id?: string;
+  ward_id?: string;
 }
 
 export async function getAdminOrders(): Promise<Order[]> {
@@ -94,10 +111,11 @@ export async function getOrderByCodeOrPhone(query: string): Promise<Order | null
     const { data, error } = await supabase
       .from('orders')
       .select('*, order_items(*)')
-      .or(`order_code.ilike.%${clean}%,customer_phone.eq.${clean}`)
+      .or(`order_code.ilike.%${clean}%,customer_phone.eq.${clean},customer_email.eq.${clean},tracking_code.eq.${clean},allingo_track_id.eq.${clean}`)
       .order('created_at', { ascending: false })
       .limit(1)
       .maybeSingle();
+
 
     if (error || !data) return null;
     return data as Order;

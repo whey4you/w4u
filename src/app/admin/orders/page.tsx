@@ -2,11 +2,15 @@ import React from 'react';
 import { AdminHeader } from '@/components/features/admin/admin-header';
 import { OrderManager } from '@/components/features/admin/order-manager';
 import { getAdminOrders } from '@/services/order.service';
+import { getAdminProducts } from '@/services/product.service';
 
 export const revalidate = 0;
 
 export default async function AdminOrdersPage() {
-  const orders = await getAdminOrders();
+  const [orders, products] = await Promise.all([
+    getAdminOrders(),
+    getAdminProducts(),
+  ]);
 
   return (
     <div className="flex-1 flex flex-col">
@@ -16,7 +20,7 @@ export default async function AdminOrdersPage() {
       />
 
       <main className="p-8 max-w-7xl w-full mx-auto">
-        <OrderManager initialOrders={orders} />
+        <OrderManager initialOrders={orders} products={products} />
       </main>
     </div>
   );

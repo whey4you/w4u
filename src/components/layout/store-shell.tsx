@@ -14,8 +14,9 @@ interface StoreShellProps {
 export function StoreShell({ children }: StoreShellProps) {
   const pathname = usePathname();
   const isAdminRoute = pathname?.startsWith('/admin');
+  const isCheckoutRoute = pathname === '/checkout';
 
-  if (isAdminRoute) {
+  if (isAdminRoute || isCheckoutRoute) {
     return <main className="min-h-screen w-full">{children}</main>;
   }
 

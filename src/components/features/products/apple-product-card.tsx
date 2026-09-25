@@ -64,6 +64,7 @@ export function AppleProductCard({ product }: AppleProductCardProps) {
       flavor: selectedFlavor,
       size: selectedSize,
       image: selectedFlavor.image || product.defaultImage,
+      weightKg: selectedSize?.weightKg ?? product.weightKg ?? 1.0,
     });
     setIsAdded(true);
     setTimeout(() => setIsAdded(false), 1500);

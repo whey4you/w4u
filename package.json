@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "tunnel": "cloudflared tunnel --url http://localhost:3000",
     "test:chat": "vitest run"
   },
   "dependencies": {
@@ -15,6 +16,7 @@
     "clsx": "^2.1.1",
     "lucide-react": "^0.475.0",
     "next": "^15.1.7",
+    "nodemailer": "^10.0.10",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-markdown": "^10.1.0",
@@ -26,6 +28,7 @@
   },
   "devDependencies": {
     "@types/node": "^22.13.4",
+    "@types/nodemailer": "^8.0.2",
     "@types/react": "^19.0.10",
     "@types/react-dom": "^19.0.4",
     "autoprefixer": "^10.4.20",

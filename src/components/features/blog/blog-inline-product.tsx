@@ -51,6 +51,7 @@ export function BlogInlineProduct({ productId }: BlogInlineProductProps) {
       price: product.price,
       flavor: activeFlavor,
       image: activeFlavor.image || product.defaultImage,
+      weightKg: product.weightKg || 1.0,
     });
     setIsAdded(true);
     setTimeout(() => setIsAdded(false), 1800);

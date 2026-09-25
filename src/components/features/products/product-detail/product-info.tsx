@@ -41,6 +41,7 @@ export function ProductInfo({
       flavor: selectedFlavor,
       size: selectedSize,
       image: selectedFlavor.image || product.defaultImage,
+      weightKg: selectedSize?.weightKg ?? product.weightKg ?? 1.0,
     }, quantity);
     setAdded(true);
     window.setTimeout(() => setAdded(false), 1500);

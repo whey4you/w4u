@@ -25,7 +25,7 @@ export function AppleNav() {
 
   return (
     <>
-      <nav className="sticky top-0 z-40 h-16 bg-white/90 backdrop-blur-xl border-b border-black/[0.08] transition-all">
+      <nav className="sticky top-0 z-40 h-16 bg-white/90 backdrop-blur-xl border-b border-black/[0.08] transition-all print:hidden">
         <Container className="h-full flex items-center justify-between">
           {/* Brand Logo */}
           <Link href="/" className="flex items-center flex-shrink-0">
