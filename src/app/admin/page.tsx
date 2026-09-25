@@ -5,15 +5,15 @@ import { AdminHeader } from '@/components/features/admin/admin-header';
 import { DashboardStats } from '@/components/features/admin/dashboard-stats';
 import { RecentOrdersCard } from '@/components/features/admin/recent-orders-card';
 import { getAdminProducts } from '@/services/product.service';
-import { getAdminOrders, getOrderStats } from '@/services/order.service';
+import { getAdminOrdersAction, getAdminOrderStatsAction } from '@/app/actions/admin-order.actions';
 
 export const revalidate = 0;
 
 export default async function AdminDashboardPage() {
   const [products, orders, stats] = await Promise.all([
     getAdminProducts(),
-    getAdminOrders(),
-    getOrderStats(),
+    getAdminOrdersAction(),
+    getAdminOrderStatsAction(),
   ]);
 
   const outOfStockCount = products.filter((p) => !p.inStock).length;

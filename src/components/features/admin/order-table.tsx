@@ -2,7 +2,8 @@
 
 import React, { useState } from 'react';
 import { Eye, Clock, Edit3, Trash2 } from 'lucide-react';
-import { Order, OrderStatus, updateOrderStatus } from '@/services/order.service';
+import { Order, OrderStatus } from '@/services/order.service';
+import { updateAdminOrderStatusAction } from '@/app/actions/admin-order.actions';
 import { formatPrice } from '@/lib/utils';
 import { OrderDetailModal } from './order-detail-modal';
 
@@ -27,7 +28,7 @@ export function OrderTable({ orders, onRefresh, onEditOrder, onDeleteOrder }: Or
 
   const handleStatusChange = async (orderId: string, newStatus: OrderStatus) => {
     setUpdatingId(orderId);
-    const ok = await updateOrderStatus(orderId, newStatus);
+    const ok = await updateAdminOrderStatusAction(orderId, newStatus);
     setUpdatingId(null);
     if (ok) {
       onRefresh();

@@ -46,7 +46,7 @@ export function AIBlogGeneratorModal({
     setError(null);
 
     try {
-      const res = await fetch('/api/ai/blog/generate', {
+      const res = await fetch('/api/admin/ai/blog', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

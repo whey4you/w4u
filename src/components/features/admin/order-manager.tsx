@@ -2,7 +2,8 @@
 
 import React, { useState } from 'react';
 import { Search, RefreshCw, Plus } from 'lucide-react';
-import { Order, getAdminOrders } from '@/services/order.service';
+import { Order } from '@/services/order.service';
+import { getAdminOrdersAction } from '@/app/actions/admin-order.actions';
 import { Product } from '@/types/product';
 import { OrderTable } from './order-table';
 import { OrderCreateModal } from './order-create-modal';
@@ -34,7 +35,7 @@ export function OrderManager({ initialOrders, products = [] }: OrderManagerProps
 
   const refreshData = async () => {
     setRefreshing(true);
-    const updated = await getAdminOrders();
+    const updated = await getAdminOrdersAction();
     setOrders(updated);
     setEditingOrder((prev) => {
       if (!prev) return null;

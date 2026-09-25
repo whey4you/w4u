@@ -1,5 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { SPXTrackingResult, SPXStatusCategory, SPXTrackingRecord } from '@/types/spx';
+import { checkRateLimit, getClientIp } from '@/lib/security/rate-limiter';
+
+interface CacheEntry {
+  data: SPXTrackingResult;
+  expiresAt: number;
+}
+const spxCache = new Map<string, CacheEntry>();
+const CACHE_TTL_MS = 5 * 60 * 1000; // 5 phút
 
 function resolveStatus(
   milestoneCode: number,
@@ -18,6 +26,23 @@ function resolveStatus(
 }
 
 export async function GET(request: NextRequest) {
+  // Giới hạn 12 lượt tra cứu / phút trên mỗi IP để bảo vệ IP máy chủ khỏi bị SPX chặn
+  const clientIp = getClientIp(request);
+  const rateLimit = checkRateLimit(`spx_lookup:${clientIp}`, 12, 60000);
+  if (!rateLimit.allowed) {
+    return NextResponse.json<SPXTrackingResult>(
+      {
+        success: false,
+        tracking_number: '',
+        status_category: 'unknown',
+        status_label: 'Vượt quá tần suất',
+        records: [],
+        error_message: 'Bạn đang tra cứu quá nhanh. Vui lòng thử lại sau 1 phút.',
+      },
+      { status: 429 }
+    );
+  }
+
   const { searchParams } = new URL(request.url);
   const rawTn = searchParams.get('spx_tn') || '';
   const cleanTn = rawTn.trim().toUpperCase();
@@ -34,6 +59,12 @@ export async function GET(request: NextRequest) {
       },
       { status: 400 }
     );
+  }
+
+  // Kiểm tra bộ đệm cache
+  const cached = spxCache.get(cleanTn);
+  if (cached && cached.expiresAt > Date.now()) {
+    return NextResponse.json<SPXTrackingResult>(cached.data);
   }
 
   try {
@@ -82,6 +113,7 @@ export async function GET(request: NextRequest) {
       records,
     };
 
+    spxCache.set(cleanTn, { data: result, expiresAt: Date.now() + CACHE_TTL_MS });
     return NextResponse.json<SPXTrackingResult>(result);
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Lỗi kết nối máy chủ';

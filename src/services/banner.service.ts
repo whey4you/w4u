@@ -1,5 +1,8 @@
 import { supabase, isSupabaseConfigured } from '@/lib/supabase/client';
+import { supabaseAdmin, isSupabaseAdminConfigured } from '@/lib/supabase/server';
 import { HeroBannerItem } from '@/config/hero-banners';
+
+const getDb = () => (isSupabaseAdminConfigured ? supabaseAdmin : supabase);
 
 interface HeroBannerRow {
   id: string;
@@ -47,9 +50,9 @@ export async function getHeroBanners(): Promise<HeroBannerItem[]> {
  * Xóa một Hero Banner trực tiếp trên Supabase theo ID
  */
 export async function deleteHeroBanner(id: string): Promise<boolean> {
-  if (!isSupabaseConfigured) return false;
+  if (!isSupabaseConfigured && !isSupabaseAdminConfigured) return false;
   try {
-    const { error } = await supabase.from('hero_banners').delete().eq('id', id);
+    const { error } = await getDb().from('hero_banners').delete().eq('id', id);
     if (error) throw error;
     return true;
   } catch (err) {
@@ -64,7 +67,7 @@ export async function deleteHeroBanner(id: string): Promise<boolean> {
  * - Xóa các banner đã bị loại khỏi danh sách
  */
 export async function saveHeroBanners(banners: HeroBannerItem[]): Promise<boolean> {
-  if (!isSupabaseConfigured) {
+  if (!isSupabaseConfigured && !isSupabaseAdminConfigured) {
     console.warn('[BannerService] Supabase chưa được cấu hình, không thể lưu banner');
     return false;
   }
@@ -72,7 +75,7 @@ export async function saveHeroBanners(banners: HeroBannerItem[]): Promise<boolea
   try {
     if (banners.length === 0) {
       // Nếu danh sách rỗng, xóa toàn bộ banner hiện có trong bảng
-      const { error: delAllErr } = await supabase
+      const { error: delAllErr } = await getDb()
         .from('hero_banners')
         .delete()
         .neq('id', '___NON_EXISTENT_ID___');
@@ -92,7 +95,7 @@ export async function saveHeroBanners(banners: HeroBannerItem[]): Promise<boolea
       updated_at: new Date().toISOString(),
     }));
 
-    const { error: upsertError } = await supabase
+    const { error: upsertError } = await getDb()
       .from('hero_banners')
       .upsert(rows, { onConflict: 'id' });
 
@@ -100,7 +103,7 @@ export async function saveHeroBanners(banners: HeroBannerItem[]): Promise<boolea
 
     // 2. Xóa banner không còn trong danh sách mới (cú pháp PostgREST in.(id1,id2))
     const keepIds = banners.map((b) => b.id);
-    const { error: deleteError } = await supabase
+    const { error: deleteError } = await getDb()
       .from('hero_banners')
       .delete()
       .not('id', 'in', `(${keepIds.join(',')})`);

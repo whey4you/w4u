@@ -1,14 +1,14 @@
 import React from 'react';
 import { AdminHeader } from '@/components/features/admin/admin-header';
 import { OrderManager } from '@/components/features/admin/order-manager';
-import { getAdminOrders } from '@/services/order.service';
+import { getAdminOrdersAction } from '@/app/actions/admin-order.actions';
 import { getAdminProducts } from '@/services/product.service';
 
 export const revalidate = 0;
 
 export default async function AdminOrdersPage() {
   const [orders, products] = await Promise.all([
-    getAdminOrders(),
+    getAdminOrdersAction(),
     getAdminProducts(),
   ]);
 

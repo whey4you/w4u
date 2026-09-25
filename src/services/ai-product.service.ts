@@ -35,7 +35,7 @@ export async function generateProductDetails(
   params: GenerateProductParams,
   signal?: AbortSignal
 ): Promise<GeneratedProductResponse> {
-  const res = await fetch('/api/ai/product/generate', {
+  const res = await fetch('/api/admin/ai/product', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(params),

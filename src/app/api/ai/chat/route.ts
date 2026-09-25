@@ -5,12 +5,13 @@ import { streamMistralChat } from '@/lib/ai/stream-client';
 import { buildConsultantSystemPrompt } from '@/lib/ai/prompts/consultant.prompt';
 import { getShopCatalogSummary } from '@/lib/ai/product-catalog';
 import { evaluateCustomerIntent } from '@/lib/ai/evaluator-agent';
+import { checkRateLimit, getClientIp } from '@/lib/security/rate-limiter';
 
 const requestSchema = z.object({
   messages: z.array(z.object({
     role: z.enum(['user', 'assistant']),
-    content: z.string().trim().min(1).max(12000),
-  })).min(1).max(24),
+    content: z.string().trim().min(1).max(800),
+  })).min(1).max(12),
   stream: z.boolean().optional(),
 }).refine((body) => body.messages.at(-1)?.role === 'user');
 
@@ -21,6 +22,18 @@ const complexityHints: Record<string, string> = {
 };
 
 export async function POST(req: NextRequest) {
+  // Chống Spam / DDoS: Giới hạn tối đa 10 câu hỏi / 10 phút trên mỗi IP
+  const clientIp = getClientIp(req);
+  const rateLimitKey = `ai_chat:${clientIp}`;
+  const rateCheck = checkRateLimit(rateLimitKey, 10, 10 * 60 * 1000);
+  if (!rateCheck.allowed) {
+    const retrySecs = Math.max(1, Math.ceil((rateCheck.resetTime - Date.now()) / 1000));
+    return NextResponse.json(
+      { error: 'Bạn đang gửi câu hỏi quá nhanh. Vui lòng thử lại sau ít phút hoặc liên hệ hotline để được hỗ trợ ngay nhé!' },
+      { status: 429, headers: { 'Retry-After': String(retrySecs) } }
+    );
+  }
+
   let input: unknown;
   try {
     input = await req.json();
@@ -29,10 +42,10 @@ export async function POST(req: NextRequest) {
   }
   const parsed = requestSchema.safeParse(input);
   if (!parsed.success) {
-    return NextResponse.json({ error: 'Tin nhắn không hợp lệ hoặc quá dài.' }, { status: 400 });
+    return NextResponse.json({ error: 'Tin nhắn không hợp lệ hoặc vượt quá 800 ký tự cho phép.' }, { status: 400 });
   }
 
-  const rawMessages = parsed.data.messages.slice(-12);
+  const rawMessages = parsed.data.messages.slice(-8);
 
   // TẦNG 1: Phân tích ý định người dùng & lấy danh mục sản phẩm từ Supabase (song song)
   const [evaluation, catalogSummary] = await Promise.all([

@@ -100,6 +100,7 @@ export function CheckoutForm({ items, onBack, onComplete, onSuccess }: CheckoutF
       wardName: addressData.wardName,
       streetAddress: addressData.streetAddress,
       notes: String(form.get('notes') || ''),
+      website_hp: String(form.get('website_hp') || ''),
       paymentMethod,
       items: items.map((item) => ({
         productId: item.productId,
@@ -176,6 +177,10 @@ export function CheckoutForm({ items, onBack, onComplete, onSuccess }: CheckoutF
   return (
     <>
       <form onSubmit={handleSubmit} className="flex flex-1 flex-col overflow-hidden">
+        {/* Honeypot field for bot trap - completely invisible to human users */}
+        <div style={{ position: 'absolute', opacity: 0, zIndex: -1, width: 0, height: 0, overflow: 'hidden' }} aria-hidden="true">
+          <input type="text" name="website_hp" tabIndex={-1} autoComplete="off" defaultValue="" />
+        </div>
         <div className="flex items-center gap-3 border-b border-slate-200 px-4 py-4 sm:px-6">
           <button type="button" onClick={onBack} className="grid h-11 w-11 place-items-center" aria-label="Quay lại giỏ hàng">
             <ArrowLeft className="h-5 w-5" />

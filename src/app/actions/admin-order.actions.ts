@@ -4,7 +4,8 @@ import { revalidatePath } from 'next/cache';
 import { supabaseAdmin, isSupabaseAdminConfigured } from '@/lib/supabase/server';
 import { cancelAllinGoOrder } from '@/lib/allingo';
 import { fulfillOrderWithAllinGo } from '@/services/allingo-fulfillment.service';
-import { OrderStatus } from '@/services/order.service';
+import { Order, OrderStatus } from '@/services/order.service';
+import { assertAdminSession } from '@/lib/auth/admin-guard';
 
 export interface AdminOrderItemInput {
   product_id: string;
@@ -55,6 +56,9 @@ export interface CreateManualOrderPayload {
 }
 
 export async function updateAdminOrderAction(payload: UpdateOrderPayload): Promise<{ success: boolean; error?: string }> {
+  if (!(await assertAdminSession())) {
+    return { success: false, error: 'Không có quyền thực hiện: Yêu cầu phiên đăng nhập quản trị.' };
+  }
   if (!isSupabaseAdminConfigured) {
     return { success: false, error: 'Chưa cấu hình Supabase Admin.' };
   }
@@ -140,6 +144,9 @@ export async function updateAdminOrderAction(payload: UpdateOrderPayload): Promi
 }
 
 export async function cancelAllinGoShipmentAction(orderId: string, forceClear: boolean = false): Promise<{ success: boolean; message?: string; error?: string }> {
+  if (!(await assertAdminSession())) {
+    return { success: false, error: 'Không có quyền thực hiện: Yêu cầu phiên đăng nhập quản trị.' };
+  }
   if (!isSupabaseAdminConfigured) {
     return { success: false, error: 'Chưa cấu hình Supabase Admin.' };
   }
@@ -198,6 +205,9 @@ export async function cancelAllinGoShipmentAction(orderId: string, forceClear: b
 }
 
 export async function createManualOrderAction(payload: CreateManualOrderPayload): Promise<{ success: boolean; orderId?: string; orderCode?: string; error?: string }> {
+  if (!(await assertAdminSession())) {
+    return { success: false, error: 'Không có quyền thực hiện: Yêu cầu phiên đăng nhập quản trị.' };
+  }
   if (!isSupabaseAdminConfigured) {
     return { success: false, error: 'Chưa cấu hình Supabase Admin.' };
   }
@@ -287,6 +297,9 @@ export async function createManualOrderAction(payload: CreateManualOrderPayload)
 }
 
 export async function fulfillManualOrderAction(orderId: string): Promise<{ success: boolean; trackingNumber?: string; error?: string }> {
+  if (!(await assertAdminSession())) {
+    return { success: false, error: 'Không có quyền thực hiện: Yêu cầu phiên đăng nhập quản trị.' };
+  }
   try {
     const res = await fulfillOrderWithAllinGo(orderId);
     revalidatePath('/admin/orders');
@@ -297,6 +310,9 @@ export async function fulfillManualOrderAction(orderId: string): Promise<{ succe
 }
 
 export async function deleteAdminOrderAction(orderId: string): Promise<{ success: boolean; error?: string }> {
+  if (!(await assertAdminSession())) {
+    return { success: false, error: 'Không có quyền thực hiện: Yêu cầu phiên đăng nhập quản trị.' };
+  }
   if (!isSupabaseAdminConfigured) {
     return { success: false, error: 'Chưa cấu hình Supabase Admin.' };
   }
@@ -337,3 +353,57 @@ export async function deleteAdminOrderAction(orderId: string): Promise<{ success
     return { success: false, error: err?.message || 'Không thể xóa đơn hàng.' };
   }
 }
+
+export async function getAdminOrdersAction(): Promise<Order[]> {
+  if (!(await assertAdminSession())) {
+    return [];
+  }
+  const { data, error } = await supabaseAdmin
+    .from('orders')
+    .select('*, order_items(*)')
+    .order('created_at', { ascending: false });
+
+  if (error || !data) return [];
+  return data as Order[];
+}
+
+export async function updateAdminOrderStatusAction(orderId: string, status: OrderStatus): Promise<boolean> {
+  if (!(await assertAdminSession())) {
+    return false;
+  }
+  try {
+    const { error } = await supabaseAdmin
+      .from('orders')
+      .update({ status, updated_at: new Date().toISOString() })
+      .eq('id', orderId);
+
+    if (error) throw error;
+    revalidatePath('/admin/orders');
+    revalidatePath('/admin');
+    return true;
+  } catch (err) {
+    console.error('[Update Order Status Error]:', err);
+    return false;
+  }
+}
+
+export async function getAdminOrderStatsAction() {
+  const orders = await getAdminOrdersAction();
+  const totalOrders = orders.length;
+  const pendingOrders = orders.filter((o) => o.status === 'pending').length;
+  const shippingOrders = orders.filter((o) => o.status === 'shipping').length;
+  const completedOrders = orders.filter((o) => o.status === 'completed').length;
+  const totalRevenue = orders
+    .filter((o) => o.status === 'completed' || o.status === 'shipping')
+    .reduce((sum, o) => sum + Number(o.total_amount || 0), 0);
+
+  return {
+    totalOrders,
+    pendingOrders,
+    shippingOrders,
+    completedOrders,
+    totalRevenue,
+  };
+}
+
+

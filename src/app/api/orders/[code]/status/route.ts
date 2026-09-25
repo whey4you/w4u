@@ -2,12 +2,22 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin, isSupabaseAdminConfigured } from '@/lib/supabase/server';
 import { getPayOS, isPayOSConfigured } from '@/lib/payos';
 import { commitPaidOrder } from '@/services/checkout-committer.service';
+import { checkRateLimit, getClientIp } from '@/lib/security/rate-limiter';
 
 interface Params {
   params: Promise<{ code: string }>;
 }
 
 export async function GET(_req: NextRequest, { params }: Params) {
+  const clientIp = getClientIp(_req);
+  const rateCheck = checkRateLimit(`order_status:${clientIp}`, 40, 60000);
+  if (!rateCheck.allowed) {
+    return NextResponse.json(
+      { success: false, error: 'Quá nhiều yêu cầu kiểm tra trạng thái. Vui lòng thử lại sau.' },
+      { status: 429 }
+    );
+  }
+
   if (!isSupabaseAdminConfigured) {
     return NextResponse.json({ success: false, error: 'Chưa cấu hình Supabase' }, { status: 500 });
   }

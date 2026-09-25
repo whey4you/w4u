@@ -6,6 +6,21 @@ import { CheckoutInput, CheckoutItemInput, CheckoutResult, PaymentMethod } from 
 import { getPayOS, isPayOSConfigured } from '@/lib/payos';
 import { getBestShippingQuote } from '@/lib/allingo';
 import { validateAndCalculateCoupon } from '@/services/coupon.service';
+import { checkRateLimit } from '@/lib/security/rate-limiter';
+import { headers } from 'next/headers';
+
+async function getActionIp(): Promise<string> {
+  try {
+    const h = await headers();
+    const f = h.get('x-forwarded-for');
+    if (f) return f.split(',')[0].trim();
+    const r = h.get('x-real-ip');
+    if (r) return r.trim();
+    return '127.0.0.1';
+  } catch {
+    return '127.0.0.1';
+  }
+}
 
 interface ProductRow {
   id: string;
@@ -135,6 +150,21 @@ async function createPayOSLink(
 }
 
 export async function createOrderAction(input: CheckoutInput): Promise<CheckoutResult> {
+  // 1. Kiểm tra Honeypot Trap (nếu bot tự động điền trường ẩn)
+  if ((input as any).website_hp) {
+    return { success: false, error: 'Yêu cầu không hợp lệ.' };
+  }
+
+  // 2. Chống spam tạo đơn: Giới hạn tối đa 5 lần khởi tạo / 15 phút trên mỗi IP
+  const ip = await getActionIp();
+  const rateCheck = checkRateLimit(`checkout_create:${ip}`, 5, 15 * 60 * 1000);
+  if (!rateCheck.allowed) {
+    return {
+      success: false,
+      error: 'Bạn đã khởi tạo đơn hàng quá nhiều lần trong thời gian ngắn. Vui lòng thử lại sau 15 phút hoặc liên hệ hotline để được hỗ trợ.',
+    };
+  }
+
   if (!isSupabaseAdminConfigured) {
     return { success: false, error: 'Hệ thống đặt hàng chưa được cấu hình.' };
   }
@@ -299,6 +329,26 @@ export async function cancelPendingCheckoutAction(orderCode: string): Promise<{ 
   } catch (err) {
     console.error('[Cancel Pending Checkout Error]:', err);
     return { success: false };
+  }
+}
+
+export async function lookupOrderAction(query: string) {
+  const clean = query.trim();
+  if (!clean) return null;
+  try {
+    const { data, error } = await supabaseAdmin
+      .from('orders')
+      .select('*, order_items(*)')
+      .or(`order_code.ilike.%${clean}%,customer_phone.eq.${clean},customer_email.eq.${clean},tracking_code.eq.${clean},allingo_track_id.eq.${clean}`)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (error || !data) return null;
+    return data;
+  } catch (err) {
+    console.error('[Lookup Order Action Error]:', err);
+    return null;
   }
 }
 

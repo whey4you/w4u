@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { generateBlogArticle } from '@/lib/ai/blog-generator';
+import { assertAdminSession } from '@/lib/auth/admin-guard';
 
 const requestSchema = z.object({
   topic: z.string().trim().min(2).max(300),
@@ -11,6 +12,13 @@ const requestSchema = z.object({
 });
 
 export async function POST(req: NextRequest) {
+  if (!(await assertAdminSession())) {
+    return NextResponse.json(
+      { success: false, error: 'Unauthorized: Yêu cầu quyền quản trị viên.' },
+      { status: 401 }
+    );
+  }
+
   try {
     const body = await req.json();
     const parsed = requestSchema.safeParse(body);
@@ -28,7 +36,7 @@ export async function POST(req: NextRequest) {
       data: blogData,
     });
   } catch (error) {
-    console.error('[API /api/ai/blog/generate] Error:', error);
+    console.error('[API /api/admin/ai/blog] Error:', error);
     return NextResponse.json(
       { success: false, error: error instanceof Error ? error.message : 'Lỗi khi tạo bài viết bằng AI' },
       { status: 500 }

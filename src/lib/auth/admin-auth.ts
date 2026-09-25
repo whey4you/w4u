@@ -7,7 +7,11 @@ export const ADMIN_COOKIE_NAME = 'whey4you_admin_session';
 const SESSION_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000; // 7 ngày
 
 function getAdminSecret(): string {
-  return process.env.ADMIN_SECRET_KEY || 'whey4you_admin_2026';
+  const secret = process.env.ADMIN_SECRET_KEY;
+  if (!secret && process.env.NODE_ENV === 'production') {
+    console.warn('[SECURITY WARNING] Biến ADMIN_SECRET_KEY chưa được cấu hình trên Production! Đang dùng fallback tạm thời.');
+  }
+  return secret || 'whey4you_admin_2026';
 }
 
 async function getCryptoKey(secret: string): Promise<CryptoKey> {

@@ -25,6 +25,7 @@ export interface CheckoutInput {
   carrierName?: string;
   shippingFee?: number;
   couponCode?: string;
+  website_hp?: string;
   items: CheckoutItemInput[];
 }
 

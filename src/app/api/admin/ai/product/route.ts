@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { generateProductData } from '@/lib/ai/product-generator';
+import { assertAdminSession } from '@/lib/auth/admin-guard';
 
 const requestSchema = z.object({
   productName: z.string().trim().min(2).max(250),
@@ -13,6 +14,13 @@ const requestSchema = z.object({
 });
 
 export async function POST(req: NextRequest) {
+  if (!(await assertAdminSession())) {
+    return NextResponse.json(
+      { success: false, error: 'Unauthorized: Yêu cầu quyền quản trị viên.' },
+      { status: 401 }
+    );
+  }
+
   try {
     const body = await req.json();
     const parsed = requestSchema.safeParse(body);
@@ -30,7 +38,7 @@ export async function POST(req: NextRequest) {
       data,
     });
   } catch (error) {
-    console.error('[API /api/ai/product/generate] Error:', error);
+    console.error('[API /api/admin/ai/product] Error:', error);
     return NextResponse.json(
       { success: false, error: 'Không thể tạo nội dung sản phẩm bằng AI. Vui lòng thử lại.' },
       { status: 500 }

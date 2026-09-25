@@ -6,7 +6,8 @@ import { Search, Loader2, PhoneCall, ShieldCheck, ExternalLink } from 'lucide-re
 import { Container } from '@/components/ui/container';
 import { SPXTrackingResult } from '@/types/spx';
 import { trackSPXOrder } from '@/services/spx.service';
-import { Order, getOrderByCodeOrPhone } from '@/services/order.service';
+import { Order } from '@/services/order.service';
+import { lookupOrderAction } from '@/app/actions/order.actions';
 import { UnifiedOrderResult } from '@/components/features/orders/unified-order-result';
 
 function OrdersContent() {
@@ -33,21 +34,21 @@ function OrdersContent() {
         // Nếu nhập mã SPX: tìm kiếm cả lộ trình bưu cục và đơn hàng trong hệ thống
         const [spx, order] = await Promise.all([
           trackSPXOrder(clean),
-          getOrderByCodeOrPhone(clean),
+          lookupOrderAction(clean),
         ]);
 
         if (spx && spx.success) setSpxResult(spx);
-        if (order) setStoreOrder(order);
+        if (order) setStoreOrder(order as Order);
 
         if (!order && (!spx || !spx.success)) {
           setNotFound(true);
         }
       } else {
         // Nhập mã đơn Whey4You (W4U...), SĐT hoặc mã AllinGo
-        const order = await getOrderByCodeOrPhone(clean);
+        const order = await lookupOrderAction(clean);
 
         if (order) {
-          setStoreOrder(order);
+          setStoreOrder(order as Order);
           // Tự động kiểm tra nạp hành trình SPX nếu đơn hàng đã có mã vận đơn
           const carrierCode = order.tracking_code;
           if (carrierCode && carrierCode.toUpperCase().startsWith('SPX')) {
