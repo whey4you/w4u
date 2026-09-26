@@ -34,7 +34,7 @@ const SELLER = {
   name: 'WHEY4YOU',
   tagline: 'Thực Phẩm Bổ Sung Chính Hãng',
   address: 'TP. Hồ Chí Minh, Việt Nam',
-  hotline: '0909 123 456',
+  hotline: '0559 959 433',
   website: 'whey4you.vn',
 };
 

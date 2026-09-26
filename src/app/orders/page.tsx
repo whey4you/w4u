@@ -166,7 +166,7 @@ function OrdersContent() {
         <div className="mt-6 pt-5 border-t border-slate-100 grid grid-cols-2 gap-4 text-xs text-slate-600">
           <div className="flex items-center gap-2">
             <PhoneCall className="h-4 w-4 text-apple-blue shrink-0" />
-            <span>Hotline hỗ trợ: <strong>1900 8888</strong></span>
+            <span>Hotline hỗ trợ: <strong>0559 959 433</strong></span>
           </div>
           <div className="flex items-center gap-2">
             <ShieldCheck className="h-4 w-4 text-apple-blue shrink-0" />

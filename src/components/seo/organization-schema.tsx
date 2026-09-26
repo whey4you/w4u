@@ -26,7 +26,7 @@ export function OrganizationSchema() {
         contactPoint: {
           '@type': 'ContactPoint',
           contactType: 'customer support',
-          telephone: '+84-900-000-000',
+          telephone: '+84-559-959-433',
           availableLanguage: ['Vietnamese'],
         },
       },
