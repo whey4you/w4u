@@ -2,8 +2,9 @@
 
 import React, { useState, useEffect } from 'react';
 import { X, Tag, Loader2, Save } from 'lucide-react';
-import { Coupon, DiscountType, CreateCouponInput } from '@/types/coupon';
+import { Coupon, DiscountType, CreateCouponInput, CouponTier } from '@/types/coupon';
 import { updateCouponAction } from '@/app/actions/coupon.actions';
+import { CouponTierEditor } from './coupon-tier-editor';
 
 interface CouponEditModalProps {
   isOpen: boolean;
@@ -15,6 +16,8 @@ interface CouponEditModalProps {
 export function CouponEditModal({ isOpen, onClose, coupon, onSuccess }: CouponEditModalProps) {
   const [code, setCode] = useState('');
   const [description, setDescription] = useState('');
+  const [isTiered, setIsTiered] = useState(false);
+  const [tiers, setTiers] = useState<CouponTier[]>([]);
   const [discountType, setDiscountType] = useState<DiscountType>('fixed');
   const [discountValue, setDiscountValue] = useState<number>(0);
   const [minOrderValue, setMinOrderValue] = useState<number>(0);
@@ -30,6 +33,9 @@ export function CouponEditModal({ isOpen, onClose, coupon, onSuccess }: CouponEd
     if (coupon) {
       setCode(coupon.code || '');
       setDescription(coupon.description || '');
+      const hasTiers = Boolean(coupon.tiers && Array.isArray(coupon.tiers) && coupon.tiers.length > 0);
+      setIsTiered(hasTiers);
+      setTiers(hasTiers && coupon.tiers ? [...coupon.tiers] : []);
       setDiscountType(coupon.discount_type || 'fixed');
       setDiscountValue(Number(coupon.discount_value || 0));
       setMinOrderValue(Number(coupon.min_order_value || 0));
@@ -60,24 +66,40 @@ export function CouponEditModal({ isOpen, onClose, coupon, onSuccess }: CouponEd
       setErrorMsg('Vui lòng nhập mã giảm giá.');
       return;
     }
-    if (discountValue <= 0) {
-      setErrorMsg('Giá trị giảm giá phải lớn hơn 0.');
-      return;
+
+    if (isTiered) {
+      if (tiers.length === 0) {
+        setErrorMsg('Vui lòng thêm ít nhất 1 bậc giảm giá.');
+        return;
+      }
+      for (let i = 0; i < tiers.length; i++) {
+        if (!tiers[i].discount_value || tiers[i].discount_value <= 0) {
+          setErrorMsg(`Bậc ${i + 1} phải có mức giảm lớn hơn 0.`);
+          return;
+        }
+      }
+    } else {
+      if (discountValue <= 0) {
+        setErrorMsg('Giá trị giảm giá phải lớn hơn 0.');
+        return;
+      }
     }
 
     setLoading(true);
     setErrorMsg(null);
 
+    const firstTier = tiers[0];
     const input: Partial<CreateCouponInput> = {
       code: code.trim().toUpperCase(),
       description: description.trim() || undefined,
-      discount_type: discountType,
-      discount_value: Number(discountValue),
-      min_order_value: Number(minOrderValue) || 0,
-      max_discount_amount: maxDiscountAmount !== '' ? Number(maxDiscountAmount) : null,
+      discount_type: isTiered && firstTier ? firstTier.discount_type : discountType,
+      discount_value: isTiered && firstTier ? Number(firstTier.discount_value) : Number(discountValue),
+      min_order_value: isTiered && firstTier ? Number(firstTier.min_order_value) || 0 : Number(minOrderValue) || 0,
+      max_discount_amount: isTiered ? null : (maxDiscountAmount !== '' ? Number(maxDiscountAmount) : null),
       usage_limit: usageLimit !== '' ? Number(usageLimit) : null,
       expires_at: expiresAt ? new Date(expiresAt).toISOString() : null,
       is_active: isActive,
+      tiers: isTiered ? tiers : [],
     };
 
     const result = await updateCouponAction(coupon.id, input);
@@ -130,62 +152,116 @@ export function CouponEditModal({ isOpen, onClose, coupon, onSuccess }: CouponEd
               type="text"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
+              placeholder="VD: Giảm theo bậc đơn hàng"
               className="w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:border-slate-900"
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="font-bold text-slate-700 block mb-1">Loại giảm giá *</label>
-              <select
-                value={discountType}
-                onChange={(e) => setDiscountType(e.target.value as DiscountType)}
-                className="w-full px-3 py-2 border border-slate-200 rounded-xl bg-white focus:outline-none focus:border-slate-900"
+          {/* Cấu hình giảm giá: 1 Mức cố định HOẶC Đa bậc */}
+          <div className="pt-1">
+            <label className="font-bold text-slate-700 block mb-1.5">Hình thức giảm giá *</label>
+            <div className="flex p-1 bg-slate-100 rounded-xl mb-3">
+              <button
+                type="button"
+                onClick={() => setIsTiered(false)}
+                className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                  !isTiered ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-500 hover:text-slate-800'
+                }`}
               >
-                <option value="fixed">Số tiền cố định (đ)</option>
-                <option value="percent">Phần trăm (%)</option>
-              </select>
+                1 Mức cố định
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsTiered(true);
+                  if (tiers.length === 0) {
+                    setTiers([
+                      {
+                        id: `tier_${Date.now()}_1`,
+                        min_order_value: 0,
+                        max_order_value: 500000,
+                        discount_type: 'fixed',
+                        discount_value: 15000,
+                        max_discount_amount: null,
+                      },
+                      {
+                        id: `tier_${Date.now()}_2`,
+                        min_order_value: 500000,
+                        max_order_value: 1000000,
+                        discount_type: 'fixed',
+                        discount_value: 20000,
+                        max_discount_amount: null,
+                      },
+                    ]);
+                  }
+                }}
+                className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                  isTiered ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-500 hover:text-slate-800'
+                }`}
+              >
+                Theo bậc giá trị đơn
+              </button>
             </div>
-            <div>
-              <label className="font-bold text-slate-700 block mb-1">
-                Giá trị giảm ({discountType === 'fixed' ? 'VNĐ' : '%'}) *
-              </label>
-              <input
-                type="number"
-                min="1"
-                value={discountValue}
-                onChange={(e) => setDiscountValue(Number(e.target.value))}
-                className="w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:border-slate-900"
-                required
-              />
-            </div>
-          </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="font-bold text-slate-700 block mb-1">Đơn tối thiểu (VNĐ)</label>
-              <input
-                type="number"
-                min="0"
-                step="10000"
-                value={minOrderValue}
-                onChange={(e) => setMinOrderValue(Number(e.target.value))}
-                className="w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:border-slate-900"
-              />
-            </div>
-            <div>
-              <label className="font-bold text-slate-700 block mb-1">Giảm tối đa (VNĐ)</label>
-              <input
-                type="number"
-                min="0"
-                step="10000"
-                disabled={discountType !== 'percent'}
-                value={maxDiscountAmount}
-                onChange={(e) => setMaxDiscountAmount(e.target.value === '' ? '' : Number(e.target.value))}
-                placeholder={discountType === 'percent' ? 'Không giới hạn' : 'Chỉ áp dụng với %'}
-                className="w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:border-slate-900 disabled:bg-slate-100 disabled:text-slate-400"
-              />
-            </div>
+            {isTiered ? (
+              <CouponTierEditor tiers={tiers} onChange={setTiers} />
+            ) : (
+              <div className="space-y-3 p-3 bg-slate-50 rounded-xl border border-slate-200/80">
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="font-bold text-slate-700 block mb-1">Loại giảm giá *</label>
+                    <select
+                      value={discountType}
+                      onChange={(e) => setDiscountType(e.target.value as DiscountType)}
+                      className="w-full px-3 py-2 border border-slate-200 rounded-xl bg-white focus:outline-none focus:border-slate-900"
+                    >
+                      <option value="fixed">Số tiền cố định (đ)</option>
+                      <option value="percent">Phần trăm (%)</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="font-bold text-slate-700 block mb-1">
+                      Giá trị giảm ({discountType === 'fixed' ? 'VNĐ' : '%'}) *
+                    </label>
+                    <input
+                      type="number"
+                      min="1"
+                      value={discountValue}
+                      onChange={(e) => setDiscountValue(Number(e.target.value))}
+                      className="w-full px-3 py-2 border border-slate-200 rounded-xl bg-white focus:outline-none focus:border-slate-900"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="font-bold text-slate-700 block mb-1">Đơn tối thiểu (VNĐ)</label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="10000"
+                      value={minOrderValue}
+                      onChange={(e) => setMinOrderValue(Number(e.target.value))}
+                      className="w-full px-3 py-2 border border-slate-200 rounded-xl bg-white focus:outline-none focus:border-slate-900"
+                    />
+                  </div>
+                  <div>
+                    <label className="font-bold text-slate-700 block mb-1">Giảm tối đa (VNĐ)</label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="10000"
+                      disabled={discountType !== 'percent'}
+                      value={maxDiscountAmount}
+                      onChange={(e) => setMaxDiscountAmount(e.target.value === '' ? '' : Number(e.target.value))}
+                      placeholder={discountType === 'percent' ? 'Không giới hạn' : 'Chỉ áp dụng với %'}
+                      className="w-full px-3 py-2 border border-slate-200 rounded-xl bg-white focus:outline-none focus:border-slate-900 disabled:bg-slate-100 disabled:text-slate-400"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="grid grid-cols-2 gap-3">

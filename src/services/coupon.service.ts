@@ -82,6 +82,7 @@ export async function createCoupon(
       usage_limit: input.usage_limit ? Number(input.usage_limit) : null,
       is_active: input.is_active ?? true,
       expires_at: input.expires_at || null,
+      tiers: input.tiers && input.tiers.length > 0 ? input.tiers : [],
     };
 
     const { data, error } = await supabaseAdmin
@@ -144,6 +145,7 @@ export async function updateCoupon(
     }
     if (input.is_active !== undefined) payload.is_active = input.is_active;
     if (input.expires_at !== undefined) payload.expires_at = input.expires_at || null;
+    if (input.tiers !== undefined) payload.tiers = input.tiers || [];
 
     const { data, error } = await supabaseAdmin
       .from('coupons')

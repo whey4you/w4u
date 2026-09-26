@@ -87,15 +87,25 @@ export function CheckoutSummaryDetails({
         {/* Voucher input or applied voucher */}
         <div className="pb-1.5">
           {appliedCoupon ? (
-            <div className="flex items-center justify-between bg-emerald-50 border border-emerald-200/80 rounded-xl px-3 py-2 text-xs">
-              <div className="flex items-center gap-1.5 text-emerald-800 font-semibold truncate">
-                <Tag className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0" />
-                <span className="font-mono">{appliedCoupon.code}</span>
-                <span className="text-[10px] text-emerald-700">(-{formatPrice(discountAmount)})</span>
+            <div className="bg-emerald-50 border border-emerald-200/80 rounded-xl px-3 py-2 text-xs space-y-1">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5 text-emerald-800 font-semibold truncate">
+                  <Tag className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0" />
+                  <span className="font-mono">{appliedCoupon.code}</span>
+                  <span className="text-[10px] text-emerald-700">(-{formatPrice(discountAmount)})</span>
+                </div>
+                <button type="button" onClick={removeCoupon} className="text-emerald-600 hover:text-emerald-900 p-0.5 rounded transition-colors" title="Hủy voucher">
+                  <X className="w-3.5 h-3.5" />
+                </button>
               </div>
-              <button type="button" onClick={removeCoupon} className="text-emerald-600 hover:text-emerald-900 p-0.5 rounded transition-colors" title="Hủy voucher">
-                <X className="w-3.5 h-3.5" />
-              </button>
+              {appliedCoupon.nextTier && (
+                <p className="text-[10px] text-emerald-800/90 pt-1 border-t border-emerald-200/50">
+                  💡 Mua thêm {formatPrice(appliedCoupon.nextTier.amountNeeded)} để được giảm{' '}
+                  {appliedCoupon.nextTier.discountType === 'percent'
+                    ? `${appliedCoupon.nextTier.discountValue}%`
+                    : formatPrice(appliedCoupon.nextTier.discountValue)}
+                </p>
+              )}
             </div>
           ) : (
             <form onSubmit={handleApplyCoupon} className="space-y-1.5">

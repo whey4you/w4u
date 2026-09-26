@@ -71,17 +71,38 @@ export function CouponMobileCard({
       <div className="grid grid-cols-2 gap-2 text-xs pt-2 border-t border-slate-100">
         <div>
           <span className="text-[10px] text-slate-400 block uppercase font-semibold">Mức giảm</span>
-          <span className="font-bold text-emerald-700">
-            {coupon.discount_type === 'percent'
-              ? `-${coupon.discount_value}% ${coupon.max_discount_amount ? `(tối đa ${formatPrice(coupon.max_discount_amount)})` : ''}`
-              : `-${formatPrice(coupon.discount_value)}`}
-          </span>
+          {coupon.tiers && coupon.tiers.length > 0 ? (
+            <div>
+              <span className="inline-flex items-center px-1.5 py-0.2 rounded text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200">
+                Đa bậc ({coupon.tiers.length} bậc)
+              </span>
+              <p className="font-bold text-emerald-700 text-xs mt-0.5">
+                {coupon.tiers
+                  .map((t) =>
+                    t.discount_type === 'percent'
+                      ? `-${t.discount_value}%`
+                      : `-${formatPrice(t.discount_value)}`
+                  )
+                  .join(' | ')}
+              </p>
+            </div>
+          ) : (
+            <span className="font-bold text-emerald-700">
+              {coupon.discount_type === 'percent'
+                ? `-${coupon.discount_value}% ${coupon.max_discount_amount ? `(tối đa ${formatPrice(coupon.max_discount_amount)})` : ''}`
+                : `-${formatPrice(coupon.discount_value)}`}
+            </span>
+          )}
         </div>
 
         <div>
           <span className="text-[10px] text-slate-400 block uppercase font-semibold">Đơn tối thiểu</span>
           <span className="font-semibold text-slate-700">
-            {coupon.min_order_value > 0 ? formatPrice(coupon.min_order_value) : '0đ'}
+            {coupon.tiers && coupon.tiers.length > 0
+              ? `Từ ${formatPrice(Math.min(...coupon.tiers.map((t) => Number(t.min_order_value || 0))))}`
+              : coupon.min_order_value > 0
+                ? formatPrice(coupon.min_order_value)
+                : '0đ'}
           </span>
         </div>
 

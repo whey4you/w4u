@@ -4,14 +4,16 @@ import React, { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { ShoppingBag, Menu, X } from 'lucide-react';
+import { ShoppingBag, Search, Menu, X } from 'lucide-react';
 import { useCart } from '@/context/cart-context';
 import { Container } from '@/components/ui/container';
+import { SearchModal } from './search-modal';
 
 export function AppleNav() {
   const pathname = usePathname();
   const { totalItems, openCart } = useCart();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
 
   const links = [
     { label: 'Whey Protein', href: '/products?category=whey' },
@@ -60,12 +62,22 @@ export function AppleNav() {
             })}
           </div>
 
-          {/* Right Action Icons: Cart */}
-          <div className="flex items-center gap-5">
+          {/* Right Action Icons: Search + Cart */}
+          <div className="flex items-center gap-4 sm:gap-5">
             <button
+              type="button"
+              onClick={() => setSearchOpen(true)}
+              aria-label="Tìm kiếm sản phẩm"
+              className="p-1.5 text-apple-dark hover:text-apple-blue transition-colors rounded-full hover:bg-black/[0.04] cursor-pointer"
+            >
+              <Search className="h-5 w-5" />
+            </button>
+
+            <button
+              type="button"
               onClick={openCart}
               aria-label="Giỏ hàng"
-              className="relative p-1.5 text-apple-dark hover:text-apple-blue transition-colors rounded-full hover:bg-black/[0.04]"
+              className="relative p-1.5 text-apple-dark hover:text-apple-blue transition-colors rounded-full hover:bg-black/[0.04] cursor-pointer"
             >
               <ShoppingBag className="h-5 w-5" />
               {totalItems > 0 && (
@@ -120,6 +132,8 @@ export function AppleNav() {
         </div>
       )}
 
+      {/* Global Search Modal */}
+      <SearchModal isOpen={searchOpen} onClose={() => setSearchOpen(false)} />
     </>
   );
 }

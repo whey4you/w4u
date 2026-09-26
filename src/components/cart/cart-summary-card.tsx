@@ -75,7 +75,17 @@ export function CartSummaryCard({ totalAmount, totalItems }: CartSummaryCardProp
               {appliedCoupon.description && (
                 <p className="text-[11px] text-emerald-700/90 mt-0.5 truncate">{appliedCoupon.description}</p>
               )}
-              {isBelowMinOrder && (
+              {appliedCoupon.nextTier && (
+                <div className="mt-1.5 pt-1.5 border-t border-emerald-200/60 text-[11px] text-emerald-900 font-medium">
+                  💡 Mua thêm <span className="font-bold underline decoration-emerald-400">{formatPrice(appliedCoupon.nextTier.amountNeeded)}</span> để được giảm{' '}
+                  <span className="font-bold">
+                    {appliedCoupon.nextTier.discountType === 'percent'
+                      ? `${appliedCoupon.nextTier.discountValue}%`
+                      : formatPrice(appliedCoupon.nextTier.discountValue)}
+                  </span>
+                </div>
+              )}
+              {isBelowMinOrder && !appliedCoupon.nextTier && (
                 <p className="text-[11px] text-amber-700 mt-1 font-medium">
                   Cần mua thêm {formatPrice(appliedCoupon.minOrderValue - totalAmount)} để nhận ưu đãi.
                 </p>

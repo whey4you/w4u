@@ -1,8 +1,9 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
+import React, { createContext, useContext, useEffect, useRef, useState, useMemo } from 'react';
 import { CartItem } from '@/types/product';
 import { AppliedCoupon } from '@/types/coupon';
+import { calculateDiscountAmount, findMatchingTier } from '@/lib/coupon-calculator';
 
 const CART_STORAGE_KEY = 'whey4you_cart_v1';
 const COUPON_STORAGE_KEY = 'whey4you_applied_coupon_v1';
@@ -124,21 +125,50 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
   const totalAmount = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
-  // Tính lại tiền giảm giá theo giá trị giỏ hàng thực tế
-  let discountAmount = 0;
-  if (appliedCoupon && totalAmount >= (appliedCoupon.minOrderValue || 0)) {
-    if (appliedCoupon.discountType === 'fixed') {
-      discountAmount = Math.min(appliedCoupon.discountValue, totalAmount);
-    } else if (appliedCoupon.discountType === 'percent') {
-      const raw = (totalAmount * appliedCoupon.discountValue) / 100;
-      if (appliedCoupon.maxDiscountAmount && appliedCoupon.maxDiscountAmount > 0) {
-        discountAmount = Math.min(raw, appliedCoupon.maxDiscountAmount);
-      } else {
-        discountAmount = raw;
-      }
+  // Tính lại tiền giảm giá theo giá trị giỏ hàng thực tế (hỗ trợ cả coupon đơn & đa bậc)
+  const { effectiveCoupon, discountAmount } = useMemo(() => {
+    if (!appliedCoupon) {
+      return { effectiveCoupon: null, discountAmount: 0 };
     }
-    discountAmount = Math.max(0, Math.min(Math.round(discountAmount), totalAmount));
-  }
+
+    if (appliedCoupon.isTiered && appliedCoupon.tiers && appliedCoupon.tiers.length > 0) {
+      const match = findMatchingTier(appliedCoupon.tiers, totalAmount);
+      const discount = match.activeTier
+        ? calculateDiscountAmount(
+            match.activeTier.discount_type,
+            match.activeTier.discount_value,
+            match.activeTier.max_discount_amount,
+            totalAmount
+          )
+        : 0;
+
+      return {
+        effectiveCoupon: {
+          ...appliedCoupon,
+          activeTier: match.activeTier,
+          nextTier: match.nextTier || null,
+          discountAmount: discount,
+          discountType: match.activeTier ? match.activeTier.discount_type : appliedCoupon.discountType,
+          discountValue: match.activeTier ? Number(match.activeTier.discount_value) : appliedCoupon.discountValue,
+        },
+        discountAmount: discount,
+      };
+    }
+
+    const discount = totalAmount >= (appliedCoupon.minOrderValue || 0)
+      ? calculateDiscountAmount(
+          appliedCoupon.discountType,
+          appliedCoupon.discountValue,
+          appliedCoupon.maxDiscountAmount,
+          totalAmount
+        )
+      : 0;
+
+    return {
+      effectiveCoupon: { ...appliedCoupon, discountAmount: discount },
+      discountAmount: discount,
+    };
+  }, [appliedCoupon, totalAmount]);
 
   const finalTotal = Math.max(0, totalAmount - discountAmount);
 
@@ -160,7 +190,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         updateQuantity,
         totalItems,
         totalAmount,
-        appliedCoupon,
+        appliedCoupon: effectiveCoupon,
         applyCoupon: (coupon: AppliedCoupon) => setAppliedCoupon(coupon),
         removeCoupon: () => setAppliedCoupon(null),
         discountAmount,

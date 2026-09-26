@@ -105,14 +105,37 @@ export function CouponTable({ coupons, onRefresh, onEdit }: CouponTableProps) {
                     {c.description && <p className="text-[11px] text-slate-400 mt-0.5">{c.description}</p>}
                   </td>
 
-                  <td className="py-3.5 px-4 font-bold text-emerald-700">
-                    {c.discount_type === 'percent'
-                      ? `-${c.discount_value}% ${c.max_discount_amount ? `(tối đa ${formatPrice(c.max_discount_amount)})` : ''}`
-                      : `-${formatPrice(c.discount_value)}`}
+                  <td className="py-3.5 px-4">
+                    {c.tiers && c.tiers.length > 0 ? (
+                      <div>
+                        <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200">
+                          Đa bậc ({c.tiers.length} bậc)
+                        </span>
+                        <p className="text-[11px] text-emerald-700 font-semibold mt-0.5">
+                          {c.tiers
+                            .map((t) =>
+                              t.discount_type === 'percent'
+                                ? `-${t.discount_value}%`
+                                : `-${formatPrice(t.discount_value)}`
+                            )
+                            .join(' | ')}
+                        </p>
+                      </div>
+                    ) : (
+                      <span className="font-bold text-emerald-700">
+                        {c.discount_type === 'percent'
+                          ? `-${c.discount_value}% ${c.max_discount_amount ? `(tối đa ${formatPrice(c.max_discount_amount)})` : ''}`
+                          : `-${formatPrice(c.discount_value)}`}
+                      </span>
+                    )}
                   </td>
 
                   <td className="py-3.5 px-4 text-slate-600">
-                    {c.min_order_value > 0 ? formatPrice(c.min_order_value) : '0đ'}
+                    {c.tiers && c.tiers.length > 0
+                      ? `Từ ${formatPrice(Math.min(...c.tiers.map((t) => Number(t.min_order_value || 0))))}`
+                      : c.min_order_value > 0
+                        ? formatPrice(c.min_order_value)
+                        : '0đ'}
                   </td>
 
                   <td className="py-3.5 px-4">
