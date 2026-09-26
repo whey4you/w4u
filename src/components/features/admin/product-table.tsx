@@ -4,8 +4,9 @@ import React, { useState } from 'react';
 import Image from 'next/image';
 import { Edit2, CheckCircle2, XCircle } from 'lucide-react';
 import { Product } from '@/types/product';
-import { toggleProductStock } from '@/services/product.mutations';
+import { toggleProductStock, bulkToggleProductStock } from '@/services/product.mutations';
 import { formatPrice } from '@/lib/utils';
+import { getProductStockSummary } from '@/lib/product-stock';
 import { ProductModal } from './product-modal';
 import { ProductMobileCard } from './product-mobile-card';
 
@@ -21,8 +22,10 @@ export function ProductTable({ products, onRefresh }: ProductTableProps) {
 
   const handleToggleStock = async (product: Product) => {
     setLoadingId(product.id);
-    const newStatus = !product.inStock;
-    const res = await toggleProductStock(product.id, newStatus);
+    const summary = getProductStockSummary(product);
+    // Nếu đang hết hàng toàn bộ -> Bật lại toàn bộ còn hàng (true). Ngược lại -> Kích hoạt toàn bộ hết hàng (false).
+    const newStatus = summary.isAllOutOfStock;
+    const res = await bulkToggleProductStock(product.id, newStatus);
     setLoadingId(null);
     if (res.success) {
       onRefresh();
@@ -123,28 +126,34 @@ export function ProductTable({ products, onRefresh }: ProductTableProps) {
                   </td>
 
                   <td className="py-3.5 px-4 text-center">
-                    <button
-                      onClick={() => handleToggleStock(p)}
-                      disabled={isLoading}
-                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-bold transition-all shadow-2xs ${
-                        p.inStock
-                          ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100'
-                          : 'bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100'
-                      } ${isLoading ? 'opacity-50 cursor-wait' : 'cursor-pointer'}`}
-                      title="Bấm để chuyển trạng thái Còn / Hết hàng tức thì"
-                    >
-                      {p.inStock ? (
-                        <>
-                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                          <span>Còn hàng</span>
-                        </>
-                      ) : (
-                        <>
-                          <XCircle className="w-3.5 h-3.5 text-rose-600" />
-                          <span>Hết hàng</span>
-                        </>
-                      )}
-                    </button>
+                    {(() => {
+                      const summary = getProductStockSummary(p);
+                      const isOutOfStock = summary.isAllOutOfStock;
+                      return (
+                        <button
+                          onClick={() => handleToggleStock(p)}
+                          disabled={isLoading}
+                          className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-bold transition-all shadow-2xs ${
+                            !isOutOfStock
+                              ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100'
+                              : 'bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100'
+                          } ${isLoading ? 'opacity-50 cursor-wait' : 'cursor-pointer'}`}
+                          title="Bấm để kích hoạt toàn bộ Còn / Hết hàng tức thì"
+                        >
+                          {!isOutOfStock ? (
+                            <>
+                              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                              <span>{summary.statusLabel}</span>
+                            </>
+                          ) : (
+                            <>
+                              <XCircle className="w-3.5 h-3.5 text-rose-600" />
+                              <span>{summary.statusLabel}</span>
+                            </>
+                          )}
+                        </button>
+                      );
+                    })()}
                   </td>
 
                   <td className="py-3.5 px-6 text-right">

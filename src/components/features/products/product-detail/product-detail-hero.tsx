@@ -12,16 +12,18 @@ interface ProductDetailHeroProps {
 }
 
 export function ProductDetailHero({ product }: ProductDetailHeroProps) {
-  const defaultFlavor = product.flavors?.[0] || {
+  const inStockFlavor = product.flavors?.find((f) => f.inStock !== false);
+  const defaultFlavor = inStockFlavor || product.flavors?.[0] || {
     id: 'default',
     name: 'Tiêu Chuẩn',
     colorHex: '#3b82f6',
   };
 
+  const inStockSize = product.sizes?.find((s) => s.inStock !== false);
+  const defaultSize = inStockSize || (product.sizes && product.sizes.length > 0 ? product.sizes[0] : undefined);
+
   const [selectedFlavor, setSelectedFlavor] = useState<ProductFlavor>(defaultFlavor);
-  const [selectedSize, setSelectedSize] = useState<ProductSize | undefined>(
-    product.sizes && product.sizes.length > 0 ? product.sizes[0] : undefined
-  );
+  const [selectedSize, setSelectedSize] = useState<ProductSize | undefined>(defaultSize);
 
   return (
     <div className="grid grid-cols-1 items-start gap-x-12 gap-y-6 lg:gap-y-10 lg:grid-cols-12 xl:gap-x-16">

@@ -61,9 +61,9 @@ export function ProductPurchaseActions({
         </div>
 
         <div className="flex items-center gap-3">
-          <span className="flex items-center gap-1.5 text-xs font-medium text-emerald-700">
-            <span className="h-2 w-2 rounded-full bg-emerald-500" />
-            {available ? 'Còn hàng trong kho' : 'Tạm hết hàng'}
+          <span className={`flex items-center gap-1.5 text-xs font-medium ${available ? 'text-emerald-700' : 'text-rose-600 font-semibold'}`}>
+            <span className={`h-2 w-2 rounded-full ${available ? 'bg-emerald-500' : 'bg-rose-500'}`} />
+            {available ? 'Còn hàng trong kho' : 'Tạm hết biến thể này'}
           </span>
           <button
             type="button"
@@ -109,7 +109,9 @@ export function ProductPurchaseActions({
           onClick={onAdd}
           disabled={!available}
           className={`h-11 sm:h-12 px-4 sm:px-7 rounded-full text-sm font-bold text-white shadow-md transition-all active:scale-[0.98] shrink-0 ${
-            added
+            !available
+              ? 'bg-slate-300 hover:bg-slate-300 text-slate-500 cursor-not-allowed shadow-none'
+              : added
               ? 'bg-emerald-600 hover:bg-emerald-700'
               : 'bg-apple-blue hover:bg-apple-blue-hover shadow-blue-500/20'
           }`}
@@ -119,7 +121,7 @@ export function ProductPurchaseActions({
           ) : (
             <ShoppingBag className="mr-1.5 sm:mr-2 h-4 sm:h-5 w-4 sm:w-5" />
           )}
-          <span>{added ? 'Đã thêm vào giỏ!' : 'Thêm vào giỏ hàng'}</span>
+          <span>{added ? 'Đã thêm vào giỏ!' : !available ? 'Tạm hết hàng' : 'Thêm vào giỏ hàng'}</span>
         </Button>
       </div>
 

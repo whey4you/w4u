@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Product, ProductFlavor, ProductSize } from '@/types/product';
 import { useCart } from '@/context/cart-context';
 import { getVariantPrice } from '@/lib/product-pricing';
+import { isVariantInStock } from '@/lib/product-stock';
 import { ProductOptionSelectors } from './product-option-selectors';
 import { ProductPurchaseActions } from './product-purchase-actions';
 
@@ -29,7 +30,7 @@ export function ProductInfo({
   const variantPricing = getVariantPrice(product, selectedSize, selectedFlavor.id);
   const price = variantPricing.price;
   const originalPrice = variantPricing.originalPrice;
-  const available = product.inStock && selectedSize?.inStock !== false;
+  const available = isVariantInStock(product, selectedSize, selectedFlavor.id, selectedFlavor);
 
   const handleAddToCart = () => {
     if (!available) return;
@@ -50,6 +51,7 @@ export function ProductInfo({
   return (
     <div className="space-y-4">
       <ProductOptionSelectors
+        product={product}
         flavors={product.flavors}
         sizes={product.sizes}
         selectedFlavor={selectedFlavor}

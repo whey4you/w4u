@@ -11,6 +11,7 @@ import { getProductHUDStats } from '@/lib/nutrition-helpers';
 import { ProductCardOptions } from './product-card-options';
 import { ProductFlavorImageSwiper } from './product-flavor-image-swiper';
 import { getVariantPrice } from '@/lib/product-pricing';
+import { isVariantInStock } from '@/lib/product-stock';
 
 interface AppleProductCardProps {
   product: Product;
@@ -18,8 +19,9 @@ interface AppleProductCardProps {
 
 export function AppleProductCard({ product }: AppleProductCardProps) {
   const { addItem } = useCart();
+  const inStockFlavor = product.flavors?.find((f) => f.inStock !== false);
   const [selectedFlavor, setSelectedFlavor] = useState<ProductFlavor>(
-    product.flavors[0] || { id: 'std', name: 'Tiêu chuẩn', colorHex: '#0071e3' }
+    inStockFlavor || product.flavors[0] || { id: 'std', name: 'Tiêu chuẩn', colorHex: '#0071e3' }
   );
   const [selectedSize, setSelectedSize] = useState<ProductSize | undefined>(
     product.sizes && product.sizes.length > 0
@@ -43,7 +45,7 @@ export function AppleProductCard({ product }: AppleProductCardProps) {
     } else {
       setSelectedSize(undefined);
     }
-  }, [product.sizes, selectedSize?.id]);
+  }, [product.sizes, selectedSize]);
 
   const [isAdded, setIsAdded] = useState(false);
   const hudStats = getProductHUDStats(product);
@@ -51,7 +53,7 @@ export function AppleProductCard({ product }: AppleProductCardProps) {
   const variantPricing = getVariantPrice(product, selectedSize, selectedFlavor.id);
   const price = variantPricing.price;
   const originalPrice = variantPricing.originalPrice;
-  const isAvailable = product.inStock && (selectedSize ? selectedSize.inStock !== false : true);
+  const isAvailable = isVariantInStock(product, selectedSize, selectedFlavor.id, selectedFlavor);
 
   const handleAddToCart = () => {
     if (!isAvailable) return;
@@ -134,6 +136,7 @@ export function AppleProductCard({ product }: AppleProductCardProps) {
 
         {/* Size & Flavor Options */}
         <ProductCardOptions
+          product={product}
           flavors={product.flavors}
           sizes={product.sizes}
           selectedFlavor={selectedFlavor}

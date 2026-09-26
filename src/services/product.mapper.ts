@@ -42,6 +42,7 @@ export interface RawProductRow {
     name: string;
     color_hex: string;
     image?: string;
+    in_stock?: boolean;
   }[];
   product_goals?: { goal: string }[];
   product_sizes?: {
@@ -105,6 +106,7 @@ export function mapRowToProduct(row: RawProductRow): Product {
     name: flavor.name,
     colorHex: flavor.color_hex,
     image: flavor.image || undefined,
+    inStock: flavor.in_stock !== false,
   }));
   const sizes: ProductSize[] = (row.product_sizes || [])
     .map((size, index) => ({

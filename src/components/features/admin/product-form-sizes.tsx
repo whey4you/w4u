@@ -36,22 +36,52 @@ export function ProductFormSizes({ sizes, setSizes, flavors = [] }: ProductFormS
     setSizes((prev) => prev.map((s) => (s.id === updatedSize.id ? updatedSize : s)));
   };
 
+  const handleSetAllSizesStock = (inStock: boolean) => {
+    setSizes((prev) => prev.map((s) => ({ ...s, inStock })));
+  };
+
+  const inStockSizesCount = sizes.filter((s) => s.inStock !== false).length;
+
   return (
     <div className="space-y-4 text-xs">
       {/* Current Sizes List */}
       <div>
-        <div className="flex items-center justify-between mb-2">
-          <label className="font-semibold text-slate-700">
-            Các Kích Cỡ & Giá Bán ({sizes.length})
-          </label>
-          <span className="text-[11px] text-slate-400">
-            Kéo thả hoặc dùng ⬆️ ⬇️ để đổi thứ tự hiển thị
-          </span>
+        <div className="flex items-center justify-between mb-2 flex-wrap gap-2">
+          <div className="flex items-center gap-2">
+            <label className="font-semibold text-slate-700">
+              Các Kích Cỡ & Giá Bán ({sizes.length})
+            </label>
+            {sizes.length > 0 && (
+              <span className="text-[11px] font-medium text-slate-500">
+                (Còn {inStockSizesCount}/{sizes.length} size)
+              </span>
+            )}
+          </div>
+          {sizes.length > 0 && (
+            <div className="flex items-center gap-1.5">
+              <button
+                type="button"
+                onClick={() => handleSetAllSizesStock(false)}
+                className="text-[10px] font-semibold text-rose-600 hover:text-rose-700 hover:bg-rose-50 px-2 py-0.5 rounded border border-rose-200 transition-colors cursor-pointer"
+                title="Đánh dấu tất cả các kích cỡ là Hết hàng"
+              >
+                Hết hàng tất cả size
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSetAllSizesStock(true)}
+                className="text-[10px] font-semibold text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 transition-colors cursor-pointer"
+                title="Đánh dấu tất cả các kích cỡ là Còn hàng"
+              >
+                Còn hàng tất cả size
+              </button>
+            </div>
+          )}
         </div>
 
         {sizes.length === 0 ? (
           <p className="text-slate-400 italic p-3 rounded-xl border border-dashed border-slate-200 text-center">
-            Chưa có kích cỡ nào. Vui lòng thêm ít nhất một kích cỡ kèm giá bán ở form bên dưới.
+            Chưa có kích cỡ nào. Vui lòng bấm &ldquo;Thêm Kích Cỡ Mới&rdquo; ở nút bên dưới để thiết lập.
           </p>
         ) : (
           <div className="space-y-2.5">

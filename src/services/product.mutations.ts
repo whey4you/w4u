@@ -60,6 +60,7 @@ async function syncProductDetails(id: string, payload: Partial<Product>) {
         name: flavor.name,
         color_hex: flavor.colorHex || '#0071e3',
         image: flavor.image || null,
+        in_stock: flavor.inStock !== false,
       })));
     }
   }
@@ -127,6 +128,35 @@ export async function toggleProductStock(id: string, inStock: boolean): Promise<
     return { success: true };
   } catch (err: any) {
     return { success: false, error: err?.message || 'Lỗi cập nhật trạng thái kho.' };
+  }
+}
+
+export async function bulkToggleProductStock(id: string, inStock: boolean): Promise<MutationResult> {
+  const isAdmin = await assertAdminSession();
+  if (!isAdmin) {
+    return { success: false, error: 'Phiên làm việc hết hạn hoặc không có quyền quản trị.' };
+  }
+
+  try {
+    await supabaseAdmin
+      .from('products')
+      .update({ in_stock: inStock, updated_at: new Date().toISOString() })
+      .eq('id', id);
+
+    await supabaseAdmin
+      .from('product_sizes')
+      .update({ in_stock: inStock })
+      .eq('product_id', id);
+
+    await supabaseAdmin
+      .from('product_flavors')
+      .update({ in_stock: inStock })
+      .eq('product_id', id);
+
+    revalidateProductPaths();
+    return { success: true };
+  } catch (err: any) {
+    return { success: false, error: err?.message || 'Lỗi cập nhật trạng thái kho toàn bộ.' };
   }
 }
 

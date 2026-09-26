@@ -47,13 +47,48 @@ export function ProductFormFlavors({
     setFlavors((prev) => prev.filter((f) => f.id !== id));
   };
 
+  const handleSetAllFlavorsStock = (inStock: boolean) => {
+    setFlavors((prev) => prev.map((f) => ({ ...f, inStock })));
+  };
+
+  const inStockFlavorsCount = flavors.filter((f) => f.inStock !== false).length;
+
   return (
     <div className="space-y-4 text-xs">
       {/* Current Flavors List */}
       <div>
-        <label className="block font-semibold text-slate-700 mb-2">
-          Danh Sách Hương Vị Đang Có ({flavors.length})
-        </label>
+        <div className="flex items-center justify-between mb-2 flex-wrap gap-2">
+          <div className="flex items-center gap-2">
+            <label className="font-semibold text-slate-700">
+              Danh Sách Hương Vị Đang Có ({flavors.length})
+            </label>
+            {flavors.length > 0 && (
+              <span className="text-[11px] font-medium text-slate-500">
+                (Còn {inStockFlavorsCount}/{flavors.length} vị)
+              </span>
+            )}
+          </div>
+          {flavors.length > 0 && (
+            <div className="flex items-center gap-1.5">
+              <button
+                type="button"
+                onClick={() => handleSetAllFlavorsStock(false)}
+                className="text-[10px] font-semibold text-rose-600 hover:text-rose-700 hover:bg-rose-50 px-2 py-0.5 rounded border border-rose-200 transition-colors cursor-pointer"
+                title="Đánh dấu tất cả các hương vị là Hết hàng"
+              >
+                Hết hàng tất cả vị
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSetAllFlavorsStock(true)}
+                className="text-[10px] font-semibold text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 transition-colors cursor-pointer"
+                title="Đánh dấu tất cả các hương vị là Còn hàng"
+              >
+                Còn hàng tất cả vị
+              </button>
+            </div>
+          )}
+        </div>
         <div className="space-y-2">
           {flavors.map((flv) => (
             <ProductFlavorItem

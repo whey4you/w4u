@@ -32,6 +32,7 @@ export function useProductForm({ product, isOpen, onSuccess, onClose }: UseProdu
   const [defaultImage, setDefaultImage] = useState('/products/r1-protein.jpg');
   const [images, setImages] = useState<string[]>([]);
   const [weightKg, setWeightKg] = useState('1.0');
+  const [inStock, setInStock] = useState(true);
 
   // Macro & Nutrition State
   const [proteinLabel, setProteinLabel] = useState('Protein / Lần Dùng');
@@ -84,6 +85,7 @@ export function useProductForm({ product, isOpen, onSuccess, onClose }: UseProdu
       setOriginalPrice(product.originalPrice ? String(product.originalPrice) : '');
       setBadge(product.badge || '');
       setWeightKg(product.weightKg ? String(product.weightKg) : '1.0');
+      setInStock(product.inStock !== false);
       setDefaultImage(product.defaultImage || '/products/r1-protein.jpg');
       setImages(product.images || []);
 
@@ -115,6 +117,7 @@ export function useProductForm({ product, isOpen, onSuccess, onClose }: UseProdu
       setOriginalPrice('');
       setBadge('');
       setWeightKg('1.0');
+      setInStock(true);
       setDefaultImage('/products/r1-protein.jpg');
       setImages([]);
       applyPreset('whey');
@@ -145,6 +148,7 @@ export function useProductForm({ product, isOpen, onSuccess, onClose }: UseProdu
       weightKg: Number(weightKg) > 0 ? Number(weightKg) : 1.0,
       defaultImage: defaultImage || '/products/r1-protein.jpg',
       images,
+      inStock,
       description,
       howToUse,
       macros: {
@@ -202,6 +206,7 @@ export function useProductForm({ product, isOpen, onSuccess, onClose }: UseProdu
     category, setCategory,
     badge, setBadge,
     weightKg, setWeightKg,
+    inStock, setInStock,
     defaultImage, setDefaultImage,
     images, setImages,
     protein, setProtein,

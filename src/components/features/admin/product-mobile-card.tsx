@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { Edit2, CheckCircle2, XCircle } from 'lucide-react';
 import { Product } from '@/types/product';
 import { formatPrice } from '@/lib/utils';
+import { getProductStockSummary } from '@/lib/product-stock';
 
 interface ProductMobileCardProps {
   product: Product;
@@ -67,28 +68,35 @@ export function ProductMobileCard({
 
       {/* Bottom row: Stock status & Edit button */}
       <div className="flex items-center justify-between gap-2 pt-2 border-t border-slate-100">
-        <button
-          type="button"
-          onClick={() => onToggleStock(product)}
-          disabled={isLoading}
-          className={`min-h-[40px] px-3 py-1.5 rounded-xl text-xs font-bold transition-all shadow-2xs inline-flex items-center gap-1.5 cursor-pointer ${
-            product.inStock
-              ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100'
-              : 'bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100'
-          } ${isLoading ? 'opacity-50 cursor-wait' : ''}`}
-        >
-          {product.inStock ? (
-            <>
-              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-              <span>Còn hàng</span>
-            </>
-          ) : (
-            <>
-              <XCircle className="w-3.5 h-3.5 text-rose-600" />
-              <span>Hết hàng</span>
-            </>
-          )}
-        </button>
+        {(() => {
+          const summary = getProductStockSummary(product);
+          const isOutOfStock = summary.isAllOutOfStock;
+          return (
+            <button
+              type="button"
+              onClick={() => onToggleStock(product)}
+              disabled={isLoading}
+              className={`min-h-[40px] px-3 py-1.5 rounded-xl text-xs font-bold transition-all shadow-2xs inline-flex items-center gap-1.5 cursor-pointer ${
+                !isOutOfStock
+                  ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100'
+                  : 'bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100'
+              } ${isLoading ? 'opacity-50 cursor-wait' : ''}`}
+              title="Bấm để kích hoạt toàn bộ Còn / Hết hàng tức thì"
+            >
+              {!isOutOfStock ? (
+                <>
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                  <span>{summary.statusLabel}</span>
+                </>
+              ) : (
+                <>
+                  <XCircle className="w-3.5 h-3.5 text-rose-600" />
+                  <span>{summary.statusLabel}</span>
+                </>
+              )}
+            </button>
+          );
+        })()}
 
         <button
           type="button"

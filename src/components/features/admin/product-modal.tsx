@@ -35,9 +35,24 @@ export function ProductModal({ isOpen, onClose, onSuccess, product }: ProductMod
       <div className="bg-white w-full max-w-3xl lg:max-w-4xl rounded-2xl shadow-2xl border border-slate-200 overflow-hidden max-h-[92vh] flex flex-col">
         {/* Header */}
         <div className="px-4 sm:px-6 py-3.5 sm:py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50 gap-2">
-          <h2 className="text-sm sm:text-base font-bold text-slate-900 truncate">
-            {form.isEditing ? 'Chỉnh Sửa Toàn Diện Sản Phẩm' : 'Thêm Sản Phẩm Mới'}
-          </h2>
+          <div className="flex items-center gap-3 min-w-0">
+            <h2 className="text-sm sm:text-base font-bold text-slate-900 truncate">
+              {form.isEditing ? 'Chỉnh Sửa Toàn Diện Sản Phẩm' : 'Thêm Sản Phẩm Mới'}
+            </h2>
+            <button
+              type="button"
+              onClick={() => form.setInStock(!form.inStock)}
+              className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold transition-all shadow-2xs cursor-pointer shrink-0 ${
+                form.inStock
+                  ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100'
+                  : 'bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100'
+              }`}
+              title="Bật/tắt trạng thái kho toàn bộ sản phẩm (Master Switch)"
+            >
+              <span className={`w-2 h-2 rounded-full ${form.inStock ? 'bg-emerald-500' : 'bg-rose-500'}`} />
+              <span>{form.inStock ? 'Kho: Đang Bán' : 'Kho: Hết Toàn Bộ'}</span>
+            </button>
+          </div>
           <button onClick={onClose} className="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-200 shrink-0 cursor-pointer">
             <X className="w-4 h-4" />
           </button>

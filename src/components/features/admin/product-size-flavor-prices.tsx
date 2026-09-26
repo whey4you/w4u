@@ -60,6 +60,18 @@ export function ProductSizeFlavorPrices({
     onChange(next);
   };
 
+  const handleToggleStock = (flavorId: string) => {
+    const current = flavorPrices[flavorId] || { price: 0 };
+    const newInStock = current.inStock === false ? true : false;
+    onChange({
+      ...flavorPrices,
+      [flavorId]: {
+        ...current,
+        inStock: newInStock,
+      },
+    });
+  };
+
   const defaultPriceText = defaultPrice ? Number(defaultPrice).toLocaleString('en-US') : '0';
   const defaultOrigText = defaultOriginalPrice ? Number(defaultOriginalPrice).toLocaleString('en-US') : '';
 
@@ -104,21 +116,23 @@ export function ProductSizeFlavorPrices({
               <thead>
                 <tr className="bg-slate-50 text-[11px] font-semibold text-slate-500 border-b border-slate-200">
                   <th className="py-1.5 px-3">Hương Vị</th>
-                  <th className="py-1.5 px-3 w-40">Giá Bán Riêng (VNĐ)</th>
-                  <th className="py-1.5 px-3 w-40">Giá Gốc Niêm Yết</th>
-                  <th className="py-1.5 px-2 text-center w-16">Thao Tác</th>
+                  <th className="py-1.5 px-2 text-center w-24">Kho Size Này</th>
+                  <th className="py-1.5 px-3 w-36">Giá Bán Riêng (VNĐ)</th>
+                  <th className="py-1.5 px-3 w-36">Giá Gốc Niêm Yết</th>
+                  <th className="py-1.5 px-2 text-center w-14">Xóa Giá</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {flavors.map((flv) => {
                   const current = flavorPrices[flv.id];
                   const hasCustom = Boolean(current && current.price > 0);
+                  const isFlavorInStock = current?.inStock !== false;
 
                   return (
                     <tr
                       key={flv.id}
                       className={`hover:bg-slate-50/70 transition-colors ${
-                        hasCustom ? 'bg-amber-50/30' : ''
+                        !isFlavorInStock ? 'bg-rose-50/30' : hasCustom ? 'bg-amber-50/30' : ''
                       }`}
                     >
                       {/* 1. Flavor Name */}
@@ -128,10 +142,26 @@ export function ProductSizeFlavorPrices({
                             className="w-2.5 h-2.5 rounded-full border border-black/10 shrink-0"
                             style={{ backgroundColor: flv.colorHex || '#0071e3' }}
                           />
-                          <span className="font-semibold text-slate-800 text-xs truncate">
+                          <span className={`font-semibold text-xs truncate ${!isFlavorInStock ? 'line-through text-slate-400' : 'text-slate-800'}`}>
                             {flv.name}
                           </span>
                         </div>
+                      </td>
+
+                      {/* 1.5. Stock Status Toggle for this Size */}
+                      <td className="py-1.5 px-2 text-center">
+                        <button
+                          type="button"
+                          onClick={() => handleToggleStock(flv.id)}
+                          className={`inline-flex items-center justify-center px-2 py-0.5 rounded-full text-[10px] font-bold transition-all shadow-2xs cursor-pointer ${
+                            isFlavorInStock
+                              ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100'
+                              : 'bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100'
+                          }`}
+                          title={`Bấm để chuyển thành ${isFlavorInStock ? 'Hết hàng' : 'Còn hàng'} cho vị này ở size này`}
+                        >
+                          {isFlavorInStock ? 'Còn' : 'Hết'}
+                        </button>
                       </td>
 
                       {/* 2. Custom Price Input */}

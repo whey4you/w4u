@@ -10,6 +10,7 @@ export interface ProductFlavor {
   name: string;
   colorHex: string;
   image?: string;
+  inStock?: boolean;
 }
 
 export interface NutritionTableRow {
@@ -38,6 +39,7 @@ export interface MacroNutrients {
 export interface ProductSizeFlavorPrice {
   price: number;
   originalPrice?: number;
+  inStock?: boolean;
 }
 
 export interface ProductSize {
