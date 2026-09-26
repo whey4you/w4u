@@ -45,14 +45,13 @@ export interface PendingCheckoutRecord {
  */
 export async function commitPaidOrder(identifier: number | string): Promise<{ success: boolean; orderId?: string; orderCode?: string; error?: string }> {
   const numericCode = typeof identifier === 'number' ? identifier : Number(String(identifier).replace(/\D/g, ''));
-  const orderCode = `W4U-${numericCode}`;
 
   try {
     // 1. Kiểm tra nếu đơn hàng đã được commit trước đó (tránh duplicate)
     const { data: existingOrder } = await supabaseAdmin
       .from('orders')
       .select('id, order_code, status')
-      .eq('order_code', orderCode)
+      .or(`order_code.eq.W4UF-${numericCode},order_code.eq.W4UC-${numericCode},order_code.eq.W4U-${numericCode}`)
       .maybeSingle();
 
     if (existingOrder) {

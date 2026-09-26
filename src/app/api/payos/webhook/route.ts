@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
       if (!commitRes.success) {
         console.error('[PayOS Webhook] Lỗi lưu đơn hàng:', commitRes.error);
       } else {
-        console.log(`[PayOS Webhook] Đơn hàng W4U-${orderCode} đã được lưu chính thức vào orders và kích hoạt AllinGo!`);
+        console.log(`[PayOS Webhook] Đơn hàng ${commitRes.orderCode || `W4U-${orderCode}`} đã được lưu chính thức vào orders và kích hoạt AllinGo!`);
       }
     }
 

@@ -31,7 +31,7 @@ export async function GET(_req: NextRequest, { params }: Params) {
     const { data: order } = await supabaseAdmin
       .from('orders')
       .select('id, order_code, status, payment_method, total_amount, tracking_code, carrier_name, tracking_url')
-      .or(`order_code.eq.${cleanCode},order_code.eq.W4U-${cleanCode}`)
+      .or(`order_code.eq.${cleanCode},order_code.eq.W4UF-${cleanCode},order_code.eq.W4UC-${cleanCode},order_code.eq.W4U-${cleanCode}`)
       .maybeSingle();
 
     if (order) {

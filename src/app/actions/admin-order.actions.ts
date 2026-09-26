@@ -243,7 +243,8 @@ export async function createManualOrderAction(payload: CreateManualOrderPayload)
     const codRemaining = codAmount;
     const timePart = Date.now() % 10000000;
     const randPart = Math.floor(10 + Math.random() * 90);
-    const orderCode = `W4U-${timePart}${randPart}`;
+    const prefix = isFullPaid ? 'W4UF' : 'W4UC';
+    const orderCode = `${prefix}-${timePart}${randPart}`;
 
     const status: OrderStatus = 'processing';
     let payNote = isFullPaid

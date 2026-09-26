@@ -101,11 +101,12 @@ async function loadProducts(items: CheckoutItemInput[]) {
     .in('id', ids);
 }
 
-function generateOrderCode(): { orderCode: string; numericCode: number } {
+function generateOrderCode(isDeposit = false): { orderCode: string; numericCode: number } {
   const timePart = Date.now() % 10000000;
   const randPart = Math.floor(10 + Math.random() * 90);
   const numericCode = Number(`${timePart}${randPart}`);
-  return { orderCode: `W4U-${numericCode}`, numericCode };
+  const prefix = isDeposit ? 'W4UC' : 'W4UF';
+  return { orderCode: `${prefix}-${numericCode}`, numericCode };
 }
 
 async function createPayOSLink(
@@ -120,11 +121,12 @@ async function createPayOSLink(
 ) {
   const payos = getPayOS();
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
-  const desc = (isDeposit ? `W4U Coc ${numericCode}` : `W4U ${numericCode}`).slice(0, 25);
+  const desc = (isDeposit ? `W4UC ${numericCode}` : `W4UF ${numericCode}`).slice(0, 25);
+  const prefix = isDeposit ? 'W4UC' : 'W4UF';
   const items = isDeposit
-    ? [{ name: `Đặt cọc đơn hàng W4U-${numericCode}`, quantity: 1, price: payAmount }]
+    ? [{ name: `Đặt cọc đơn hàng ${prefix}-${numericCode}`, quantity: 1, price: payAmount }]
     : (discountAmount > 0
-        ? [{ name: `Đơn hàng W4U-${numericCode}`, quantity: 1, price: payAmount }]
+        ? [{ name: `Đơn hàng ${prefix}-${numericCode}`, quantity: 1, price: payAmount }]
         : [
             ...validItems.map((item) => ({
               name: item.product_name.slice(0, 50),
@@ -239,9 +241,9 @@ export async function createOrderAction(input: CheckoutInput): Promise<CheckoutR
   // Tổng giá trị đơn hàng gồm tiền hàng (sau giảm giá) và phí vận chuyển
   const discountedSubtotal = Math.max(0, subtotal - discountAmount);
   const totalAmount = discountedSubtotal + shippingFee;
-  const { orderCode, numericCode } = generateOrderCode();
   const paymentMethod: PaymentMethod = input.paymentMethod === 'payos' ? 'payos' : 'cod';
   const isCod = paymentMethod === 'cod';
+  const { orderCode, numericCode } = generateOrderCode(isCod);
 
   const depositAmount = isCod ? Math.min(100000, totalAmount) : totalAmount;
   const codRemaining = isCod ? Math.max(0, totalAmount - depositAmount) : 0;
