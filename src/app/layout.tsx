@@ -87,6 +87,13 @@ export const metadata: Metadata = {
     icon: '/icon.png',
     apple: '/apple-touch-icon.png',
   },
+  ...(process.env.NEXT_PUBLIC_FACEBOOK_APP_ID
+    ? {
+        facebook: {
+          appId: process.env.NEXT_PUBLIC_FACEBOOK_APP_ID,
+        },
+      }
+    : {}),
 };
 
 export default function RootLayout({
