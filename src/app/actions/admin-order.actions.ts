@@ -37,6 +37,8 @@ export interface UpdateOrderPayload {
   carrierName?: string;
   shippingServiceId?: string;
   reissueShipment?: boolean;
+  discountAmount?: number;
+  couponCode?: string;
   items: AdminOrderItemInput[];
 }
 
@@ -70,7 +72,8 @@ export async function updateAdminOrderAction(payload: UpdateOrderPayload): Promi
   try {
     const subtotal = payload.items.reduce((sum, item) => sum + Number(item.price || 0) * Number(item.quantity || 1), 0);
     const shippingFee = typeof payload.shippingFee === 'number' ? Math.max(0, payload.shippingFee) : 0;
-    const totalAmount = subtotal + shippingFee;
+    const discountAmount = typeof payload.discountAmount === 'number' ? Math.max(0, payload.discountAmount) : 0;
+    const totalAmount = Math.max(0, subtotal + shippingFee - discountAmount);
     const codAmount = typeof payload.codAmount === 'number'
       ? Math.max(0, payload.codAmount)
       : (typeof payload.codRemaining === 'number' ? payload.codRemaining : 0);
@@ -104,6 +107,12 @@ export async function updateAdminOrderAction(payload: UpdateOrderPayload): Promi
 
     if (typeof payload.shippingFee === 'number' && payload.shippingFee > 0) {
       updateFields.shipping_fee = payload.shippingFee;
+    }
+    if (typeof payload.discountAmount === 'number') {
+      updateFields.discount_amount = payload.discountAmount;
+    }
+    if (payload.couponCode !== undefined) {
+      updateFields.coupon_code = payload.couponCode || null;
     }
     if (payload.carrierName) {
       updateFields.carrier_name = payload.carrierName;
@@ -427,7 +436,33 @@ export async function fulfillManualOrderAction(orderId: string): Promise<{ succe
   }
   try {
     const res = await fulfillOrderWithAllinGo(orderId);
+    if (res.success && res.trackingNumber) {
+      try {
+        const { data: ord } = await supabaseAdmin
+          .from('orders')
+          .select('order_code, carrier_name')
+          .eq('id', orderId)
+          .single();
+        if (ord) {
+          let waybillPdfUrl: string | undefined;
+          if (res.allingoOrderId) {
+            const pdf = await getAllinGoWaybillPdfWithRetry(res.allingoOrderId, 1, 1500);
+            if (pdf.success && pdf.url) waybillPdfUrl = pdf.url;
+          }
+          await sendTelegramShipmentDispatchedNotice(
+            ord.order_code,
+            res.carrierName || ord.carrier_name || 'AllinGo',
+            res.trackingNumber,
+            res.trackingUrl,
+            waybillPdfUrl
+          );
+        }
+      } catch (tErr) {
+        console.warn('[Fulfill Manual Order] Telegram notice error:', tErr);
+      }
+    }
     revalidatePath('/admin/orders');
+    revalidatePath('/admin');
     return res;
   } catch (err: any) {
     return { success: false, error: err?.message || 'Lỗi khi lên đơn AllinGo.' };

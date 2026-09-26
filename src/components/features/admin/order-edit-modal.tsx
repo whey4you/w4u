@@ -177,34 +177,53 @@ export function OrderEditModal({ isOpen, onClose, order, products, onSuccess }: 
     setSaving(true);
     setErrorMsg(null);
 
-    const res = await updateAdminOrderAction({
-      orderId: order.id,
-      customerName,
-      customerPhone,
-      customerEmail,
-      customerAddress: finalAddress,
-      provinceCode: addressData?.cityId || order.province_code,
-      districtCode: addressData?.districtId || order.district_code,
-      wardCode: addressData?.wardId || order.ward_code,
-      notes,
-      status,
-      codAmount: Number(codAmount),
-      shippingFee,
-      carrierName,
-      shippingServiceId: selectedServiceId || undefined,
-      reissueShipment,
-      items,
-    });
+    try {
+      const res = await updateAdminOrderAction({
+        orderId: order.id,
+        customerName,
+        customerPhone,
+        customerEmail,
+        customerAddress: finalAddress,
+        provinceCode: addressData?.cityId || order.province_code,
+        districtCode: addressData?.districtId || order.district_code,
+        wardCode: addressData?.wardId || order.ward_code,
+        notes,
+        status,
+        codAmount: Number(codAmount),
+        shippingFee,
+        discountAmount: Number(order.discount_amount || 0),
+        couponCode: order.coupon_code || undefined,
+        paymentMethod: order.payment_method,
+        carrierName,
+        shippingServiceId: selectedServiceId || undefined,
+        reissueShipment,
+        items,
+      });
 
-    setSaving(false);
-    if (res.success) {
-      if ((res as any).warning) {
-        alert((res as any).warning);
+      if (res.success) {
+        if ((res as any).warning) {
+          alert((res as any).warning);
+        }
+        onSuccess();
+        onClose();
+      } else {
+        setErrorMsg(res.error || 'Cập nhật đơn hàng thất bại.');
       }
-      onSuccess();
-      onClose();
-    } else {
-      setErrorMsg(res.error || 'Cập nhật đơn hàng thất bại.');
+    } catch (err: any) {
+      const errMsg = err?.message || String(err);
+      if (
+        err?.name === 'UnrecognizedActionError' ||
+        errMsg.includes('Server Action') ||
+        errMsg.includes('not found on the server') ||
+        errMsg.includes('Failed to load resource')
+      ) {
+        setErrorMsg('Phiên bản web vừa được cập nhật. Đang tự động tải lại trang...');
+        setTimeout(() => window.location.reload(), 1200);
+      } else {
+        setErrorMsg(errMsg || 'Lỗi khi lưu đơn hàng.');
+      }
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -212,27 +231,37 @@ export function OrderEditModal({ isOpen, onClose, order, products, onSuccess }: 
     if (!confirm('Bạn có chắc muốn hủy vận đơn AllinGo này để cập nhật đơn?')) return;
     setCancellingShipment(true);
     setErrorMsg(null);
-    const res = await cancelAllinGoShipmentAction(order.id);
-    setCancellingShipment(false);
-    if (res.success) {
-      setCurrentTrackingCode(null);
-      setCurrentAllingoOrderId(null);
-      await onSuccess();
-    } else {
-      setErrorMsg(res.error || 'Không thể hủy vận đơn AllinGo.');
+    try {
+      const res = await cancelAllinGoShipmentAction(order.id);
+      if (res.success) {
+        setCurrentTrackingCode(null);
+        setCurrentAllingoOrderId(null);
+        await onSuccess();
+      } else {
+        setErrorMsg(res.error || 'Không thể hủy vận đơn AllinGo.');
+      }
+    } catch (err: any) {
+      setErrorMsg(err?.message || 'Lỗi khi hủy vận đơn AllinGo.');
+    } finally {
+      setCancellingShipment(false);
     }
   };
 
   const handleFulfillNow = async () => {
     setFulfilling(true);
     setErrorMsg(null);
-    const res = await fulfillManualOrderAction(order.id);
-    setFulfilling(false);
-    if (res.success) {
-      setCurrentTrackingCode(res.trackingNumber || 'Đã tạo vận đơn');
-      await onSuccess();
-    } else {
-      setErrorMsg(res.error || 'Không thể tạo vận đơn AllinGo.');
+    try {
+      const res = await fulfillManualOrderAction(order.id);
+      if (res.success) {
+        setCurrentTrackingCode(res.trackingNumber || 'Đã tạo vận đơn');
+        await onSuccess();
+      } else {
+        setErrorMsg(res.error || 'Không thể tạo vận đơn AllinGo. Vui lòng kiểm tra số dư ví AllinGo.');
+      }
+    } catch (err: any) {
+      setErrorMsg(err?.message || 'Lỗi khi lên đơn AllinGo.');
+    } finally {
+      setFulfilling(false);
     }
   };
 
@@ -254,7 +283,7 @@ export function OrderEditModal({ isOpen, onClose, order, products, onSuccess }: 
     }
   };
 
-  const totalToCollect = Number(codAmount) + (shippingFee || 0);
+  const totalToCollect = Number(codAmount);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200">
@@ -370,6 +399,7 @@ export function OrderEditModal({ isOpen, onClose, order, products, onSuccess }: 
               key={order.id}
               subtotal={subtotal}
               shippingFee={shippingFee}
+              discountAmount={Number(order.discount_amount || 0)}
               value={codAmount}
               onChange={setCodAmount}
               initialDeposit={order.deposit_amount}
@@ -464,11 +494,26 @@ export function OrderEditModal({ isOpen, onClose, order, products, onSuccess }: 
                   • Ship: <span className="font-bold text-slate-800">{formatPrice(shippingFee)}</span>
                 </span>
               )}
+              {Number(order.discount_amount || 0) > 0 && (
+                <span className="text-emerald-600 font-semibold ml-2">
+                  • Giảm voucher ({order.coupon_code || 'Voucher'}): -{formatPrice(Number(order.discount_amount))}
+                </span>
+              )}
             </div>
             <div>
-              <span className="text-slate-500">Thu khi giao: </span>
-              <span className="text-sm sm:text-base font-black text-blue-600">{formatPrice(totalToCollect)}</span>
-              {Number(codAmount) === 0 && <span className="text-[11px] text-emerald-600 font-semibold ml-1">(Chỉ thu cước ship)</span>}
+              <span className="text-slate-500">Thu khi giao (COD): </span>
+              <span className={`text-sm sm:text-base font-black ${Number(codAmount) === 0 ? 'text-emerald-600' : 'text-blue-600'}`}>
+                {formatPrice(totalToCollect)}
+              </span>
+              {Number(codAmount) === 0 ? (
+                <span className="text-[11px] text-emerald-600 font-semibold ml-1.5">
+                  ✅ Đã thanh toán 100% (Shipper không thu tiền)
+                </span>
+              ) : (
+                <span className="text-[11px] text-amber-600 font-semibold ml-1.5">
+                  📦 Shipper thu khi nhận hàng
+                </span>
+              )}
             </div>
           </div>
           <div className="flex items-center gap-2 justify-end">

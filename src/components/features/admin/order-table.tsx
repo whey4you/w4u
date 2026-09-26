@@ -1,9 +1,9 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Eye, Clock, Edit3, Trash2 } from 'lucide-react';
+import { Eye, Clock, Edit3, Trash2, Truck, AlertTriangle } from 'lucide-react';
 import { Order, OrderStatus } from '@/services/order.service';
-import { updateAdminOrderStatusAction } from '@/app/actions/admin-order.actions';
+import { updateAdminOrderStatusAction, fulfillManualOrderAction } from '@/app/actions/admin-order.actions';
 import { formatPrice } from '@/lib/utils';
 import { OrderDetailModal } from './order-detail-modal';
 import { OrderMobileCard } from './order-mobile-card';
@@ -26,6 +26,24 @@ const STATUS_OPTIONS: { value: OrderStatus; label: string; bg: string }[] = [
 export function OrderTable({ orders, onRefresh, onEditOrder, onDeleteOrder }: OrderTableProps) {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
+  const [retryingFulfillId, setRetryingFulfillId] = useState<string | null>(null);
+
+  const handleRetryFulfill = async (orderId: string) => {
+    setRetryingFulfillId(orderId);
+    try {
+      const res = await fulfillManualOrderAction(orderId);
+      if (res.success) {
+        alert('Tạo vận đơn AllinGo thành công: ' + (res.trackingNumber || ''));
+        onRefresh();
+      } else {
+        alert('Chưa thể lên đơn AllinGo: ' + (res.error || 'Vui lòng nạp tiền vào ví AllinGo trước khi thử lại'));
+      }
+    } catch (err: any) {
+      alert('Lỗi kết nối máy chủ: ' + (err?.message || 'Vui lòng thử lại'));
+    } finally {
+      setRetryingFulfillId(null);
+    }
+  };
 
   const handleStatusChange = async (orderId: string, newStatus: OrderStatus) => {
     setUpdatingId(orderId);
@@ -119,7 +137,24 @@ export function OrderTable({ orders, onRefresh, onEditOrder, onDeleteOrder }: Or
                             🚚 {order.carrier_name || 'Vận chuyển'}: {order.tracking_code || order.allingo_track_id}
                           </a>
                         )}
-
+                        {!order.tracking_code && !order.allingo_order_id && Boolean(order.notes && (order.notes.includes('Insufficient wallet balance') || order.notes.includes('API 402'))) && (
+                          <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
+                            <span className="inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded bg-rose-100 text-rose-700 border border-rose-200">
+                              <AlertTriangle className="w-3 h-3 text-rose-600" />
+                              Ví AllinGo thiếu tiền ({formatPrice(Number(order.shipping_fee || 15000))})
+                            </span>
+                            <button
+                              type="button"
+                              disabled={retryingFulfillId === order.id}
+                              onClick={() => handleRetryFulfill(order.id)}
+                              className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded bg-blue-600 hover:bg-blue-700 text-white transition-colors cursor-pointer disabled:opacity-50"
+                              title="Bấm để phát hành lại mã vận đơn sau khi đã nạp tiền vào ví AllinGo"
+                            >
+                              <Truck className="w-3 h-3" />
+                              <span>{retryingFulfillId === order.id ? 'Đang lên đơn...' : 'Đẩy lại AllinGo'}</span>
+                            </button>
+                          </div>
+                        )}
                       </div>
                     </td>
 
@@ -161,7 +196,7 @@ export function OrderTable({ orders, onRefresh, onEditOrder, onDeleteOrder }: Or
                       </select>
                     </td>
 
-                    <td className="py-3.5 px-4 text-slate-400">
+                    <td className="py-3.5 px-4 text-slate-400" suppressHydrationWarning>
                       {new Date(order.created_at).toLocaleDateString('vi-VN', {
                         day: '2-digit',
                         month: '2-digit',
@@ -220,6 +255,7 @@ export function OrderTable({ orders, onRefresh, onEditOrder, onDeleteOrder }: Or
       onClose={() => setSelectedOrder(null)}
       order={selectedOrder}
       onEdit={selectedOrder && onEditOrder ? () => onEditOrder(selectedOrder) : undefined}
+      onDelete={selectedOrder && onDeleteOrder ? () => onDeleteOrder(selectedOrder) : undefined}
     />
   </>
 );

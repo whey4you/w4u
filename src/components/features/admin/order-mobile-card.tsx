@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Eye, Edit3, Trash2, Phone, MapPin, Truck } from 'lucide-react';
+import { Eye, Edit3, Trash2, Phone, MapPin, Truck, AlertTriangle } from 'lucide-react';
 import { Order, OrderStatus } from '@/services/order.service';
 import { formatPrice } from '@/lib/utils';
 
@@ -35,7 +35,7 @@ export function OrderMobileCard({
           <span className="font-mono font-bold text-sm text-blue-600">
             {order.order_code}
           </span>
-          <p className="text-[10px] text-slate-400 mt-0.5">
+          <p className="text-[10px] text-slate-400 mt-0.5" suppressHydrationWarning>
             {new Date(order.created_at).toLocaleDateString('vi-VN', {
               day: '2-digit',
               month: '2-digit',
@@ -102,6 +102,13 @@ export function OrderMobileCard({
               {order.carrier_name || 'Vận chuyển'}: {order.tracking_code || order.allingo_track_id}
             </span>
           </a>
+        )}
+
+        {!order.tracking_code && !order.allingo_order_id && Boolean(order.notes && (order.notes.includes('Insufficient wallet balance') || order.notes.includes('API 402'))) && (
+          <div className="flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded bg-rose-100 text-rose-700 border border-rose-200 w-fit">
+            <AlertTriangle className="w-3 h-3 text-rose-600 shrink-0" />
+            <span>Ví AllinGo thiếu tiền ({formatPrice(Number(order.shipping_fee || 15000))})</span>
+          </div>
         )}
       </div>
 

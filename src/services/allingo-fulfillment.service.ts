@@ -1,5 +1,6 @@
 import { supabaseAdmin } from '@/lib/supabase/server';
 import { createAllinGoOrder } from '@/lib/allingo';
+import { checkAndAlertLowAllinGoBalance, sendAllinGoOutOfCreditAlert } from '@/services/telegram-finance.service';
 
 interface OrderFulfillmentData {
   id: string;
@@ -166,6 +167,9 @@ export async function fulfillOrderWithAllinGo(orderId: string): Promise<FulfillO
       }
 
       console.log(`[AllinGo Fulfillment] Thành công: ${result.trackingNumber} cho đơn ${ord.order_code}`);
+      // Kiểm tra ngầm số dư ví AllinGo, cảnh báo Telegram nếu gần hết tiền cước
+      void checkAndAlertLowAllinGoBalance(100000).catch((e) => console.warn('[AllinGo Balance Check Warn]:', e));
+
       return {
         success: true,
         trackingNumber: result.trackingNumber,
@@ -182,6 +186,20 @@ export async function fulfillOrderWithAllinGo(orderId: string): Promise<FulfillO
       }).eq('id', ord.id);
 
       console.error(`[AllinGo Fulfillment] Thất bại cho đơn ${ord.order_code}:`, result.error);
+
+      // Cảnh báo khẩn cấp qua Telegram nếu lỗi do hết tiền ví
+      const isOutOfCredit = Boolean(
+        result.error &&
+        (result.error.includes('insufficient_wallet_credit') ||
+         result.error.includes('402') ||
+         result.error.toLowerCase().includes('số dư'))
+      );
+      if (isOutOfCredit) {
+        void sendAllinGoOutOfCreditAlert(ord.order_code, result.error).catch((e) =>
+          console.warn('[AllinGo Out of Credit Alert Warn]:', e)
+        );
+      }
+
       return { success: false, error: result.error };
     }
   } catch (err: any) {

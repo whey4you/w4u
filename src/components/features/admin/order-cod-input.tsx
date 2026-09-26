@@ -4,6 +4,7 @@ import { formatPrice } from '@/lib/utils';
 interface OrderCodInputProps {
   subtotal: number;
   shippingFee?: number;
+  discountAmount?: number;
   value: number; // Tiền thu COD hiện tại
   onChange: (calculatedCod: number) => void;
   initialDeposit?: number;
@@ -13,20 +14,22 @@ interface OrderCodInputProps {
 export function OrderCodInput({
   subtotal,
   shippingFee = 0,
+  discountAmount = 0,
   value,
   onChange,
   initialDeposit,
   className = '',
 }: OrderCodInputProps) {
   const fee = Math.max(0, Number(shippingFee || 0));
-  const totalOrder = subtotal + fee;
+  const discount = Math.max(0, Number(discountAmount || 0));
+  const totalOrder = Math.max(0, subtotal + fee - discount);
 
   // depositInput có thể là chuỗi số (vd: "200000") hoặc "Full"
   const [depositInput, setDepositInput] = useState<string>(() => {
     if (typeof initialDeposit === 'number' && initialDeposit > 0) {
       return initialDeposit >= totalOrder && totalOrder > 0 ? 'Full' : String(initialDeposit);
     }
-    if (value === 0 && totalOrder > 0) {
+    if (value === 0 && totalOrder >= 0) {
       return 'Full';
     }
     return '';
@@ -51,7 +54,7 @@ export function OrderCodInput({
       {/* Hàng 1: Tổng tiền đơn hàng */}
       <div>
         <label className="text-[11px] font-bold text-slate-600 block uppercase tracking-wider mb-1">
-          1. Tổng Giá Trị Đơn {fee > 0 ? `(Tiền hàng ${formatPrice(subtotal)} + Cước ship ${formatPrice(fee)})` : '(Tiền Hàng)'}
+          1. Tổng Giá Trị Đơn {discount > 0 ? `(Hàng ${formatPrice(subtotal)} + Ship ${formatPrice(fee)} - Giảm ${formatPrice(discount)})` : fee > 0 ? `(Tiền hàng ${formatPrice(subtotal)} + Cước ship ${formatPrice(fee)})` : '(Tiền Hàng)'}
         </label>
         <div className="relative">
           <input

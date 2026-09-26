@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { X, MapPin, Phone, User, FileText, ShoppingCart, Edit3 } from 'lucide-react';
+import { X, MapPin, Phone, User, FileText, ShoppingCart, Edit3, Trash2 } from 'lucide-react';
 import { Order } from '@/services/order.service';
 import { formatPrice } from '@/lib/utils';
 
@@ -10,9 +10,10 @@ interface OrderDetailModalProps {
   onClose: () => void;
   order: Order | null;
   onEdit?: () => void;
+  onDelete?: () => void;
 }
 
-export function OrderDetailModal({ isOpen, onClose, order, onEdit }: OrderDetailModalProps) {
+export function OrderDetailModal({ isOpen, onClose, order, onEdit, onDelete }: OrderDetailModalProps) {
   if (!isOpen || !order) return null;
 
   return (
@@ -27,7 +28,7 @@ export function OrderDetailModal({ isOpen, onClose, order, onEdit }: OrderDetail
                 {order.order_code}
               </span>
             </div>
-            <p className="text-[11px] sm:text-xs text-slate-400 mt-0.5">
+            <p className="text-[11px] sm:text-xs text-slate-400 mt-0.5" suppressHydrationWarning>
               Ngày đặt: {new Date(order.created_at).toLocaleString('vi-VN')}
             </p>
           </div>
@@ -171,7 +172,21 @@ export function OrderDetailModal({ isOpen, onClose, order, onEdit }: OrderDetail
 
         {/* Modal Footer */}
         <div className="px-4 sm:px-6 py-3 border-t border-slate-200 bg-slate-50 flex items-center justify-between gap-2">
-          <div>
+          <div className="flex items-center gap-2">
+            {onDelete && (
+              <button
+                type="button"
+                onClick={() => {
+                  onClose();
+                  onDelete();
+                }}
+                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-semibold text-xs transition-colors cursor-pointer"
+                title="Xóa đơn hàng này"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>Xóa Đơn</span>
+              </button>
+            )}
             {onEdit && (
               <button
                 type="button"

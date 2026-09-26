@@ -5,3 +5,4 @@ export * from './centroids';
 export * from './rates';
 export * from './orders';
 export * from './webhook';
+export * from './wallet';

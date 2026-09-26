@@ -31,14 +31,29 @@ export function OrderDeleteModal({
   const handleConfirmDelete = async () => {
     setDeleting(true);
     setErrorMsg(null);
-    const res = await deleteAdminOrderAction(order.id);
-    setDeleting(false);
-
-    if (res.success) {
-      onDeleted();
-      onClose();
-    } else {
-      setErrorMsg(res.error || 'Không thể xóa đơn hàng.');
+    try {
+      const res = await deleteAdminOrderAction(order.id);
+      if (res.success) {
+        onDeleted();
+        onClose();
+      } else {
+        setErrorMsg(res.error || 'Không thể xóa đơn hàng.');
+      }
+    } catch (err: any) {
+      const errMsg = err?.message || String(err);
+      if (
+        err?.name === 'UnrecognizedActionError' ||
+        errMsg.includes('Server Action') ||
+        errMsg.includes('not found on the server') ||
+        errMsg.includes('Failed to load resource')
+      ) {
+        setErrorMsg('Phiên bản web vừa được cập nhật. Đang tự động tải lại trang...');
+        setTimeout(() => window.location.reload(), 1200);
+      } else {
+        setErrorMsg(errMsg || 'Không thể xóa đơn hàng.');
+      }
+    } finally {
+      setDeleting(false);
     }
   };
 
