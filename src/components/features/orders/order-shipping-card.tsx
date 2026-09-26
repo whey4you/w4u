@@ -66,6 +66,26 @@ export function OrderShippingCard({ order, spxResult }: OrderShippingCardProps) 
         </div>
       )}
 
+      {/* Hỗ trợ đổi thông tin / hãng vận chuyển khi đơn đang xử lý */}
+      {order && (order.status === 'processing' || order.status === 'pending') && (
+        <div className="p-3.5 rounded-2xl bg-amber-50/80 border border-amber-200/80 flex items-center justify-between gap-3 text-xs">
+          <div className="min-w-0">
+            <span className="font-bold text-amber-950 block">Cần đổi địa chỉ hoặc đơn vị vận chuyển?</span>
+            <p className="text-[11px] text-amber-800 line-clamp-1 mt-0.5">
+              Đơn hàng đang chuẩn bị. Nhắn Shop qua Zalo ngay để hỗ trợ đổi kịp thời nhé!
+            </p>
+          </div>
+          <a
+            href="https://zalo.me/0559959433"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-amber-600 hover:bg-amber-700 text-white font-semibold text-[11px] transition-colors shadow-2xs shrink-0"
+          >
+            <span>Nhắn Zalo</span>
+          </a>
+        </div>
+      )}
+
       {/* Thông tin đơn vị vận chuyển & Mã vận đơn */}
       {trackingCode && (
         <div className="p-3.5 rounded-2xl bg-blue-50/70 border border-blue-100 flex items-center justify-between gap-3 text-xs">

@@ -43,6 +43,7 @@ export function OrderEditModal({ isOpen, onClose, order, products, onSuccess }: 
   const [loadingPdf, setLoadingPdf] = useState(false);
   const [currentTrackingCode, setCurrentTrackingCode] = useState<string | null>(order?.tracking_code || order?.allingo_track_id || null);
   const [currentAllingoOrderId, setCurrentAllingoOrderId] = useState<string | null>(order?.allingo_order_id || null);
+  const [reissueShipment, setReissueShipment] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const handleSelectRate = (rate: FormattedShippingRate) => {
@@ -50,6 +51,9 @@ export function OrderEditModal({ isOpen, onClose, order, products, onSuccess }: 
     setShippingFee(rate.totalFee);
     setCarrierName(rate.carrierName);
     setExpectedDelivery(rate.expected || '');
+    if (currentTrackingCode || currentAllingoOrderId) {
+      setReissueShipment(true);
+    }
   };
 
   useEffect(() => {
@@ -188,11 +192,15 @@ export function OrderEditModal({ isOpen, onClose, order, products, onSuccess }: 
       shippingFee,
       carrierName,
       shippingServiceId: selectedServiceId || undefined,
+      reissueShipment,
       items,
     });
 
     setSaving(false);
     if (res.success) {
+      if ((res as any).warning) {
+        alert((res as any).warning);
+      }
       onSuccess();
       onClose();
     } else {
@@ -369,46 +377,66 @@ export function OrderEditModal({ isOpen, onClose, order, products, onSuccess }: 
           </div>
 
           {/* Shipping management */}
-          <div className="p-3 rounded-xl bg-orange-50/70 border border-orange-200/80 flex items-center justify-between gap-3">
-            <div>
-              <p className="font-bold text-orange-950 flex items-center gap-1.5">
-                <Truck className="w-3.5 h-3.5 text-orange-600" />
-                Vận chuyển AllinGo: {currentTrackingCode ? `Mã ${currentTrackingCode}` : 'Chưa lên vận đơn'}
-              </p>
-              <p className="text-[11px] text-orange-800 mt-0.5">
-                {currentTrackingCode || currentAllingoOrderId ? 'Đã có vận đơn trên sàn logistics.' : 'Bạn có thể tự đẩy sang AllinGo bất cứ lúc nào.'}
-              </p>
-            </div>
-            {currentTrackingCode || currentAllingoOrderId ? (
-              <div className="flex items-center gap-2 flex-wrap">
-                <button
-                  type="button"
-                  disabled={loadingPdf}
-                  onClick={handleViewWaybillPdf}
-                  className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs whitespace-nowrap transition-colors cursor-pointer flex items-center gap-1.5"
-                  title="Mở hoặc in tệp PDF mã vận đơn bưu cục"
-                >
-                  <FileText className="w-3.5 h-3.5" />
-                  {loadingPdf ? 'Đang lấy...' : 'In Vận Đơn (PDF)'}
-                </button>
-                <button
-                  type="button"
-                  disabled={cancellingShipment}
-                  onClick={handleCancelShipment}
-                  className="px-3 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-semibold text-xs whitespace-nowrap transition-colors cursor-pointer"
-                >
-                  {cancellingShipment ? 'Đang hủy...' : 'Hủy Vận Đơn'}
-                </button>
+          <div className="p-3.5 rounded-xl bg-orange-50/70 border border-orange-200/80 space-y-2.5">
+            <div className="flex items-center justify-between gap-3 flex-wrap">
+              <div>
+                <p className="font-bold text-orange-950 flex items-center gap-1.5">
+                  <Truck className="w-3.5 h-3.5 text-orange-600" />
+                  Vận chuyển AllinGo: {currentTrackingCode ? `Mã ${currentTrackingCode}` : 'Chưa lên vận đơn'}
+                </p>
+                <p className="text-[11px] text-orange-800 mt-0.5">
+                  {currentTrackingCode || currentAllingoOrderId ? `Đơn vị hiện tại: ${carrierName || 'AllinGo'}` : 'Bạn có thể tự đẩy sang AllinGo bất cứ lúc nào.'}
+                </p>
               </div>
-            ) : (
-              <button
-                type="button"
-                disabled={fulfilling}
-                onClick={handleFulfillNow}
-                className="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs whitespace-nowrap transition-colors cursor-pointer"
-              >
-                {fulfilling ? 'Đang lên đơn...' : 'Lên Vận Đơn AllinGo'}
-              </button>
+              {currentTrackingCode || currentAllingoOrderId ? (
+                <div className="flex items-center gap-2 flex-wrap">
+                  <button
+                    type="button"
+                    disabled={loadingPdf}
+                    onClick={handleViewWaybillPdf}
+                    className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs whitespace-nowrap transition-colors cursor-pointer flex items-center gap-1.5"
+                    title="Mở hoặc in tệp PDF mã vận đơn bưu cục"
+                  >
+                    <FileText className="w-3.5 h-3.5" />
+                    {loadingPdf ? 'Đang lấy...' : 'In Vận Đơn (PDF)'}
+                  </button>
+                  <button
+                    type="button"
+                    disabled={cancellingShipment}
+                    onClick={handleCancelShipment}
+                    className="px-3 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-semibold text-xs whitespace-nowrap transition-colors cursor-pointer"
+                  >
+                    {cancellingShipment ? 'Đang hủy...' : 'Hủy Vận Đơn'}
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  disabled={fulfilling}
+                  onClick={handleFulfillNow}
+                  className="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs whitespace-nowrap transition-colors cursor-pointer"
+                >
+                  {fulfilling ? 'Đang lên đơn...' : 'Lên Vận Đơn AllinGo'}
+                </button>
+              )}
+            </div>
+
+            {/* Tùy chọn 1-Click: Tự động đổi hãng & cấp lại vận đơn AllinGo */}
+            {(currentTrackingCode || currentAllingoOrderId) && (
+              <div className="pt-2 border-t border-orange-200/60">
+                <label className="flex items-start gap-2 cursor-pointer select-none text-[11px] font-semibold text-orange-950">
+                  <input
+                    type="checkbox"
+                    checked={reissueShipment}
+                    onChange={(e) => setReissueShipment(e.target.checked)}
+                    className="mt-0.5 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                  />
+                  <span>🔄 Tự động hủy mã cũ và cấp lại vận đơn AllinGo mới với hãng: <b>{carrierName || 'Hãng đã chọn'}</b></span>
+                </label>
+                <p className="text-[10px] text-orange-700 pl-5 mt-0.5">
+                  Ví AllinGo nhận hoàn tiền cước đơn cũ 100% (nếu bưu tá chưa lấy). Khoản cước chênh lệch với khách được xử lý trực tiếp ngoài web.
+                </p>
+              </div>
             )}
           </div>
 

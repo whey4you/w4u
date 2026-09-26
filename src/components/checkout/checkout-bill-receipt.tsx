@@ -141,6 +141,28 @@ export function CheckoutBillReceipt({
         trackingUrl={trackingInfo?.trackingUrl}
       />
 
+      {/* 3. HỖ TRỢ ĐỔI THÔNG TIN / ĐƠN VỊ VẬN CHUYỂN KHI VỪA THANH TOÁN */}
+      {isPaid && (
+        <div className="p-4 sm:p-5 rounded-2xl bg-amber-50/80 border border-amber-200/80 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs print:hidden animate-in fade-in duration-300">
+          <div className="space-y-0.5">
+            <p className="font-bold text-amber-950 flex items-center gap-1.5 text-xs sm:text-sm">
+              💬 Cần đổi địa chỉ hoặc đơn vị vận chuyển?
+            </p>
+            <p className="text-[11px] text-amber-800 leading-relaxed">
+              Đơn hàng đang trong khâu đóng gói. Nếu quý khách cần đổi sang Hỏa Tốc hoặc sửa địa chỉ nhận hàng, hãy nhắn Shop qua Zalo ngay nhé!
+            </p>
+          </div>
+          <a
+            href="https://zalo.me/0559959433"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs shadow-xs transition-colors shrink-0"
+          >
+            <span>Nhắn Zalo Shop hỗ trợ</span>
+          </a>
+        </div>
+      )}
+
       {/* Action Navigation Footer - CHỈ HIỂN THỊ SAU KHI ĐÃ THANH TOÁN THÀNH CÔNG */}
       {isPaid ? (
         <div className="flex flex-wrap items-center justify-between gap-3 print:hidden animate-in fade-in duration-300">

@@ -4,7 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { supabaseAdmin, isSupabaseAdminConfigured } from '@/lib/supabase/server';
 import { cancelAllinGoOrder, getAllinGoWaybillPdfWithRetry } from '@/lib/allingo';
 import { fulfillOrderWithAllinGo } from '@/services/allingo-fulfillment.service';
-import { sendNewOrderTelegramAlert } from '@/services/telegram-notification.service';
+import { sendNewOrderTelegramAlert, sendTelegramShipmentDispatchedNotice } from '@/services/telegram-notification.service';
 import { Order, OrderStatus } from '@/services/order.service';
 import { assertAdminSession } from '@/lib/auth/admin-guard';
 
@@ -36,6 +36,7 @@ export interface UpdateOrderPayload {
   shippingFee?: number;
   carrierName?: string;
   shippingServiceId?: string;
+  reissueShipment?: boolean;
   items: AdminOrderItemInput[];
 }
 
@@ -58,7 +59,7 @@ export interface CreateManualOrderPayload {
   items: AdminOrderItemInput[];
 }
 
-export async function updateAdminOrderAction(payload: UpdateOrderPayload): Promise<{ success: boolean; error?: string }> {
+export async function updateAdminOrderAction(payload: UpdateOrderPayload): Promise<{ success: boolean; warning?: string; error?: string }> {
   if (!(await assertAdminSession())) {
     return { success: false, error: 'Không có quyền thực hiện: Yêu cầu phiên đăng nhập quản trị.' };
   }
@@ -120,6 +121,45 @@ export async function updateAdminOrderAction(payload: UpdateOrderPayload): Promi
       updateFields.ward_id = payload.wardCode;
     }
 
+    let orderCodeForNotice = '';
+    if (payload.reissueShipment) {
+      const { data: existingOrder } = await supabaseAdmin
+        .from('orders')
+        .select('id, order_code, allingo_order_id, tracking_code')
+        .eq('id', payload.orderId)
+        .single();
+
+      if (existingOrder) {
+        orderCodeForNotice = existingOrder.order_code;
+        if (existingOrder.allingo_order_id) {
+          const cancelRes = await cancelAllinGoOrder(
+            existingOrder.allingo_order_id,
+            'buyer_requested',
+            'Admin đổi thông tin vận chuyển theo yêu cầu khách'
+          );
+          if (!cancelRes.success) {
+            const errLower = (cancelRes.error || '').toLowerCase();
+            const isIgnorable =
+              errLower.includes('canceled') ||
+              errLower.includes('cancelled') ||
+              errLower.includes('not found') ||
+              errLower.includes('không tìm thấy');
+            if (!isIgnorable) {
+              return {
+                success: false,
+                error: cancelRes.error || 'Bưu tá đã tiếp nhận bưu phẩm trên AllinGo, không thể hủy đơn cũ để đổi hãng.',
+              };
+            }
+          }
+        }
+      }
+
+      updateFields.tracking_code = null;
+      updateFields.allingo_order_id = null;
+      updateFields.allingo_track_id = null;
+      updateFields.tracking_url = null;
+    }
+
     const { error: orderErr } = await supabaseAdmin
       .from('orders')
       .update(updateFields)
@@ -143,6 +183,41 @@ export async function updateAdminOrderAction(payload: UpdateOrderPayload): Promi
       }));
       const { error: insertErr } = await supabaseAdmin.from('order_items').insert(itemsToInsert);
       if (insertErr) throw insertErr;
+    }
+
+    // Nếu có yêu cầu cấp lại vận đơn mới ngay lập tức
+    if (payload.reissueShipment) {
+      try {
+        const fulfillRes = await fulfillOrderWithAllinGo(payload.orderId);
+        if (fulfillRes.success && fulfillRes.trackingNumber) {
+          const newTrackingNumber = fulfillRes.trackingNumber;
+          const newTrackingUrl = fulfillRes.trackingUrl;
+          const newOrderId = fulfillRes.allingoOrderId;
+          (async () => {
+            let waybillPdfUrl: string | undefined;
+            if (newOrderId) {
+              const pdf = await getAllinGoWaybillPdfWithRetry(newOrderId, 1, 2000);
+              if (pdf.success && pdf.url) waybillPdfUrl = pdf.url;
+            }
+            await sendTelegramShipmentDispatchedNotice(
+              orderCodeForNotice || payload.orderId,
+              payload.carrierName || fulfillRes.carrierName || 'Hãng mới',
+              newTrackingNumber,
+              newTrackingUrl,
+              waybillPdfUrl
+            );
+          })().catch(() => {});
+        } else {
+          revalidatePath('/admin/orders');
+          revalidatePath('/admin');
+          return {
+            success: true,
+            warning: `Đã lưu thông tin đơn hàng, nhưng chưa thể tạo vận đơn mới trên AllinGo: ${fulfillRes.error || 'Lỗi tạo vận đơn'}`,
+          };
+        }
+      } catch (fErr: any) {
+        console.error('[Reissue AllinGo Exception]:', fErr);
+      }
     }
 
     revalidatePath('/admin/orders');
