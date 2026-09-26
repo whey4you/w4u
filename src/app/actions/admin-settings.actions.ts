@@ -3,32 +3,9 @@
 import { revalidatePath } from 'next/cache';
 import { assertAdminSession } from '@/lib/auth/admin-guard';
 import {
-  getWarehouseConfig,
   updateWarehouseConfig,
   WarehouseConfig,
 } from '@/services/store-settings.service';
-
-/**
- * Lấy cấu hình kho phục vụ trang quản trị
- */
-export async function getAdminWarehouseConfigAction(): Promise<{
-  success: boolean;
-  data?: WarehouseConfig;
-  error?: string;
-}> {
-  const isAdmin = await assertAdminSession();
-  if (!isAdmin) {
-    return { success: false, error: 'Bạn không có quyền quản trị.' };
-  }
-
-  try {
-    const config = await getWarehouseConfig();
-    return { success: true, data: config };
-  } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : 'Lỗi lấy cấu hình';
-    return { success: false, error: message };
-  }
-}
 
 /**
  * Cập nhật thông tin kho hàng và người gửi AllinGo

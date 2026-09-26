@@ -66,7 +66,7 @@ export function ChatInput({ onSend, isLoading }: ChatInputProps) {
           value={text}
           onChange={handleChange}
           onKeyDown={handleKeyDown}
-          placeholder="Hỏi về Whey, Mass, Creatine..."
+          placeholder="Nhập câu hỏi hoặc nội dung cần tư vấn..."
           disabled={isLoading}
           rows={1}
           className="block w-full flex-1 resize-none bg-transparent py-1 text-base sm:text-sm text-apple-dark placeholder:text-slate-400 focus:outline-none leading-5 disabled:opacity-60"

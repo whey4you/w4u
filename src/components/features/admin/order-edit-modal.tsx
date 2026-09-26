@@ -1,12 +1,12 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { X, Save, AlertCircle, RefreshCw, Truck } from 'lucide-react';
+import { X, Save, AlertCircle, RefreshCw, Truck, FileText } from 'lucide-react';
 import { Order, OrderStatus } from '@/services/order.service';
 import { Product } from '@/types/product';
 import { OrderItemPicker } from './order-item-picker';
 import { AddressSelector, SelectedAddressData } from '@/components/checkout/address-selector';
-import { updateAdminOrderAction, cancelAllinGoShipmentAction, fulfillManualOrderAction, AdminOrderItemInput } from '@/app/actions/admin-order.actions';
+import { updateAdminOrderAction, cancelAllinGoShipmentAction, fulfillManualOrderAction, getOrderWaybillPdfAction, AdminOrderItemInput } from '@/app/actions/admin-order.actions';
 import { formatPrice } from '@/lib/utils';
 import { OrderCodInput } from './order-cod-input';
 import { FormattedShippingRate } from '@/lib/allingo';
@@ -40,6 +40,7 @@ export function OrderEditModal({ isOpen, onClose, order, products, onSuccess }: 
   const [saving, setSaving] = useState(false);
   const [cancellingShipment, setCancellingShipment] = useState(false);
   const [fulfilling, setFulfilling] = useState(false);
+  const [loadingPdf, setLoadingPdf] = useState(false);
   const [currentTrackingCode, setCurrentTrackingCode] = useState<string | null>(order?.tracking_code || order?.allingo_track_id || null);
   const [currentAllingoOrderId, setCurrentAllingoOrderId] = useState<string | null>(order?.allingo_order_id || null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -227,29 +228,47 @@ export function OrderEditModal({ isOpen, onClose, order, products, onSuccess }: 
     }
   };
 
+  const handleViewWaybillPdf = async () => {
+    if (!order?.id) return;
+    setLoadingPdf(true);
+    setErrorMsg(null);
+    try {
+      const res = await getOrderWaybillPdfAction(order.id);
+      if (res.success && res.url) {
+        window.open(res.url, '_blank', 'noopener,noreferrer');
+      } else {
+        setErrorMsg(res.error || 'Chưa có file PDF vận đơn từ nhà vận chuyển.');
+      }
+    } catch (err: any) {
+      setErrorMsg(err?.message || 'Lỗi khi tải file PDF vận đơn.');
+    } finally {
+      setLoadingPdf(false);
+    }
+  };
+
   const totalToCollect = Number(codAmount) + (shippingFee || 0);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200">
       <div className="bg-white w-full max-w-2xl rounded-2xl shadow-xl border border-slate-200 overflow-hidden max-h-[92vh] flex flex-col">
         {/* Header */}
-        <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50">
-          <div>
+        <div className="px-4 sm:px-6 py-3.5 sm:py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50 gap-2">
+          <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
-              <h2 className="text-base font-bold text-slate-900">Chỉnh Sửa Đơn Hàng</h2>
-              <span className="font-mono font-bold text-xs text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-200">
+              <h2 className="text-sm sm:text-base font-bold text-slate-900 truncate">Chỉnh Sửa Đơn Hàng</h2>
+              <span className="font-mono font-bold text-xs text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-200 shrink-0">
                 {order.order_code}
               </span>
             </div>
-            <p className="text-xs text-slate-400 mt-0.5">Cập nhật thông tin nhận hàng, sản phẩm hoặc điều phối AllinGo</p>
+            <p className="text-[11px] sm:text-xs text-slate-400 mt-0.5 line-clamp-1">Cập nhật thông tin nhận hàng, sản phẩm hoặc điều phối AllinGo</p>
           </div>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-200/60">
+          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-200/60 shrink-0 cursor-pointer">
             <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Form Body */}
-        <form id="edit-order-form" onSubmit={handleSave} className="p-6 overflow-y-auto space-y-4 text-xs flex-1">
+        <form id="edit-order-form" onSubmit={handleSave} className="p-4 sm:p-6 overflow-y-auto space-y-4 text-xs flex-1">
           {errorMsg && (
             <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 flex items-center gap-2">
               <AlertCircle className="w-4 h-4 flex-shrink-0" />
@@ -361,14 +380,26 @@ export function OrderEditModal({ isOpen, onClose, order, products, onSuccess }: 
               </p>
             </div>
             {currentTrackingCode || currentAllingoOrderId ? (
-              <button
-                type="button"
-                disabled={cancellingShipment}
-                onClick={handleCancelShipment}
-                className="px-3 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-semibold text-xs whitespace-nowrap transition-colors cursor-pointer"
-              >
-                {cancellingShipment ? 'Đang hủy...' : 'Hủy Vận Đơn Để Sửa'}
-              </button>
+              <div className="flex items-center gap-2 flex-wrap">
+                <button
+                  type="button"
+                  disabled={loadingPdf}
+                  onClick={handleViewWaybillPdf}
+                  className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs whitespace-nowrap transition-colors cursor-pointer flex items-center gap-1.5"
+                  title="Mở hoặc in tệp PDF mã vận đơn bưu cục"
+                >
+                  <FileText className="w-3.5 h-3.5" />
+                  {loadingPdf ? 'Đang lấy...' : 'In Vận Đơn (PDF)'}
+                </button>
+                <button
+                  type="button"
+                  disabled={cancellingShipment}
+                  onClick={handleCancelShipment}
+                  className="px-3 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-semibold text-xs whitespace-nowrap transition-colors cursor-pointer"
+                >
+                  {cancellingShipment ? 'Đang hủy...' : 'Hủy Vận Đơn'}
+                </button>
+              </div>
             ) : (
               <button
                 type="button"
@@ -395,28 +426,28 @@ export function OrderEditModal({ isOpen, onClose, order, products, onSuccess }: 
         </form>
 
         {/* Footer */}
-        <div className="px-6 py-3 border-t border-slate-200 bg-slate-50 flex items-center justify-between">
-          <div className="text-xs space-y-0.5">
+        <div className="px-4 sm:px-6 py-3 border-t border-slate-200 bg-slate-50 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 text-xs">
+          <div className="space-y-0.5">
             <div>
               <span className="text-slate-500">Tiền hàng: </span>
               <span className="font-bold text-slate-800">{formatPrice(subtotal)}</span>
               {shippingFee > 0 && (
                 <span className="text-slate-500 ml-2">
-                  • Cước ship: <span className="font-bold text-slate-800">{formatPrice(shippingFee)}</span>
+                  • Ship: <span className="font-bold text-slate-800">{formatPrice(shippingFee)}</span>
                 </span>
               )}
             </div>
             <div>
-              <span className="text-slate-500">Tổng shipper thu khi giao: </span>
-              <span className="text-base font-black text-blue-600">{formatPrice(totalToCollect)}</span>
+              <span className="text-slate-500">Thu khi giao: </span>
+              <span className="text-sm sm:text-base font-black text-blue-600">{formatPrice(totalToCollect)}</span>
               {Number(codAmount) === 0 && <span className="text-[11px] text-emerald-600 font-semibold ml-1">(Chỉ thu cước ship)</span>}
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 justify-end">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold text-xs transition-colors cursor-pointer"
+              className="flex-1 sm:flex-none px-4 py-2 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold text-xs transition-colors cursor-pointer text-center"
             >
               Hủy bỏ
             </button>
@@ -424,7 +455,7 @@ export function OrderEditModal({ isOpen, onClose, order, products, onSuccess }: 
               type="submit"
               form="edit-order-form"
               disabled={saving}
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs transition-colors shadow-2xs cursor-pointer"
+              className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs transition-colors shadow-2xs cursor-pointer"
             >
               {saving ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
               <span>{saving ? 'Đang lưu...' : 'Lưu Thay Đổi'}</span>

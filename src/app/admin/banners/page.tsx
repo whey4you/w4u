@@ -24,7 +24,7 @@ export default async function AdminBannersPage() {
         subtitle="Thiết lập hình ảnh, link điều hướng (sản phẩm, vitamins, blog) và thứ tự hiển thị của slide banner"
       />
 
-      <main className="p-6 md:p-8 max-w-5xl w-full mx-auto">
+      <main className="p-3.5 sm:p-6 lg:p-8 max-w-5xl w-full mx-auto">
         <AdminBannerManager initialBanners={banners} products={products} />
       </main>
     </div>

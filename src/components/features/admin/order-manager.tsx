@@ -56,9 +56,9 @@ export function OrderManager({ initialOrders, products = [] }: OrderManagerProps
   return (
     <div className="space-y-6">
       {/* Search & Tabs & Actions */}
-      <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4">
+      <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3 sm:gap-4">
         {/* Status Tabs */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-2 lg:pb-0">
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
           {TABS.map((tab) => {
             const isActive = statusTab === tab.id;
             const count =
@@ -70,7 +70,7 @@ export function OrderManager({ initialOrders, products = [] }: OrderManagerProps
               <button
                 key={tab.id}
                 onClick={() => setStatusTab(tab.id)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all flex items-center gap-1.5 ${
+                className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all flex items-center gap-1.5 shrink-0 cursor-pointer ${
                   isActive
                     ? 'bg-blue-600 text-white shadow-xs'
                     : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
@@ -91,30 +91,30 @@ export function OrderManager({ initialOrders, products = [] }: OrderManagerProps
 
         {/* Search, New Order & Refresh */}
         <div className="flex items-center gap-2">
-          <div className="relative w-full sm:w-60">
-            <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+          <div className="relative flex-1 sm:w-60">
+            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
             <input
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Mã đơn, tên, SĐT..."
-              className="w-full pl-9 pr-4 py-2 text-xs rounded-xl border border-slate-200 bg-white focus:outline-none focus:border-blue-500 shadow-2xs"
+              className="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-slate-200 bg-white focus:outline-none focus:border-blue-500 shadow-2xs"
             />
           </div>
 
           <button
             onClick={() => setIsCreateOpen(true)}
-            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs transition-colors shadow-2xs cursor-pointer whitespace-nowrap"
+            className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs transition-colors shadow-2xs cursor-pointer whitespace-nowrap shrink-0"
             title="Lên đơn tay cho khách mua trực tiếp / đưa tiền mặt ngoài đời"
           >
             <Plus className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Lên Đơn Tay</span>
+            <span>Lên Đơn Tay</span>
           </button>
 
           <button
             onClick={refreshData}
             disabled={refreshing}
-            className="p-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 shadow-2xs flex-shrink-0 cursor-pointer"
+            className="p-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 shadow-2xs shrink-0 cursor-pointer"
             title="Làm mới danh sách đơn từ Supabase"
           >
             <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />

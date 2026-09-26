@@ -1,5 +1,7 @@
 import { supabaseAdmin } from '@/lib/supabase/server';
-import { fulfillOrderWithAllinGo } from './allingo-fulfillment.service';
+import { fulfillOrderWithAllinGo, FulfillOrderResult } from './allingo-fulfillment.service';
+import { getAllinGoWaybillPdfWithRetry } from '@/lib/allingo';
+import { sendNewOrderTelegramAlert } from './telegram-notification.service';
 import { incrementCouponUsage } from './coupon.service';
 import { sendOrderInvoiceEmail } from './email/resend-email.service';
 import { revalidatePath } from 'next/cache';
@@ -137,11 +139,57 @@ export async function commitPaidOrder(identifier: number | string): Promise<{ su
     await supabaseAdmin.from('pending_checkouts').delete().eq('id', typedDraft.id);
 
     // 6. Tự động chuyển giao AllinGo tạo vận đơn
+    let fulfillResult: FulfillOrderResult | undefined;
     try {
-      await fulfillOrderWithAllinGo(createdOrder.id);
+      fulfillResult = await fulfillOrderWithAllinGo(createdOrder.id);
     } catch (fulfillErr) {
       console.error('[Checkout Committer] Lỗi AllinGo fulfillment:', fulfillErr);
     }
+
+    // 7. Gửi thông báo Telegram tức thì kèm PDF vận đơn (Async không cản trở luồng phản hồi)
+    (async () => {
+      try {
+        let waybillPdfUrl: string | undefined;
+        if (fulfillResult?.allingoOrderId) {
+          const pdfRes = await getAllinGoWaybillPdfWithRetry(fulfillResult.allingoOrderId, 1, 2000);
+          if (pdfRes.success && pdfRes.url) {
+            waybillPdfUrl = pdfRes.url;
+          }
+        }
+
+        await sendNewOrderTelegramAlert({
+          orderCode: typedDraft.order_code,
+          customerName: typedDraft.customer_name,
+          customerPhone: typedDraft.customer_phone,
+          customerEmail: typedDraft.customer_email,
+          customerAddress: typedDraft.customer_address,
+          items: Array.isArray(typedDraft.items)
+            ? typedDraft.items.map((it) => ({
+                product_name: it.product_name,
+                flavor_name: it.flavor_name,
+                price: it.price,
+                quantity: it.quantity,
+              }))
+            : [],
+          subtotal: typedDraft.subtotal || typedDraft.total_amount,
+          discountAmount: typedDraft.discount_amount || 0,
+          couponCode: typedDraft.coupon_code || undefined,
+          shippingFee: typedDraft.shipping_fee || 0,
+          totalAmount: typedDraft.total_amount,
+          depositAmount: typedDraft.deposit_amount || undefined,
+          codRemaining: typedDraft.cod_remaining || 0,
+          paymentMethod: typedDraft.payment_method,
+          carrierName: fulfillResult?.carrierName || typedDraft.carrier_name,
+          trackingCode: fulfillResult?.trackingNumber,
+          trackingUrl: fulfillResult?.trackingUrl,
+          allingoOrderId: fulfillResult?.allingoOrderId,
+          notes: typedDraft.notes,
+          waybillPdfUrl,
+        });
+      } catch (teleErr) {
+        console.error('[Checkout Committer] Lỗi gửi thông báo Telegram:', teleErr);
+      }
+    })();
 
     // 7. Tự động gửi email hóa đơn điện tử & lời cảm ơn qua Resend API (Async không cản trở)
     if (typedDraft.customer_email) {

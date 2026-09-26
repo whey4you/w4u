@@ -20,7 +20,7 @@ export default async function AdminMediaPage() {
         subtitle="Quản lý tập trung toàn bộ hình ảnh trong hệ thống, lưu link ảnh dùng chung và sao chép 1 chạm"
       />
 
-      <main className="p-6 md:p-8 max-w-7xl w-full mx-auto">
+      <main className="p-3.5 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto">
         <MediaManager initialItems={mediaItems} />
       </main>
     </div>

@@ -5,6 +5,7 @@ import { Tag, Copy, Check, Trash2, Power, Edit3 } from 'lucide-react';
 import { Coupon } from '@/types/coupon';
 import { formatPrice } from '@/lib/utils';
 import { toggleCouponAction, deleteCouponAction } from '@/app/actions/coupon.actions';
+import { CouponMobileCard } from './coupon-mobile-card';
 
 interface CouponTableProps {
   coupons: Coupon[];
@@ -39,30 +40,48 @@ export function CouponTable({ coupons, onRefresh, onEdit }: CouponTableProps) {
 
   if (coupons.length === 0) {
     return (
-      <div className="bg-white rounded-2xl border border-slate-200/80 p-12 text-center text-slate-500">
+      <div className="bg-white rounded-2xl border border-slate-200/80 p-8 sm:p-12 text-center text-slate-500">
         <Tag className="w-8 h-8 mx-auto text-slate-300 mb-2" />
         <p className="font-semibold text-slate-700">Chưa có mã giảm giá nào</p>
-        <p className="text-xs text-slate-400 mt-1">Hãy nhấn "Tạo mã mới" để bắt đầu thiết lập chương trình ưu đãi.</p>
+        <p className="text-xs text-slate-400 mt-1">Hãy nhấn &quot;Tạo mã mới&quot; để bắt đầu thiết lập chương trình ưu đãi.</p>
       </div>
     );
   }
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200/80 shadow-2xs overflow-hidden">
-      <div className="overflow-x-auto">
-        <table className="w-full text-left text-xs">
-          <thead className="bg-slate-50/80 border-b border-slate-100 text-slate-400 font-bold uppercase tracking-wider text-[10px]">
-            <tr>
-              <th className="py-3 px-4">Mã Code</th>
-              <th className="py-3 px-4">Mức Giảm</th>
-              <th className="py-3 px-4">Đơn Tối Thiểu</th>
-              <th className="py-3 px-4">Lượt Dùng</th>
-              <th className="py-3 px-4">Hạn Dùng</th>
-              <th className="py-3 px-4 text-center">Trạng Thái</th>
-              <th className="py-3 px-4 text-right">Thao Tác</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
+    <>
+      {/* Mobile Card List (hiển thị trên màn hình nhỏ < md) */}
+      <div className="md:hidden space-y-3">
+        {coupons.map((c) => (
+          <CouponMobileCard
+            key={c.id}
+            coupon={c}
+            isCopied={copiedId === c.id}
+            isProcessing={processingId === c.id}
+            onCopy={handleCopyCode}
+            onToggle={handleToggle}
+            onDelete={handleDelete}
+            onEdit={onEdit}
+          />
+        ))}
+      </div>
+
+      {/* Desktop Table (hiển thị từ tablet/desktop >= md) */}
+      <div className="hidden md:block bg-white rounded-2xl border border-slate-200/80 shadow-2xs overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-xs">
+            <thead className="bg-slate-50/80 border-b border-slate-100 text-slate-400 font-bold uppercase tracking-wider text-[10px]">
+              <tr>
+                <th className="py-3 px-4">Mã Code</th>
+                <th className="py-3 px-4">Mức Giảm</th>
+                <th className="py-3 px-4">Đơn Tối Thiểu</th>
+                <th className="py-3 px-4">Lượt Dùng</th>
+                <th className="py-3 px-4">Hạn Dùng</th>
+                <th className="py-3 px-4 text-center">Trạng Thái</th>
+                <th className="py-3 px-4 text-right">Thao Tác</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
             {coupons.map((c) => {
               const isExpired = c.expires_at && new Date(c.expires_at) < new Date();
               const isLimitReached = c.usage_limit !== null && c.usage_limit !== undefined && c.used_count >= c.usage_limit;
@@ -168,5 +187,6 @@ export function CouponTable({ coupons, onRefresh, onEdit }: CouponTableProps) {
         </table>
       </div>
     </div>
-  );
+  </>
+);
 }

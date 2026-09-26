@@ -37,9 +37,9 @@ export function ProductManager({ initialProducts }: ProductManagerProps) {
   return (
     <div className="space-y-6">
       {/* Search & Actions Bar */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-        <div className="flex items-center gap-3 w-full sm:w-auto">
-          <div className="relative w-full sm:w-72">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          <div className="relative flex-1 sm:w-72">
             <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
             <input
               type="text"
@@ -53,20 +53,20 @@ export function ProductManager({ initialProducts }: ProductManagerProps) {
           <select
             value={categoryFilter}
             onChange={(e) => setCategoryFilter(e.target.value)}
-            className="px-3 py-2 text-xs rounded-xl border border-slate-200 bg-white focus:outline-none focus:border-blue-500 font-medium text-slate-700 shadow-2xs"
+            className="px-2.5 sm:px-3 py-2 text-xs rounded-xl border border-slate-200 bg-white focus:outline-none focus:border-blue-500 font-medium text-slate-700 shadow-2xs shrink-0 max-w-[130px] sm:max-w-none truncate"
           >
-            <option value="all">Tất cả danh mục</option>
+            <option value="all">Tất cả</option>
             <option value="whey">Whey Protein</option>
-            <option value="strength">Sức Mạnh / Tăng Cân</option>
+            <option value="strength">Sức Mạnh</option>
             <option value="vitamins">Vitamins</option>
           </select>
         </div>
 
-        <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+        <div className="flex items-center gap-2 justify-end">
           <button
             onClick={refreshData}
             disabled={refreshing}
-            className="p-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 shadow-2xs"
+            className="p-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 shadow-2xs shrink-0 cursor-pointer"
             title="Làm mới dữ liệu từ Supabase"
           >
             <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
@@ -74,7 +74,7 @@ export function ProductManager({ initialProducts }: ProductManagerProps) {
 
           <button
             onClick={() => setIsCreateOpen(true)}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-xs transition-colors"
+            className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-xs transition-colors cursor-pointer"
           >
             <Plus className="w-4 h-4" />
             <span>Thêm Sản Phẩm</span>

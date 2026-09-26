@@ -96,12 +96,3 @@ export interface CartItem {
 }
 
 export type ProductSortOption = 'price-asc' | 'price-desc';
-
-export interface ProductFilterState {
-  category: string;
-  goals: WorkoutGoal[];
-  priceRanges: string[];
-  brands: string[];
-  inStockOnly: boolean;
-  sortBy: ProductSortOption;
-}

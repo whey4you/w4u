@@ -43,51 +43,90 @@ export function RecentOrdersCard({ orders }: RecentOrdersCardProps) {
           <p className="text-xs">Chưa có đơn hàng nào được ghi nhận.</p>
         </div>
       ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
-            <thead>
-              <tr className="border-b border-slate-100 text-slate-400 uppercase tracking-wider font-semibold">
-                <th className="pb-3 font-semibold">Mã Đơn</th>
-                <th className="pb-3 font-semibold">Khách Hàng</th>
-                <th className="pb-3 font-semibold">Tổng Tiền</th>
-                <th className="pb-3 font-semibold">Trạng Thái</th>
-                <th className="pb-3 font-semibold text-right">Thời Gian</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {displayOrders.map((order) => {
-                const statusMeta = STATUS_LABELS[order.status] || STATUS_LABELS.pending;
-                return (
-                  <tr key={order.id} className="hover:bg-slate-50/60 transition-colors">
-                    <td className="py-3 font-mono font-bold text-blue-600">{order.order_code}</td>
-                    <td className="py-3">
+        <>
+          {/* Mobile List View (< sm) */}
+          <div className="sm:hidden divide-y divide-slate-100">
+            {displayOrders.map((order) => {
+              const statusMeta = STATUS_LABELS[order.status] || STATUS_LABELS.pending;
+              return (
+                <div key={order.id} className="py-3 space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="font-mono font-bold text-xs text-blue-600">
+                      {order.order_code}
+                    </span>
+                    <span
+                      className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold border ${statusMeta.className}`}
+                    >
+                      {statusMeta.label}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between text-xs">
+                    <div>
                       <p className="font-semibold text-slate-800">{order.customer_name}</p>
                       <p className="text-[11px] text-slate-400">{order.customer_phone}</p>
-                    </td>
-                    <td className="py-3 font-bold text-slate-900">
-                      {formatPrice(Number(order.total_amount))}
-                    </td>
-                    <td className="py-3">
-                      <span
-                        className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold border ${statusMeta.className}`}
-                      >
-                        {statusMeta.label}
-                      </span>
-                    </td>
-                    <td className="py-3 text-right text-slate-400">
-                      {new Date(order.created_at).toLocaleDateString('vi-VN', {
-                        day: '2-digit',
-                        month: '2-digit',
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      })}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-bold text-slate-900">{formatPrice(Number(order.total_amount))}</p>
+                      <p className="text-[10px] text-slate-400">
+                        {new Date(order.created_at).toLocaleDateString('vi-VN', {
+                          day: '2-digit',
+                          month: '2-digit',
+                        })}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Desktop & Tablet Table (>= sm) */}
+          <div className="hidden sm:block overflow-x-auto">
+            <table className="w-full text-left text-xs">
+              <thead>
+                <tr className="border-b border-slate-100 text-slate-400 uppercase tracking-wider font-semibold">
+                  <th className="pb-3 font-semibold">Mã Đơn</th>
+                  <th className="pb-3 font-semibold">Khách Hàng</th>
+                  <th className="pb-3 font-semibold">Tổng Tiền</th>
+                  <th className="pb-3 font-semibold">Trạng Thái</th>
+                  <th className="pb-3 font-semibold text-right">Thời Gian</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {displayOrders.map((order) => {
+                  const statusMeta = STATUS_LABELS[order.status] || STATUS_LABELS.pending;
+                  return (
+                    <tr key={order.id} className="hover:bg-slate-50/60 transition-colors">
+                      <td className="py-3 font-mono font-bold text-blue-600">{order.order_code}</td>
+                      <td className="py-3">
+                        <p className="font-semibold text-slate-800">{order.customer_name}</p>
+                        <p className="text-[11px] text-slate-400">{order.customer_phone}</p>
+                      </td>
+                      <td className="py-3 font-bold text-slate-900">
+                        {formatPrice(Number(order.total_amount))}
+                      </td>
+                      <td className="py-3">
+                        <span
+                          className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold border ${statusMeta.className}`}
+                        >
+                          {statusMeta.label}
+                        </span>
+                      </td>
+                      <td className="py-3 text-right text-slate-400">
+                        {new Date(order.created_at).toLocaleDateString('vi-VN', {
+                          day: '2-digit',
+                          month: '2-digit',
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </>
       )}
     </div>
   );

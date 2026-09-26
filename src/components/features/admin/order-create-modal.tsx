@@ -153,26 +153,26 @@ export function OrderCreateModal({ isOpen, onClose, products, onSuccess }: Order
   const totalToCollect = Number(codAmount);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200">
       <div className="bg-white w-full max-w-2xl rounded-2xl shadow-xl border border-slate-200 overflow-hidden max-h-[92vh] flex flex-col">
         {/* Header */}
-        <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-blue-50/50">
-          <div>
+        <div className="px-4 sm:px-6 py-3.5 sm:py-4 border-b border-slate-200 flex items-center justify-between bg-blue-50/50 gap-2">
+          <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
-              <span className="p-1 rounded-lg bg-blue-100 text-blue-700">
+              <span className="p-1 rounded-lg bg-blue-100 text-blue-700 shrink-0">
                 <Truck className="w-4 h-4" />
               </span>
-              <h2 className="text-base font-bold text-slate-900">Lên Đơn Giao Hàng (Khách CK Bank Ngoài / Trực Tiếp)</h2>
+              <h2 className="text-sm sm:text-base font-bold text-slate-900 truncate">Lên Đơn Giao Hàng</h2>
             </div>
-            <p className="text-xs text-slate-500 mt-0.5">Tạo đơn khi khách chuyển khoản ngân hàng ngoài hoặc thanh toán riêng để gửi hàng bưu tá</p>
+            <p className="text-[11px] sm:text-xs text-slate-500 mt-0.5 line-clamp-1">Tạo đơn khi khách chuyển khoản riêng hoặc mua trực tiếp</p>
           </div>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-200/60">
+          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-200/60 shrink-0 cursor-pointer">
             <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Body */}
-        <form id="create-order-form" onSubmit={handleSubmit} className="p-6 overflow-y-auto space-y-4 text-xs flex-1">
+        <form id="create-order-form" onSubmit={handleSubmit} className="p-4 sm:p-6 overflow-y-auto space-y-4 text-xs flex-1">
           {errorMsg && (
             <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 flex items-center gap-2">
               <AlertCircle className="w-4 h-4 flex-shrink-0" />
@@ -260,28 +260,28 @@ export function OrderCreateModal({ isOpen, onClose, products, onSuccess }: Order
         </form>
 
         {/* Footer */}
-        <div className="px-6 py-3 border-t border-slate-200 bg-slate-50 flex items-center justify-between">
-          <div className="text-xs space-y-0.5">
+        <div className="px-4 sm:px-6 py-3 border-t border-slate-200 bg-slate-50 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 text-xs">
+          <div className="space-y-0.5">
             <div>
               <span className="text-slate-500">Tiền hàng: </span>
               <span className="font-bold text-slate-800">{formatPrice(subtotal)}</span>
               {shippingFee > 0 && (
                 <span className="text-slate-500 ml-2">
-                  • Cước ship: <span className="font-bold text-slate-800">{formatPrice(shippingFee)}</span>
+                  • Ship: <span className="font-bold text-slate-800">{formatPrice(shippingFee)}</span>
                 </span>
               )}
             </div>
             <div>
-              <span className="text-slate-500">Tổng shipper thu khi giao (COD): </span>
-              <span className="text-base font-black text-blue-600">{formatPrice(totalToCollect)}</span>
+              <span className="text-slate-500">Thu khi giao (COD): </span>
+              <span className="text-sm sm:text-base font-black text-blue-600">{formatPrice(totalToCollect)}</span>
               {Number(codAmount) === 0 && <span className="text-[11px] text-emerald-600 font-semibold ml-1">(Đã thanh toán 100%)</span>}
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 justify-end">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold text-xs transition-colors cursor-pointer"
+              className="flex-1 sm:flex-none px-4 py-2 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold text-xs transition-colors cursor-pointer text-center"
             >
               Hủy bỏ
             </button>
@@ -289,10 +289,10 @@ export function OrderCreateModal({ isOpen, onClose, products, onSuccess }: Order
               type="submit"
               form="create-order-form"
               disabled={creating}
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs transition-colors shadow-2xs cursor-pointer"
+              className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs transition-colors shadow-2xs cursor-pointer"
             >
               {creating ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
-              <span>{creating ? 'Đang tạo đơn...' : 'Xác Nhận Tạo Đơn'}</span>
+              <span>{creating ? 'Đang tạo...' : 'Xác Nhận Tạo Đơn'}</span>
             </button>
           </div>
         </div>

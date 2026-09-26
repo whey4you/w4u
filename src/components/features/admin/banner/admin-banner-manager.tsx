@@ -163,21 +163,21 @@ export function AdminBannerManager({ initialBanners, products }: AdminBannerMana
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 w-full sm:w-auto">
           <button
             type="button"
             onClick={handleOpenAdd}
-            className="flex items-center justify-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition-all shadow-xs"
+            className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition-all shadow-xs"
           >
             <Plus className="w-4 h-4" />
-            <span>Thêm Banner Mới</span>
+            <span>Thêm Banner</span>
           </button>
 
           <button
             type="button"
             disabled={!hasChanges || isSaving}
             onClick={handleSaveAllToSystem}
-            className="flex items-center justify-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 disabled:pointer-events-none rounded-xl transition-all shadow-xs"
+            className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3.5 sm:px-4 py-2 text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 disabled:pointer-events-none rounded-xl transition-all shadow-xs"
           >
             {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
             <span>{hasChanges ? 'Lưu Thay Đổi' : 'Đã Đồng Bộ'}</span>

@@ -211,7 +211,7 @@ export function CheckoutStepShipping({
                 setSelectedProfileId(null);
                 setCustomer((prev) => ({ ...prev, customerName: e.target.value }));
               }}
-              placeholder="Nguyễn Văn A"
+              placeholder="Nhập họ và tên"
               className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-neutral-300 focus:outline-none focus:border-neutral-900 transition-colors"
             />
           </div>
@@ -230,7 +230,7 @@ export function CheckoutStepShipping({
                 setSelectedProfileId(null);
                 setCustomer((prev) => ({ ...prev, customerPhone: e.target.value }));
               }}
-              placeholder="0912 345 678"
+              placeholder="Nhập số điện thoại"
               className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-neutral-300 focus:outline-none focus:border-neutral-900 transition-colors"
             />
           </div>
@@ -258,7 +258,7 @@ export function CheckoutStepShipping({
                   saveEmail(val);
                 }
               }}
-              placeholder="vidu@gmail.com"
+              placeholder="Nhập địa chỉ email"
               className="w-full pl-9 pr-3.5 py-2.5 text-sm rounded-xl border border-neutral-300 focus:outline-none focus:border-neutral-900 transition-colors"
             />
             <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400 pointer-events-none" />
@@ -284,7 +284,7 @@ export function CheckoutStepShipping({
             type="text"
             value={customer.notes}
             onChange={(e) => setCustomer((prev) => ({ ...prev, notes: e.target.value }))}
-            placeholder="Lời nhắn cho shipper (ví dụ: giao giờ hành chính)..."
+            placeholder="Nhập ghi chú giao hàng (nếu có)..."
             className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-neutral-300 focus:outline-none focus:border-neutral-900 transition-colors"
           />
         </div>

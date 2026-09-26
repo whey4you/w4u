@@ -6,6 +6,7 @@ import { Order, OrderStatus } from '@/services/order.service';
 import { updateAdminOrderStatusAction } from '@/app/actions/admin-order.actions';
 import { formatPrice } from '@/lib/utils';
 import { OrderDetailModal } from './order-detail-modal';
+import { OrderMobileCard } from './order-mobile-card';
 
 interface OrderTableProps {
   orders: Order[];
@@ -35,22 +36,49 @@ export function OrderTable({ orders, onRefresh, onEditOrder, onDeleteOrder }: Or
     }
   };
 
+  if (orders.length === 0) {
+    return (
+      <div className="bg-white rounded-2xl border border-slate-200/80 p-8 sm:p-12 text-center text-slate-400">
+        <Clock className="w-8 h-8 mx-auto mb-2 text-slate-300" />
+        <p className="text-sm">Không có đơn hàng nào phù hợp với bộ lọc.</p>
+      </div>
+    );
+  }
+
   return (
-    <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
-      <div className="overflow-x-auto">
-        <table className="w-full text-left text-xs">
-          <thead>
-            <tr className="border-b border-slate-200 bg-slate-50/70 text-slate-500 uppercase tracking-wider font-semibold">
-              <th className="py-3.5 px-6">Mã Đơn</th>
-              <th className="py-3.5 px-4">Khách Hàng</th>
-              <th className="py-3.5 px-4">Số Điện Thoại</th>
-              <th className="py-3.5 px-4">Tổng Tiền</th>
-              <th className="py-3.5 px-4">Trạng Thái Đơn</th>
-              <th className="py-3.5 px-4">Ngày Đặt</th>
-              <th className="py-3.5 px-6 text-right">Chi Tiết</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100">
+    <>
+      {/* Mobile Card List (hiển thị trên màn hình nhỏ < md) */}
+      <div className="md:hidden space-y-3">
+        {orders.map((order) => (
+          <OrderMobileCard
+            key={order.id}
+            order={order}
+            isUpdating={updatingId === order.id}
+            onStatusChange={handleStatusChange}
+            onSelect={setSelectedOrder}
+            onEdit={onEditOrder}
+            onDelete={onDeleteOrder}
+            statusOptions={STATUS_OPTIONS}
+          />
+        ))}
+      </div>
+
+      {/* Desktop Table (hiển thị từ tablet/desktop >= md) */}
+      <div className="hidden md:block bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-xs">
+            <thead>
+              <tr className="border-b border-slate-200 bg-slate-50/70 text-slate-500 uppercase tracking-wider font-semibold">
+                <th className="py-3.5 px-6">Mã Đơn</th>
+                <th className="py-3.5 px-4">Khách Hàng</th>
+                <th className="py-3.5 px-4">Số Điện Thoại</th>
+                <th className="py-3.5 px-4">Tổng Tiền</th>
+                <th className="py-3.5 px-4">Trạng Thái Đơn</th>
+                <th className="py-3.5 px-4">Ngày Đặt</th>
+                <th className="py-3.5 px-6 text-right">Chi Tiết</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
             {orders.length === 0 ? (
               <tr>
                 <td colSpan={7} className="py-12 text-center text-slate-400">
@@ -185,13 +213,14 @@ export function OrderTable({ orders, onRefresh, onEditOrder, onDeleteOrder }: Or
           </tbody>
         </table>
       </div>
-
-      <OrderDetailModal
-        isOpen={Boolean(selectedOrder)}
-        onClose={() => setSelectedOrder(null)}
-        order={selectedOrder}
-        onEdit={selectedOrder && onEditOrder ? () => onEditOrder(selectedOrder) : undefined}
-      />
     </div>
-  );
+
+    <OrderDetailModal
+      isOpen={Boolean(selectedOrder)}
+      onClose={() => setSelectedOrder(null)}
+      order={selectedOrder}
+      onEdit={selectedOrder && onEditOrder ? () => onEditOrder(selectedOrder) : undefined}
+    />
+  </>
+);
 }

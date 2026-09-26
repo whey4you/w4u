@@ -36,7 +36,7 @@ export default async function AdminDashboardPage() {
         }
       />
 
-      <main className="p-8 space-y-8 max-w-7xl w-full mx-auto">
+      <main className="p-3.5 sm:p-6 lg:p-8 space-y-6 sm:space-y-8 max-w-7xl w-full mx-auto">
         {/* Metric Cards */}
         <DashboardStats
           totalRevenue={stats.totalRevenue}
@@ -46,39 +46,39 @@ export default async function AdminDashboardPage() {
         />
 
         {/* Quick Navigation Banners */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 sm:gap-5">
           <Link
             href="/admin/products"
-            className="group bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl p-6 text-white shadow-xs hover:shadow-md transition-all flex items-center justify-between"
+            className="group bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl p-4 sm:p-6 text-white shadow-xs hover:shadow-md transition-all flex items-center justify-between gap-3"
           >
             <div>
-              <div className="inline-flex p-2.5 rounded-xl bg-blue-500/20 text-blue-400 mb-3">
-                <Package className="w-5 h-5" />
+              <div className="inline-flex p-2 sm:p-2.5 rounded-xl bg-blue-500/20 text-blue-400 mb-2 sm:mb-3">
+                <Package className="w-4 h-4 sm:w-5 sm:h-5" />
               </div>
-              <h3 className="text-base font-bold">Danh Mục Sản Phẩm</h3>
-              <p className="text-xs text-slate-400 mt-1">
+              <h3 className="text-sm sm:text-base font-bold">Danh Mục Sản Phẩm</h3>
+              <p className="text-[11px] sm:text-xs text-slate-400 mt-1 line-clamp-2">
                 Bật/tắt trạng thái Còn hàng, điều chỉnh giá bán và cập nhật kho
               </p>
             </div>
-            <span className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-white/10 group-hover:bg-blue-600 transition-colors">
+            <span className="text-xs font-semibold px-2.5 sm:px-3 py-1.5 rounded-lg bg-white/10 group-hover:bg-blue-600 transition-colors shrink-0">
               Truy cập →
             </span>
           </Link>
 
           <Link
             href="/admin/orders"
-            className="group bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl p-6 text-white shadow-xs hover:shadow-md transition-all flex items-center justify-between"
+            className="group bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl p-4 sm:p-6 text-white shadow-xs hover:shadow-md transition-all flex items-center justify-between gap-3"
           >
             <div>
-              <div className="inline-flex p-2.5 rounded-xl bg-purple-500/20 text-purple-400 mb-3">
-                <ShoppingBag className="w-5 h-5" />
+              <div className="inline-flex p-2 sm:p-2.5 rounded-xl bg-purple-500/20 text-purple-400 mb-2 sm:mb-3">
+                <ShoppingBag className="w-4 h-4 sm:w-5 sm:h-5" />
               </div>
-              <h3 className="text-base font-bold">Quản Lý Đơn Hàng</h3>
-              <p className="text-xs text-slate-400 mt-1">
+              <h3 className="text-sm sm:text-base font-bold">Quản Lý Đơn Hàng</h3>
+              <p className="text-[11px] sm:text-xs text-slate-400 mt-1 line-clamp-2">
                 Duyệt đơn mới, cập nhật trạng thái vận chuyển và xem chi tiết giỏ hàng
               </p>
             </div>
-            <span className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-white/10 group-hover:bg-purple-600 transition-colors">
+            <span className="text-xs font-semibold px-2.5 sm:px-3 py-1.5 rounded-lg bg-white/10 group-hover:bg-purple-600 transition-colors shrink-0">
               Truy cập →
             </span>
           </Link>

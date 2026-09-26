@@ -22,6 +22,9 @@ interface OrderFulfillmentData {
   cod_remaining?: number;
   tracking_code?: string;
   allingo_order_id?: string;
+  allingo_track_id?: string;
+  tracking_url?: string;
+  carrier_name?: string;
 }
 
 function parseAddressFromNotes(notes: string = ''): { provinceCode?: string; districtCode?: string; wardCode?: string; weightGrams?: number; serviceId?: string } {
@@ -40,7 +43,17 @@ function parseAddressFromNotes(notes: string = ''): { provinceCode?: string; dis
   };
 }
 
-export async function fulfillOrderWithAllinGo(orderId: string): Promise<{ success: boolean; trackingNumber?: string; error?: string }> {
+export interface FulfillOrderResult {
+  success: boolean;
+  trackingNumber?: string;
+  allingoOrderId?: string;
+  allingoTrackId?: string;
+  trackingUrl?: string;
+  carrierName?: string;
+  error?: string;
+}
+
+export async function fulfillOrderWithAllinGo(orderId: string): Promise<FulfillOrderResult> {
   try {
     const { data: order, error: fetchErr } = await supabaseAdmin
       .from('orders')
@@ -57,7 +70,12 @@ export async function fulfillOrderWithAllinGo(orderId: string): Promise<{ succes
     // Idempotency: Kiểm tra nếu đã có mã vận đơn thì không tạo lại
     if (ord.tracking_code || ord.allingo_order_id) {
       console.log(`[AllinGo Fulfillment] Đơn ${ord.order_code} đã có vận đơn (${ord.tracking_code}), bỏ qua.`);
-      return { success: true, trackingNumber: ord.tracking_code };
+      return {
+        success: true,
+        trackingNumber: ord.tracking_code,
+        allingoOrderId: ord.allingo_order_id,
+        trackingUrl: ord.allingo_track_id ? `https://business.allingo.vn/track/${ord.allingo_track_id}#/track/${ord.allingo_track_id}` : undefined,
+      };
     }
 
     const parsedNotes = parseAddressFromNotes(ord.notes || '');
@@ -121,7 +139,14 @@ export async function fulfillOrderWithAllinGo(orderId: string): Promise<{ succes
       }
 
       console.log(`[AllinGo Fulfillment] Thành công: ${result.trackingNumber} cho đơn ${ord.order_code}`);
-      return { success: true, trackingNumber: result.trackingNumber };
+      return {
+        success: true,
+        trackingNumber: result.trackingNumber,
+        allingoOrderId: result.orderId,
+        allingoTrackId: result.trackId,
+        trackingUrl,
+        carrierName: result.carrierName || 'Đơn vị vận chuyển',
+      };
     } else {
       const errNote = `[AllinGo Lỗi lúc ${timestamp}: ${result.error || 'Tạo vận đơn thất bại'}]`;
       await supabaseAdmin.from('orders').update({

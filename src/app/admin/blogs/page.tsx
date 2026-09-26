@@ -24,7 +24,7 @@ export default async function AdminBlogsPage() {
         subtitle="Biên tập bài viết chuẩn SEO & E-E-A-T, tích hợp Trợ lý AI tra cứu Web Search và gắn thẻ sản phẩm tự động"
       />
 
-      <main className="p-6 md:p-8 max-w-7xl w-full mx-auto">
+      <main className="p-3.5 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto">
         <AdminBlogManager initialPosts={blogs} products={products} />
       </main>
     </div>

@@ -135,6 +135,19 @@ export async function deleteBannerMedia(publicUrl: string): Promise<boolean> {
       return false;
     }
 
+    // 1. Nếu đang ở môi trường trình duyệt: Gọi qua Admin API đã xác thực quyền để xóa an toàn bằng Service Role
+    if (typeof window !== 'undefined') {
+      try {
+        const res = await fetch(`/api/admin/media?url=${encodeURIComponent(publicUrl)}`, {
+          method: 'DELETE',
+        });
+        if (res.ok) return true;
+      } catch {
+        // Fallback sang phương thức xóa trực tiếp nếu API lỗi
+      }
+    }
+
+    // 2. Fallback: Xóa trực tiếp qua Supabase Storage client
     const parts = publicUrl.split('/storage/v1/object/public/');
     if (parts.length < 2) return false;
 

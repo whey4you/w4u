@@ -16,31 +16,31 @@ export function OrderDetailModal({ isOpen, onClose, order, onEdit }: OrderDetail
   if (!isOpen || !order) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200">
       <div className="bg-white w-full max-w-2xl rounded-2xl shadow-xl border border-slate-200 overflow-hidden max-h-[90vh] flex flex-col">
         {/* Modal Header */}
-        <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50">
+        <div className="px-4 sm:px-6 py-3.5 sm:py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50">
           <div>
             <div className="flex items-center gap-2">
-              <h2 className="text-base font-bold text-slate-900">Chi Tiết Đơn Hàng</h2>
+              <h2 className="text-sm sm:text-base font-bold text-slate-900">Chi Tiết Đơn Hàng</h2>
               <span className="font-mono font-bold text-xs text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-200">
                 {order.order_code}
               </span>
             </div>
-            <p className="text-xs text-slate-400 mt-0.5">
+            <p className="text-[11px] sm:text-xs text-slate-400 mt-0.5">
               Ngày đặt: {new Date(order.created_at).toLocaleString('vi-VN')}
             </p>
           </div>
           <button
             onClick={onClose}
-            className="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-200/60 transition-colors"
+            className="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-200/60 transition-colors cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Modal Body */}
-        <div className="p-6 overflow-y-auto space-y-6 text-xs flex-1">
+        <div className="p-4 sm:p-6 overflow-y-auto space-y-4 sm:space-y-6 text-xs flex-1">
           {/* Customer Info Card */}
           <div className="bg-slate-50 rounded-xl p-4 border border-slate-200/70 space-y-2.5">
             <h3 className="font-bold text-slate-700 uppercase tracking-wider text-[10px]">
@@ -170,7 +170,7 @@ export function OrderDetailModal({ isOpen, onClose, order, onEdit }: OrderDetail
         </div>
 
         {/* Modal Footer */}
-        <div className="px-6 py-3 border-t border-slate-200 bg-slate-50 flex items-center justify-between">
+        <div className="px-4 sm:px-6 py-3 border-t border-slate-200 bg-slate-50 flex items-center justify-between gap-2">
           <div>
             {onEdit && (
               <button
@@ -179,10 +179,10 @@ export function OrderDetailModal({ isOpen, onClose, order, onEdit }: OrderDetail
                   onClose();
                   onEdit();
                 }}
-                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 font-semibold text-xs transition-colors cursor-pointer"
+                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 font-semibold text-xs transition-colors cursor-pointer"
               >
                 <Edit3 className="w-3.5 h-3.5" />
-                <span>Chỉnh Sửa Đơn Hàng</span>
+                <span>Chỉnh Sửa</span>
               </button>
             )}
           </div>
@@ -190,7 +190,7 @@ export function OrderDetailModal({ isOpen, onClose, order, onEdit }: OrderDetail
             onClick={onClose}
             className="px-4 py-2 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold text-xs transition-colors cursor-pointer"
           >
-            Đóng Cửa Sổ
+            Đóng
           </button>
         </div>
       </div>

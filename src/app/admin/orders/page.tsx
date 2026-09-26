@@ -19,7 +19,7 @@ export default async function AdminOrdersPage() {
         subtitle="Tiếp nhận, duyệt đơn mới và cập nhật tiến trình vận chuyển theo thời gian thực"
       />
 
-      <main className="p-8 max-w-7xl w-full mx-auto">
+      <main className="p-3.5 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto">
         <OrderManager initialOrders={orders} products={products} />
       </main>
     </div>

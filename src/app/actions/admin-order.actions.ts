@@ -2,8 +2,9 @@
 
 import { revalidatePath } from 'next/cache';
 import { supabaseAdmin, isSupabaseAdminConfigured } from '@/lib/supabase/server';
-import { cancelAllinGoOrder } from '@/lib/allingo';
+import { cancelAllinGoOrder, getAllinGoWaybillPdfWithRetry } from '@/lib/allingo';
 import { fulfillOrderWithAllinGo } from '@/services/allingo-fulfillment.service';
+import { sendNewOrderTelegramAlert } from '@/services/telegram-notification.service';
 import { Order, OrderStatus } from '@/services/order.service';
 import { assertAdminSession } from '@/lib/auth/admin-guard';
 
@@ -303,7 +304,33 @@ export async function createManualOrderAction(payload: CreateManualOrderPayload)
 
     if (payload.fulfillWithAllinGo) {
       try {
-        await fulfillOrderWithAllinGo(createdOrder.id);
+        const fulfillRes = await fulfillOrderWithAllinGo(createdOrder.id);
+        (async () => {
+          let waybillPdfUrl: string | undefined;
+          if (fulfillRes?.allingoOrderId) {
+            const pdf = await getAllinGoWaybillPdfWithRetry(fulfillRes.allingoOrderId, 1, 1500);
+            if (pdf.success && pdf.url) waybillPdfUrl = pdf.url;
+          }
+          await sendNewOrderTelegramAlert({
+            orderCode,
+            customerName: payload.customerName,
+            customerPhone: payload.customerPhone,
+            customerEmail: payload.customerEmail,
+            customerAddress: payload.customerAddress,
+            items: payload.items,
+            totalAmount,
+            shippingFee,
+            paymentMethod,
+            depositAmount,
+            codRemaining,
+            carrierName: fulfillRes?.carrierName || payload.carrierName,
+            trackingCode: fulfillRes?.trackingNumber,
+            trackingUrl: fulfillRes?.trackingUrl,
+            allingoOrderId: fulfillRes?.allingoOrderId,
+            notes: payload.notes,
+            waybillPdfUrl,
+          });
+        })().catch(() => {});
       } catch (fErr) {
         console.error('[Manual Order AllinGo Error]:', fErr);
       }
@@ -329,6 +356,27 @@ export async function fulfillManualOrderAction(orderId: string): Promise<{ succe
   } catch (err: any) {
     return { success: false, error: err?.message || 'Lỗi khi lên đơn AllinGo.' };
   }
+}
+
+export async function getOrderWaybillPdfAction(orderId: string): Promise<{ success: boolean; url?: string; error?: string }> {
+  if (!(await assertAdminSession())) {
+    return { success: false, error: 'Không có quyền thực hiện: Yêu cầu phiên đăng nhập quản trị.' };
+  }
+  const { data: order, error } = await supabaseAdmin
+    .from('orders')
+    .select('allingo_order_id, order_code')
+    .eq('id', orderId)
+    .single();
+
+  if (error || !order) {
+    return { success: false, error: 'Không tìm thấy đơn hàng.' };
+  }
+
+  if (!order.allingo_order_id) {
+    return { success: false, error: 'Đơn hàng chưa có mã vận đơn AllinGo.' };
+  }
+
+  return await getAllinGoWaybillPdfWithRetry(order.allingo_order_id, 2, 1500);
 }
 
 export async function deleteAdminOrderAction(orderId: string): Promise<{ success: boolean; error?: string }> {

@@ -15,7 +15,7 @@ export default async function AdminCouponsPage() {
         subtitle="Thiết lập các chương trình khuyến mãi, voucher giảm giá và theo dõi lượt sử dụng"
       />
 
-      <main className="p-8 max-w-7xl w-full mx-auto">
+      <main className="p-3.5 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto">
         <CouponManager initialCoupons={coupons} />
       </main>
     </div>

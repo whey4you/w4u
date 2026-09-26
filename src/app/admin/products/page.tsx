@@ -15,7 +15,7 @@ export default async function AdminProductsPage() {
         subtitle="Kiểm soát trạng thái còn/hết hàng, cập nhật giá bán và thông số dinh dưỡng"
       />
 
-      <main className="p-8 max-w-7xl w-full mx-auto">
+      <main className="p-3.5 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto">
         <ProductManager initialProducts={products} />
       </main>
     </div>

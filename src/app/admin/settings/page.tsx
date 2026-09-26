@@ -19,7 +19,7 @@ export default async function AdminSettingsPage() {
         subtitle="Thiết lập địa chỉ lấy hàng AllinGo, thông tin người gửi trực tiếp lưu trữ trên Supabase"
       />
 
-      <main className="p-8 max-w-4xl w-full mx-auto">
+      <main className="p-3.5 sm:p-6 lg:p-8 max-w-4xl w-full mx-auto">
         <WarehouseSettingsForm initialConfig={warehouseConfig} />
       </main>
     </div>

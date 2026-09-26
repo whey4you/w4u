@@ -25,6 +25,8 @@ export function ProductCatalog() {
     resetFilters,
     resetAll,
     activeFilterCount,
+    searchQuery,
+    clearSearch,
     products,
     isLoading,
   } = useProductFilter();
@@ -46,6 +48,8 @@ export function ProductCatalog() {
           onRemoveInStock={() => setInStockOnly(false)}
           activeFilterCount={activeFilterCount}
           onResetFilters={resetFilters}
+          searchQuery={searchQuery}
+          onClearSearch={clearSearch}
         />
 
         {/* Main Layout: Left Sidebar + Product Grid */}
@@ -104,14 +108,16 @@ export function ProductCatalog() {
                   Không tìm thấy sản phẩm phù hợp
                 </h3>
                 <p className="text-sm text-neutral-500 mt-1 max-w-sm mx-auto">
-                  Hãy thử điều chỉnh lại bộ lọc hoặc bỏ bớt các tiêu chí tìm kiếm.
+                  {searchQuery?.trim()
+                    ? `Không có sản phẩm nào khớp với từ khóa "${searchQuery.trim()}".`
+                    : 'Hãy thử điều chỉnh lại bộ lọc hoặc bỏ bớt các tiêu chí tìm kiếm.'}
                 </p>
                 <button
                   type="button"
                   onClick={resetAll}
                   className="mt-4 px-5 py-2 rounded-full bg-black text-white text-xs font-semibold hover:bg-neutral-800 transition-colors shadow-xs"
                 >
-                  Đặt lại tất cả bộ lọc
+                  {searchQuery?.trim() ? 'Xem tất cả sản phẩm' : 'Đặt lại tất cả bộ lọc'}
                 </button>
               </div>
             )}

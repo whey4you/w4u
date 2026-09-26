@@ -105,7 +105,7 @@ export function CartSummaryCard({ totalAmount, totalItems }: CartSummaryCardProp
                     setPromoCode(e.target.value);
                     setPromoMessage(null);
                   }}
-                  placeholder="VD: WHEY4YOU, WHEY10"
+                  placeholder="Nhập mã giảm giá..."
                   className="w-full pl-9 pr-3 py-2 text-sm rounded-xl border border-neutral-200 uppercase font-mono focus:outline-none focus:border-neutral-900 transition-colors"
                 />
               </div>

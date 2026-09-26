@@ -20,6 +20,8 @@ interface ProductToolbarProps {
   onRemoveInStock: () => void;
   activeFilterCount: number;
   onResetFilters: () => void;
+  searchQuery?: string;
+  onClearSearch?: () => void;
 }
 
 export function ProductToolbar({
@@ -35,9 +37,12 @@ export function ProductToolbar({
   onRemoveInStock,
   activeFilterCount,
   onResetFilters,
+  searchQuery,
+  onClearSearch,
 }: ProductToolbarProps) {
-  const currentCategoryLabel =
-    PRODUCT_CATEGORIES.find((c) => c.id === category)?.label || 'Tất Cả Sản Phẩm';
+  const currentCategoryLabel = searchQuery?.trim()
+    ? `Kết quả tìm kiếm: "${searchQuery.trim()}"`
+    : PRODUCT_CATEGORIES.find((c) => c.id === category)?.label || 'Tất Cả Sản Phẩm';
 
   return (
     <div className="pb-3 space-y-2.5 sm:space-y-3">
@@ -107,6 +112,20 @@ export function ProductToolbar({
       {/* Active Filter Chips */}
       {activeFilterCount > 0 && (
         <div className="flex flex-wrap items-center gap-2 pt-1">
+          {searchQuery?.trim() && onClearSearch && (
+            <span className="inline-flex items-center gap-1.5 bg-neutral-900 text-white text-xs font-medium pl-3 pr-2 py-1 rounded-full shadow-2xs">
+              <span className="truncate max-w-[180px]">Tìm: &ldquo;{searchQuery.trim()}&rdquo;</span>
+              <button
+                type="button"
+                aria-label={`Bỏ tìm kiếm ${searchQuery}`}
+                onClick={onClearSearch}
+                className="hover:text-red-400 transition-colors"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            </span>
+          )}
+
           {selectedPriceRanges.map((r) => {
             const label = PRICE_RANGE_OPTIONS.find((opt) => opt.id === r)?.label;
             return (

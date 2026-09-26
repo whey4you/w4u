@@ -185,3 +185,58 @@ export async function cancelAllinGoOrder(
     };
   }
 }
+
+export interface AllinGoWaybillPdfResult {
+  success: boolean;
+  url?: string;
+  expiresAt?: string;
+  error?: string;
+}
+
+/**
+ * Lấy URL file PDF mã vận đơn đã ký sẵn từ AllinGo
+ * Endpoint: GET /orders/{id}/waybill-pdf
+ */
+export async function getAllinGoWaybillPdf(allingoOrderId: string): Promise<AllinGoWaybillPdfResult> {
+  try {
+    const cleanId = allingoOrderId?.trim();
+    if (!cleanId) {
+      return { success: false, error: 'Thiếu mã đơn hàng AllinGo.' };
+    }
+
+    const res = await allingoFetch<{ url: string; expires_at?: string }>(
+      `/orders/${encodeURIComponent(cleanId)}/waybill-pdf`
+    );
+
+    if (res?.url) {
+      return {
+        success: true,
+        url: res.url,
+        expiresAt: res.expires_at,
+      };
+    }
+
+    return { success: false, error: 'Không tìm thấy link PDF vận đơn.' };
+  } catch (err: any) {
+    return {
+      success: false,
+      error: err?.message || 'Chưa phát hành file PDF vận đơn từ bưu cục.',
+    };
+  }
+}
+
+/**
+ * Lấy PDF vận đơn với cơ chế retry (chờ 2-3s nếu nhà vận chuyển đang render PDF)
+ */
+export async function getAllinGoWaybillPdfWithRetry(
+  allingoOrderId: string,
+  retries: number = 2,
+  delayMs: number = 2500
+): Promise<AllinGoWaybillPdfResult> {
+  let result = await getAllinGoWaybillPdf(allingoOrderId);
+  for (let i = 0; i < retries && !result.success; i++) {
+    await new Promise((resolve) => setTimeout(resolve, delayMs));
+    result = await getAllinGoWaybillPdf(allingoOrderId);
+  }
+  return result;
+}

@@ -107,7 +107,7 @@ export function CheckoutSummaryDetails({
                     setCouponInput(e.target.value);
                     setCouponError(null);
                   }}
-                  placeholder="MÃ GIẢM GIÁ"
+                  placeholder="Nhập mã giảm giá..."
                   className="flex-1 px-2.5 py-1.5 text-xs rounded-xl border border-neutral-200 font-mono uppercase focus:outline-none focus:border-neutral-900 bg-white"
                 />
                 <button

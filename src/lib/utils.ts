@@ -72,3 +72,17 @@ export function parseWeightKg(str?: string | null, fallback = 1.0): number {
   return fallback;
 }
 
+/**
+ * Chuẩn hóa chuỗi tìm kiếm tiếng Việt: loại bỏ dấu, chuyển chữ thường, loại bỏ ký tự đặc biệt
+ */
+export function normalizeSearchText(text: string): string {
+  if (!text) return '';
+  return text
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[đĐ]/g, 'd')
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim();
+}
+

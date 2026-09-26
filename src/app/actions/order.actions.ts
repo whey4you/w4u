@@ -260,6 +260,9 @@ export async function createOrderAction(input: CheckoutInput): Promise<CheckoutR
     input.notes?.trim() || '',
   ].filter(Boolean).join(' ');
 
+  // Dọn dẹp ngầm các checkout nháp đã hết hạn để giải phóng database
+  void supabaseAdmin.from('pending_checkouts').delete().lt('expires_at', new Date().toISOString());
+
   // Lưu thông tin giỏ hàng tạm thời vào pending_checkouts (CHƯA LƯU VÀO ORDERS ĐỂ TRÁNH ĐƠN RÁC)
   const pendingPayload = {
     order_code: orderCode,

@@ -4,16 +4,14 @@ import React, { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { ShoppingBag, Search, Menu, X } from 'lucide-react';
+import { ShoppingBag, Menu, X } from 'lucide-react';
 import { useCart } from '@/context/cart-context';
 import { Container } from '@/components/ui/container';
-import { SearchModal } from './search-modal';
 
 export function AppleNav() {
   const pathname = usePathname();
   const { totalItems, openCart } = useCart();
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [searchOpen, setSearchOpen] = useState(false);
 
   const links = [
     { label: 'Whey Protein', href: '/products?category=whey' },
@@ -62,16 +60,8 @@ export function AppleNav() {
             })}
           </div>
 
-          {/* Right Action Icons: Search + Cart */}
+          {/* Right Action Icons: Cart */}
           <div className="flex items-center gap-5">
-            <button
-              onClick={() => setSearchOpen(true)}
-              aria-label="Tìm kiếm"
-              className="p-1.5 text-apple-dark hover:text-apple-blue transition-colors rounded-full hover:bg-black/[0.04]"
-            >
-              <Search className="h-5 w-5" />
-            </button>
-
             <button
               onClick={openCart}
               aria-label="Giỏ hàng"
@@ -130,8 +120,6 @@ export function AppleNav() {
         </div>
       )}
 
-      {/* Global Search Modal */}
-      <SearchModal isOpen={searchOpen} onClose={() => setSearchOpen(false)} />
     </>
   );
 }

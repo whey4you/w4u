@@ -87,13 +87,13 @@ export function MediaManager({ initialItems }: MediaManagerProps) {
   return (
     <div className="space-y-6">
       {/* Top Banner / Callout & Action Bar */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-5 rounded-2xl bg-gradient-to-r from-blue-900 to-slate-900 text-white shadow-md">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-blue-900 to-slate-900 text-white shadow-md">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
             <Sparkles className="w-4 h-4 text-amber-400" />
-            <h2 className="text-base font-bold">Kho Ảnh Dùng Chung (Tái Sử Dụng Link)</h2>
+            <h2 className="text-sm sm:text-base font-bold">Kho Ảnh Dùng Chung (Tái Sử Dụng Link)</h2>
           </div>
-          <p className="text-xs text-slate-300 max-w-xl">
+          <p className="text-[11px] sm:text-xs text-slate-300 max-w-xl">
             Tự động gom toàn bộ ảnh sản phẩm, banner, blog và ảnh lưu từ URL. Bấm &quot;Sao Chép Link&quot; để dán vào bất cứ form nào mà không cần tải lên lại.
           </p>
         </div>
@@ -101,7 +101,7 @@ export function MediaManager({ initialItems }: MediaManagerProps) {
         <button
           type="button"
           onClick={() => setIsAddOpen(true)}
-          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs transition-all shadow-md shadow-blue-600/20 cursor-pointer flex-shrink-0"
+          className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs transition-all shadow-md shadow-blue-600/20 cursor-pointer shrink-0"
         >
           <Plus className="w-4 h-4" />
           <span>Thêm Ảnh Mới</span>
@@ -119,7 +119,7 @@ export function MediaManager({ initialItems }: MediaManagerProps) {
 
       {/* Grid Danh Sách Ảnh */}
       {filteredItems.length === 0 ? (
-        <div className="py-20 rounded-2xl border border-dashed border-slate-200 bg-white flex flex-col items-center justify-center text-center p-6">
+        <div className="py-16 sm:py-20 rounded-2xl border border-dashed border-slate-200 bg-white flex flex-col items-center justify-center text-center p-6">
           <div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-400 mb-3">
             <ImageIcon className="w-6 h-6" />
           </div>
@@ -129,7 +129,7 @@ export function MediaManager({ initialItems }: MediaManagerProps) {
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
           {filteredItems.map((item) => (
             <MediaCard
               key={item.id}

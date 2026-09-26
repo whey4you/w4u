@@ -16,6 +16,7 @@ import {
   Images,
   Tag,
   Truck,
+  X,
 } from 'lucide-react';
 import { logoutAdminAction } from '@/app/actions/admin-auth';
 
@@ -30,7 +31,12 @@ const NAV_ITEMS = [
   { href: '/admin/settings', label: 'Cấu Hình Kho Hàng', icon: Truck, exact: false },
 ];
 
-export function AdminSidebar() {
+interface AdminSidebarProps {
+  onClose?: () => void;
+  className?: string;
+}
+
+export function AdminSidebar({ onClose, className = '' }: AdminSidebarProps) {
   const pathname = usePathname();
   const [isLoggingOut, startLogout] = useTransition();
 
@@ -41,9 +47,11 @@ export function AdminSidebar() {
   };
 
   return (
-    <aside className="w-64 bg-[#0f172a] text-slate-300 flex flex-col flex-shrink-0 sticky top-0 h-screen border-r border-slate-800 select-none overflow-y-auto">
+    <aside
+      className={`w-64 bg-[#0f172a] text-slate-300 flex flex-col flex-shrink-0 sticky top-0 h-screen border-r border-slate-800 select-none overflow-y-auto ${className}`}
+    >
       {/* Brand Header */}
-      <div className="p-6 border-b border-slate-800 flex items-center justify-between">
+      <div className="p-5 sm:p-6 border-b border-slate-800 flex items-center justify-between">
         <div>
           <div className="flex items-center gap-2">
             <span className="font-black tracking-wider text-white text-lg">WHEY4YOU</span>
@@ -53,10 +61,21 @@ export function AdminSidebar() {
           </div>
           <p className="text-xs text-slate-500 mt-0.5">Hệ thống quản trị nội bộ</p>
         </div>
+
+        {onClose && (
+          <button
+            type="button"
+            onClick={onClose}
+            className="lg:hidden p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800/80 transition-colors cursor-pointer"
+            aria-label="Đóng menu"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        )}
       </div>
 
       {/* Navigation Links */}
-      <nav className="flex-1 px-3 py-6 space-y-1.5">
+      <nav className="flex-1 px-3 py-4 sm:py-6 space-y-1.5">
         {NAV_ITEMS.map((item) => {
           const isActive = item.exact
             ? pathname === item.href
@@ -67,6 +86,7 @@ export function AdminSidebar() {
             <Link
               key={item.href}
               href={item.href}
+              onClick={onClose}
               className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all ${
                 isActive
                   ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20'

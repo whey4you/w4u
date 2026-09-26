@@ -211,14 +211,15 @@ export function CheckoutForm({ items, onBack, onComplete, onSuccess }: CheckoutF
         </div>
 
         <div className="flex-1 space-y-4 overflow-y-auto px-4 py-5 sm:px-6">
-          <Field label="Họ và tên người nhận" name="customerName" autoComplete="name" minLength={2} />
-          <Field label="Số điện thoại" name="customerPhone" type="tel" autoComplete="tel" inputMode="tel" />
+          <Field label="Họ và tên người nhận" name="customerName" autoComplete="name" minLength={2} placeholder="Nhập họ và tên" />
+          <Field label="Số điện thoại" name="customerPhone" type="tel" autoComplete="tel" inputMode="tel" placeholder="Nhập số điện thoại" />
           <Field
             label="Email nhận hóa đơn điện tử"
             name="customerEmail"
             type="email"
             autoComplete="email"
             required
+            placeholder="Nhập địa chỉ email"
             value={customerEmail}
             onChange={(e) => setCustomerEmail(e.target.value)}
             onBlur={(e) => {
@@ -256,7 +257,7 @@ export function CheckoutForm({ items, onBack, onComplete, onSuccess }: CheckoutF
             <textarea
               name="notes"
               rows={2}
-              placeholder="Lời nhắn cho shipper hoặc thời gian nhận hàng thuận tiện..."
+              placeholder="Nhập ghi chú giao hàng (nếu có)..."
               className="mt-1.5 w-full rounded-xl border border-slate-300 px-3 py-2 text-sm outline-none focus:border-apple-blue focus:ring-2 focus:ring-apple-blue/15"
             />
           </label>

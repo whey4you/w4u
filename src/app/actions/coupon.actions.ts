@@ -3,7 +3,6 @@
 import { revalidatePath } from 'next/cache';
 import {
   validateAndCalculateCoupon,
-  getAdminCoupons,
   createCoupon,
   updateCoupon,
   toggleCouponActive,
@@ -41,13 +40,6 @@ export async function applyCouponAction(
     return { valid: false, error: 'Vui lòng nhập mã giảm giá.' };
   }
   return validateAndCalculateCoupon(code, subtotal);
-}
-
-export async function getAdminCouponsAction(): Promise<Coupon[]> {
-  if (!(await assertAdminSession())) {
-    return [];
-  }
-  return getAdminCoupons();
 }
 
 export async function createCouponAction(

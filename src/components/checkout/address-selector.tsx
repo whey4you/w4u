@@ -309,7 +309,7 @@ export function AddressSelector({ onChange, disabled, value }: AddressSelectorPr
           type="text"
           value={street}
           onChange={(e) => handleStreetChange(e.target.value)}
-          placeholder="Ví dụ: 123 Đường Nguyễn Huệ, Chung cư Topaz căn 402"
+          placeholder="Nhập số nhà, tên đường, căn hộ..."
           disabled={disabled}
           className={selectStyle}
           required

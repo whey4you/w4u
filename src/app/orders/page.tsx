@@ -112,7 +112,7 @@ function OrdersContent() {
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Ví dụ: W4U-98421, 0909xxxxxx hoặc SPXVN..."
+              placeholder="Nhập mã đơn hàng, số điện thoại hoặc mã vận đơn..."
               required
               className="w-full pl-4 pr-12 py-3.5 rounded-2xl bg-slate-50 border border-slate-200 focus:outline-none focus:border-apple-blue focus:bg-white text-apple-dark text-sm transition-all"
             />

@@ -7,6 +7,7 @@ import { Product } from '@/types/product';
 import { toggleProductStock } from '@/services/product.mutations';
 import { formatPrice } from '@/lib/utils';
 import { ProductModal } from './product-modal';
+import { ProductMobileCard } from './product-mobile-card';
 
 interface ProductTableProps {
   products: Product[];
@@ -33,10 +34,33 @@ export function ProductTable({ products, onRefresh }: ProductTableProps) {
     setIsModalOpen(true);
   };
 
+  if (products.length === 0) {
+    return (
+      <div className="bg-white rounded-2xl border border-slate-200/80 p-8 sm:p-12 text-center text-slate-400">
+        <p className="text-sm">Không tìm thấy sản phẩm nào phù hợp với bộ lọc.</p>
+      </div>
+    );
+  }
+
   return (
-    <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
-      <div className="overflow-x-auto">
-        <table className="w-full text-left text-xs">
+    <>
+      {/* Mobile Card List (hiển thị trên màn hình nhỏ < md) */}
+      <div className="md:hidden space-y-3">
+        {products.map((p) => (
+          <ProductMobileCard
+            key={p.id}
+            product={p}
+            isLoading={loadingId === p.id}
+            onToggleStock={handleToggleStock}
+            onEdit={openEdit}
+          />
+        ))}
+      </div>
+
+      {/* Desktop Table (hiển thị từ tablet/desktop >= md) */}
+      <div className="hidden md:block bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-xs">
           <thead>
             <tr className="border-b border-slate-200 bg-slate-50/70 text-slate-500 uppercase tracking-wider font-semibold">
               <th className="py-3.5 px-6">Sản Phẩm</th>
@@ -136,13 +160,14 @@ export function ProductTable({ products, onRefresh }: ProductTableProps) {
           </tbody>
         </table>
       </div>
-
-      <ProductModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onSuccess={onRefresh}
-        product={editingProduct}
-      />
     </div>
-  );
+
+    <ProductModal
+      isOpen={isModalOpen}
+      onClose={() => setIsModalOpen(false)}
+      onSuccess={onRefresh}
+      product={editingProduct}
+    />
+  </>
+);
 }
