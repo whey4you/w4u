@@ -312,6 +312,7 @@ export async function createManualOrderAction(payload: CreateManualOrderPayload)
             if (pdf.success && pdf.url) waybillPdfUrl = pdf.url;
           }
           await sendNewOrderTelegramAlert({
+            orderId: createdOrder.id,
             orderCode,
             customerName: payload.customerName,
             customerPhone: payload.customerPhone,

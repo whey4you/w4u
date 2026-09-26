@@ -257,7 +257,7 @@ export async function createOrderAction(input: CheckoutInput): Promise<CheckoutR
     `[ShippingFee:${shippingFee}đ]`,
     verifiedCouponCode ? `[Voucher:${verifiedCouponCode} (-${discountAmount}đ)]` : '',
     isCod ? `[Yêu cầu cọc 100k: ${depositAmount}đ | Thu COD: ${codRemaining}đ (đã gồm cước ship)]` : '[Đã thanh toán 100% gồm cước ship]',
-    input.notes?.trim() || '',
+    input.notes?.trim() ? `[CustomerNote:${input.notes.trim()}]` : '',
   ].filter(Boolean).join(' ');
 
   // Dọn dẹp ngầm các checkout nháp đã hết hạn để giải phóng database

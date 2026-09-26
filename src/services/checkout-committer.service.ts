@@ -1,6 +1,6 @@
 import { supabaseAdmin } from '@/lib/supabase/server';
 import { fulfillOrderWithAllinGo, FulfillOrderResult } from './allingo-fulfillment.service';
-import { getAllinGoWaybillPdfWithRetry } from '@/lib/allingo';
+import { getAllinGoWaybillPdfWithRetry, isInstantDeliveryCarrier } from '@/lib/allingo';
 import { sendNewOrderTelegramAlert } from './telegram-notification.service';
 import { incrementCouponUsage } from './coupon.service';
 import { sendOrderInvoiceEmail } from './email/resend-email.service';
@@ -138,15 +138,22 @@ export async function commitPaidOrder(identifier: number | string): Promise<{ su
     // 5. Xóa bản ghi draft khỏi pending_checkouts
     await supabaseAdmin.from('pending_checkouts').delete().eq('id', typedDraft.id);
 
-    // 6. Tự động chuyển giao AllinGo tạo vận đơn
+    // 6. Kiểm tra phương thức vận chuyển:
+    // Với đơn Hỏa Tốc (Grab, GSM, LalaMove): Shop cần thời gian đóng gói hàng và chủ động đối ứng.
+    // Hệ thống KHÔNG tự động gọi xe ngay mà gửi thông báo kèm nút "Bấm gọi xe" trên Telegram.
+    // Với các đơn tiêu chuẩn (SPX, GHN, Viettel Post,...): Tự động lên vận đơn ngay lập tức.
+    const isInstant = isInstantDeliveryCarrier(typedDraft.carrier_name || '');
     let fulfillResult: FulfillOrderResult | undefined;
-    try {
-      fulfillResult = await fulfillOrderWithAllinGo(createdOrder.id);
-    } catch (fulfillErr) {
-      console.error('[Checkout Committer] Lỗi AllinGo fulfillment:', fulfillErr);
+
+    if (!isInstant) {
+      try {
+        fulfillResult = await fulfillOrderWithAllinGo(createdOrder.id);
+      } catch (fulfillErr) {
+        console.error('[Checkout Committer] Lỗi AllinGo fulfillment:', fulfillErr);
+      }
     }
 
-    // 7. Gửi thông báo Telegram tức thì kèm PDF vận đơn (Async không cản trở luồng phản hồi)
+    // 7. Gửi thông báo Telegram tức thì (Async không cản trở luồng phản hồi)
     (async () => {
       try {
         let waybillPdfUrl: string | undefined;
@@ -157,7 +164,14 @@ export async function commitPaidOrder(identifier: number | string): Promise<{ su
           }
         }
 
+        // Trích xuất lời nhắn sạch sẽ của khách để hiển thị rõ ràng trên Telegram
+        const noteMatch = typedDraft.notes?.match(/\[CustomerNote:(.*?)\]/);
+        const cleanCustomerNote = noteMatch
+          ? noteMatch[1].trim()
+          : (typedDraft.notes?.replace(/\[.*?\]/g, '').replace(/\|/g, '').trim() || null);
+
         await sendNewOrderTelegramAlert({
+          orderId: createdOrder.id,
           orderCode: typedDraft.order_code,
           customerName: typedDraft.customer_name,
           customerPhone: typedDraft.customer_phone,
@@ -183,8 +197,9 @@ export async function commitPaidOrder(identifier: number | string): Promise<{ su
           trackingCode: fulfillResult?.trackingNumber,
           trackingUrl: fulfillResult?.trackingUrl,
           allingoOrderId: fulfillResult?.allingoOrderId,
-          notes: typedDraft.notes,
+          notes: cleanCustomerNote,
           waybillPdfUrl,
+          isInstantDelivery: isInstant,
         });
       } catch (teleErr) {
         console.error('[Checkout Committer] Lỗi gửi thông báo Telegram:', teleErr);

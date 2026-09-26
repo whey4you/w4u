@@ -27,12 +27,28 @@ interface OrderFulfillmentData {
   carrier_name?: string;
 }
 
-function parseAddressFromNotes(notes: string = ''): { provinceCode?: string; districtCode?: string; wardCode?: string; weightGrams?: number; serviceId?: string } {
+function parseAddressFromNotes(notes: string = ''): {
+  provinceCode?: string;
+  districtCode?: string;
+  wardCode?: string;
+  weightGrams?: number;
+  serviceId?: string;
+  customerNote?: string;
+} {
   const cityMatch = notes.match(/\[CityID:(\w+)\]/);
   const districtMatch = notes.match(/\[DistrictID:(\w+)\]/);
   const wardMatch = notes.match(/\[WardID:(\w+)\]/);
   const weightMatch = notes.match(/\[Weight:(\d+)g\]/);
   const serviceMatch = notes.match(/\[ServiceID:([^\]]+)\]/);
+  const customerNoteMatch = notes.match(/\[CustomerNote:(.*?)\]/);
+
+  let customerNote = customerNoteMatch ? customerNoteMatch[1].trim() : undefined;
+  if (!customerNote) {
+    const stripped = notes.replace(/\[.*?\]/g, '').replace(/\|/g, '').trim();
+    if (stripped) {
+      customerNote = stripped;
+    }
+  }
 
   return {
     provinceCode: cityMatch ? cityMatch[1] : undefined,
@@ -40,6 +56,7 @@ function parseAddressFromNotes(notes: string = ''): { provinceCode?: string; dis
     wardCode: wardMatch ? wardMatch[1] : undefined,
     weightGrams: weightMatch ? Number(weightMatch[1]) : undefined,
     serviceId: serviceMatch ? serviceMatch[1] : undefined,
+    customerNote,
   };
 }
 
@@ -92,6 +109,18 @@ export async function fulfillOrderWithAllinGo(orderId: string): Promise<FulfillO
 
     console.log(`[AllinGo Fulfillment] Đang tạo vận đơn cho ${ord.order_code} (${weightGrams}g, COD: ${codAmount}đ, AllinGo COD offset)...`);
 
+    const userNote = parsedNotes.customerNote?.trim();
+    let dropoffNote = '';
+    if (userNote) {
+      dropoffNote = userNote;
+    }
+    if (codAmount > 0) {
+      const codText = `Thu COD: ${codAmount.toLocaleString('vi-VN')}đ (Đã gồm tiền hàng & cước ship)`;
+      dropoffNote = dropoffNote ? `${dropoffNote} | ${codText}` : codText;
+    } else if (!dropoffNote) {
+      dropoffNote = 'Đơn đã thanh toán 100% - Không thu tiền';
+    }
+
     const result = await createAllinGoOrder({
       orderCode: ord.order_code,
       customerName: ord.customer_name,
@@ -105,9 +134,7 @@ export async function fulfillOrderWithAllinGo(orderId: string): Promise<FulfillO
       weightGrams,
       serviceId: parsedNotes.serviceId,
       payee: 'sender',
-      notes: codAmount > 0
-        ? `Thu COD: ${codAmount.toLocaleString('vi-VN')}đ (Đã gồm tiền hàng & cước ship - Khách không trả thêm tiền ship)`
-        : 'Đơn đã thanh toán 100% (cả tiền hàng & cước ship) - Không thu tiền',
+      notes: dropoffNote,
     });
 
     const timestamp = new Date().toLocaleString('vi-VN');

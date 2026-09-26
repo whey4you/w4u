@@ -168,6 +168,11 @@ export function CheckoutStepShipping({
           <p className="text-neutral-600 line-clamp-2 leading-relaxed">
             {addressData?.fullAddress || addressData?.streetAddress}
           </p>
+          {customer.notes?.trim() && (
+            <p className="text-neutral-500 italic text-[11px] truncate pt-0.5">
+              📝 Lời nhắn shipper: &ldquo;{customer.notes.trim()}&rdquo;
+            </p>
+          )}
         </div>
       </div>
     );
@@ -274,19 +279,23 @@ export function CheckoutStepShipping({
           <AddressSelector onChange={onAddressChange} value={addressData} />
         </div>
 
-        {/* Delivery Note */}
+        {/* Delivery Note for Shipper */}
         <div>
           <label htmlFor="customerNotes" className="block text-[11px] font-bold uppercase tracking-wider text-neutral-700 mb-1">
-            Ghi chú giao hàng <span className="text-neutral-400 font-normal lowercase">(không bắt buộc)</span>
+            Ghi chú cho shipper <span className="text-neutral-400 font-normal lowercase">(không bắt buộc)</span>
           </label>
           <input
             id="customerNotes"
+            name="notes"
             type="text"
             value={customer.notes}
             onChange={(e) => setCustomer((prev) => ({ ...prev, notes: e.target.value }))}
-            placeholder="Nhập ghi chú giao hàng (nếu có)..."
+            placeholder="Ví dụ: Giao sau 18h, gọi trước khi đến, gửi lễ tân/bảo vệ..."
             className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-neutral-300 focus:outline-none focus:border-neutral-900 transition-colors"
           />
+          <p className="text-[11px] text-neutral-400 mt-1">
+            Lời nhắn này sẽ được gửi trực tiếp đến bưu tá/tài xế khi giao hàng.
+          </p>
         </div>
 
         {errorMsg && (

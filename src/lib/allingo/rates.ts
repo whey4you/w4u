@@ -136,6 +136,28 @@ export function isInstantDeliveryTimeActive(): boolean {
 }
 
 /**
+ * Nhận diện dịch vụ hỏa tốc nội thành (Grab, XanhSM, SPX Instant, Viettel Hỏa tốc, Lalamove)
+ */
+export function isInstantDeliveryCarrier(carrierNameOrId: string = '', serviceName: string = ''): boolean {
+  const c = carrierNameOrId.toLowerCase();
+  const s = serviceName.toLowerCase();
+  return (
+    c.includes('grab') ||
+    c.includes('gsm') ||
+    c.includes('xanh') ||
+    c.includes('lalamove') ||
+    c.includes('instant') ||
+    c.includes('hỏa tốc') ||
+    c.includes('1h') ||
+    c.includes('2h') ||
+    s.includes('instant') ||
+    s.includes('hỏa tốc') ||
+    s.includes('1h') ||
+    s.includes('2h')
+  );
+}
+
+/**
  * Lấy danh sách toàn bộ các hãng vận chuyển khả dụng đã được format sạch đẹp
  */
 export async function getAllShippingQuotesFormatted(params: RateInquiryParams): Promise<FormattedShippingRate[]> {
@@ -161,14 +183,7 @@ export async function getAllShippingQuotesFormatted(params: RateInquiryParams): 
       const sNameLower = sName.toLowerCase();
 
       // Nhận diện dịch vụ hỏa tốc nội thành (Grab, XanhSM, SPX Instant, Viettel Hỏa tốc, Lalamove)
-      const isInstant =
-        pId.includes('grab') ||
-        pId.includes('gsm') ||
-        pId.includes('lalamove') ||
-        sNameLower.includes('instant') ||
-        sNameLower.includes('hỏa tốc') ||
-        sNameLower.includes('1h') ||
-        sNameLower.includes('2h');
+      const isInstant = isInstantDeliveryCarrier(`${pId} ${pName}`, sNameLower);
 
       const category: ShippingCategory = isInstant ? 'instant' : 'standard';
 

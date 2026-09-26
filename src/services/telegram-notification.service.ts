@@ -1,4 +1,5 @@
 import { formatPrice } from '@/lib/utils';
+import { generateDispatchToken } from '@/lib/security/dispatch-token';
 
 export interface TelegramOrderAlertItem {
   product_name: string;
@@ -8,6 +9,7 @@ export interface TelegramOrderAlertItem {
 }
 
 export interface TelegramOrderAlertPayload {
+  orderId?: string;
   orderCode: string;
   customerName: string;
   customerPhone: string;
@@ -28,6 +30,7 @@ export interface TelegramOrderAlertPayload {
   notes?: string | null;
   items: TelegramOrderAlertItem[];
   waybillPdfUrl?: string | null;
+  isInstantDelivery?: boolean;
 }
 
 function escapeHtml(text?: string | null): string {
@@ -55,9 +58,16 @@ function buildOrderMessage(payload: TelegramOrderAlertPayload): string {
     : '• <i>Không có dữ liệu sản phẩm</i>';
 
   const carrierInfo = payload.carrierName || 'AllinGo';
-  const trackingInfo = payload.trackingCode ? `<code>${escapeHtml(payload.trackingCode)}</code>` : '<i>Đang cập nhật...</i>';
+  const isInstantAwaiting = Boolean(payload.isInstantDelivery && !payload.trackingCode);
+  const trackingInfo = payload.trackingCode
+    ? `<code>${escapeHtml(payload.trackingCode)}</code>`
+    : (isInstantAwaiting ? '⏳ <i>Chờ Shop bấm gọi xe...</i>' : '<i>Đang cập nhật...</i>');
 
-  return `🔔 <b>CÓ ĐƠN HÀNG MỚI #${escapeHtml(payload.orderCode)}</b>
+  const headerTitle = isInstantAwaiting
+    ? `⚡ <b>CÓ ĐƠN HỎA TỐC MỚI #${escapeHtml(payload.orderCode)}</b>`
+    : `🔔 <b>CÓ ĐƠN HÀNG MỚI #${escapeHtml(payload.orderCode)}</b>`;
+
+  return `${headerTitle}
 ━━━━━━━━━━━━━━━━━━━━
 👤 <b>Khách hàng:</b> ${escapeHtml(payload.customerName)}
 📱 <b>Số điện thoại:</b> <code>${escapeHtml(payload.customerPhone)}</code>
@@ -75,7 +85,7 @@ ${payload.discountAmount ? `• Giảm giá (${escapeHtml(payload.couponCode || 
 🚚 <b>VẬN CHUYỂN:</b>
 • Đối tác: <b>${escapeHtml(carrierInfo)}</b>
 • Mã vận đơn: ${trackingInfo}
-${payload.notes ? `📝 <b>Ghi chú:</b> <i>${escapeHtml(payload.notes)}</i>` : ''}`;
+${payload.notes ? `📝 <b>Ghi chú shipper:</b> <i>${escapeHtml(payload.notes)}</i>\n` : ''}${isInstantAwaiting ? '\n⚠️ <b>LƯU Ý:</b> Shop hãy đóng gói hàng xong, rồi bấm nút <b>[⚡ BẤM GỌI XE ALLINGO]</b> ngay bên dưới để tài xế tới lấy!' : ''}`;
 }
 
 async function sendTelegramDoc(token: string, chatId: string, pdfUrl: string, filename: string, caption?: string) {
@@ -126,8 +136,15 @@ export async function sendNewOrderTelegramAlert(
       : `${rawAppUrl}/admin/orders`;
 
     const inlineKeyboard: Array<Array<{ text: string; url: string }>> = [];
-    const actionRow = [];
 
+    // Nếu là đơn Hỏa Tốc đang chờ Shop đóng gói -> thêm nút gọi xe lên đầu
+    if (payload.isInstantDelivery && !payload.trackingCode && payload.orderId) {
+      const baseUrl = rawAppUrl.startsWith('http') ? rawAppUrl : 'https://whey4you.vn';
+      const dispatchUrl = `${baseUrl}/api/shipping/dispatch?orderId=${encodeURIComponent(payload.orderId)}&token=${generateDispatchToken(payload.orderId)}`;
+      inlineKeyboard.push([{ text: '⚡ BẤM GỌI XE ALLINGO NGAY', url: dispatchUrl }]);
+    }
+
+    const actionRow = [];
     if (payload.trackingUrl && payload.trackingUrl.startsWith('http')) {
       actionRow.push({ text: '🚚 Tra cứu AllinGo', url: payload.trackingUrl });
     }
@@ -170,5 +187,49 @@ export async function sendNewOrderTelegramAlert(
   } catch (err: any) {
     console.error('[Telegram Alert Exception]:', err);
     return { success: false, error: err?.message };
+  }
+}
+
+/**
+ * Gửi thông báo xác nhận đã điều xe thành công từ nút Telegram
+ */
+export async function sendTelegramShipmentDispatchedNotice(
+  orderCode: string,
+  carrierName: string,
+  trackingCode: string,
+  trackingUrl?: string,
+  waybillPdfUrl?: string
+) {
+  const token = process.env.TELEGRAM_BOT_TOKEN;
+  const chatId = process.env.TELEGRAM_CHAT_ID;
+  if (!token || !chatId) return;
+
+  const text = `🚀 <b>ĐÃ ĐIỀU XE ALLINGO THÀNH CÔNG CHO ĐƠN #${escapeHtml(orderCode)}!</b>
+━━━━━━━━━━━━━━━━━━━━
+🚚 <b>Hãng vận chuyển:</b> ${escapeHtml(carrierName)}
+📦 <b>Mã vận đơn:</b> <code>${escapeHtml(trackingCode)}</code>
+⏱️ Tài xế đang trên đường tới kho nhận hàng để giao hỏa tốc cho khách!`;
+
+  const inlineKeyboard: Array<Array<{ text: string; url: string }>> = [];
+  if (trackingUrl && trackingUrl.startsWith('http')) {
+    inlineKeyboard.push([{ text: '🚚 Tra cứu AllinGo', url: trackingUrl }]);
+  }
+
+  await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      chat_id: chatId,
+      text,
+      parse_mode: 'HTML',
+      disable_web_page_preview: true,
+      reply_markup: inlineKeyboard.length > 0 ? { inline_keyboard: inlineKeyboard } : undefined,
+    }),
+  }).catch(() => null);
+
+  if (waybillPdfUrl) {
+    const fileName = `VanDon_${trackingCode || orderCode}.pdf`;
+    const caption = `📄 Vận đơn ${carrierName} - Đơn ${orderCode}`;
+    await sendTelegramDoc(token, chatId, waybillPdfUrl, fileName, caption).catch(() => null);
   }
 }
