@@ -75,7 +75,6 @@ export function ProductModal({ isOpen, onClose, onSuccess, product }: ProductMod
               slug={form.slug} setSlug={form.setSlug}
               brand={form.brand} setBrand={form.setBrand}
               category={form.category} setCategory={form.setCategory}
-              sizes={form.sizes}
               badge={form.badge} setBadge={form.setBadge}
               defaultImage={form.defaultImage} setDefaultImage={form.setDefaultImage}
               images={form.images} setImages={form.setImages}

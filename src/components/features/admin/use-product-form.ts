@@ -167,27 +167,27 @@ export function useProductForm({ product, isOpen, onSuccess, onClose }: UseProdu
       faq,
     };
 
-    const ok = isEditing && product
+    const result = isEditing && product
       ? await updateProduct(product.id, payload)
       : await createProduct(payload);
 
     setSubmitting(false);
-    if (ok) {
+    if (result.success) {
       onSuccess();
       onClose();
     } else {
-      alert('Không thể lưu sản phẩm. Vui lòng kiểm tra lại kết nối!');
+      alert(result.error || 'Không thể lưu sản phẩm. Vui lòng kiểm tra lại!');
     }
   };
 
   const handleDelete = async () => {
     if (!product || !confirm(`Bạn có chắc chắn muốn xóa sản phẩm "${product.name}"?`)) return;
-    const ok = await deleteProduct(product.id);
-    if (ok) {
+    const result = await deleteProduct(product.id);
+    if (result.success) {
       onSuccess();
       onClose();
     } else {
-      alert('Không thể xóa sản phẩm.');
+      alert(result.error || 'Không thể xóa sản phẩm.');
     }
   };
 

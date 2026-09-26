@@ -36,35 +36,35 @@ export function CouponManager({ initialCoupons }: CouponManagerProps) {
 
   return (
     <div className="space-y-6">
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
-        <div className="p-3.5 sm:p-4 rounded-2xl bg-white border border-slate-200/80 shadow-2xs flex items-center gap-3">
-          <div className="p-2 sm:p-2.5 rounded-xl bg-blue-50 text-blue-600">
-            <Ticket className="w-5 h-5" />
+      {/* Stats Cards - Compact on mobile */}
+      <div className="grid grid-cols-3 gap-2 sm:gap-4">
+        <div className="p-2.5 sm:p-4 rounded-xl sm:rounded-2xl bg-white border border-slate-200/80 shadow-2xs flex flex-col sm:flex-row items-center sm:items-center gap-1.5 sm:gap-3 text-center sm:text-left">
+          <div className="p-1.5 sm:p-2.5 rounded-lg sm:rounded-xl bg-blue-50 text-blue-600">
+            <Ticket className="w-4 h-4 sm:w-5 sm:h-5" />
           </div>
           <div>
-            <p className="text-[10px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-wider">Tổng số mã</p>
-            <p className="text-lg sm:text-xl font-black text-slate-900">{totalCoupons}</p>
+            <p className="text-[9px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-wider">Tổng mã</p>
+            <p className="text-sm sm:text-xl font-black text-slate-900">{totalCoupons}</p>
           </div>
         </div>
 
-        <div className="p-3.5 sm:p-4 rounded-2xl bg-white border border-slate-200/80 shadow-2xs flex items-center gap-3">
-          <div className="p-2 sm:p-2.5 rounded-xl bg-emerald-50 text-emerald-600">
-            <CheckCircle2 className="w-5 h-5" />
+        <div className="p-2.5 sm:p-4 rounded-xl sm:rounded-2xl bg-white border border-slate-200/80 shadow-2xs flex flex-col sm:flex-row items-center sm:items-center gap-1.5 sm:gap-3 text-center sm:text-left">
+          <div className="p-1.5 sm:p-2.5 rounded-lg sm:rounded-xl bg-emerald-50 text-emerald-600">
+            <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5" />
           </div>
           <div>
-            <p className="text-[10px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-wider">Đang kích hoạt</p>
-            <p className="text-lg sm:text-xl font-black text-emerald-700">{activeCoupons}</p>
+            <p className="text-[9px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-wider">Kích hoạt</p>
+            <p className="text-sm sm:text-xl font-black text-emerald-700">{activeCoupons}</p>
           </div>
         </div>
 
-        <div className="p-3.5 sm:p-4 rounded-2xl bg-white border border-slate-200/80 shadow-2xs flex items-center gap-3">
-          <div className="p-2 sm:p-2.5 rounded-xl bg-purple-50 text-purple-600">
-            <Tag className="w-5 h-5" />
+        <div className="p-2.5 sm:p-4 rounded-xl sm:rounded-2xl bg-white border border-slate-200/80 shadow-2xs flex flex-col sm:flex-row items-center sm:items-center gap-1.5 sm:gap-3 text-center sm:text-left">
+          <div className="p-1.5 sm:p-2.5 rounded-lg sm:rounded-xl bg-purple-50 text-purple-600">
+            <Tag className="w-4 h-4 sm:w-5 sm:h-5" />
           </div>
           <div>
-            <p className="text-[10px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-wider">Tổng lượt đã dùng</p>
-            <p className="text-lg sm:text-xl font-black text-purple-700">{totalUses}</p>
+            <p className="text-[9px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-wider">Lượt dùng</p>
+            <p className="text-sm sm:text-xl font-black text-purple-700">{totalUses}</p>
           </div>
         </div>
       </div>

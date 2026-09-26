@@ -1,10 +1,9 @@
 'use client';
 
 import React from 'react';
-import { slugify, formatPrice } from '@/lib/utils';
+import { slugify } from '@/lib/utils';
 import { Sparkles } from 'lucide-react';
 import { ProductImageManager } from './product-image-manager';
-import { ProductSize } from '@/types/product';
 
 interface ProductFormGeneralProps {
   name: string;
@@ -15,7 +14,6 @@ interface ProductFormGeneralProps {
   setBrand: (val: string) => void;
   category: 'whey' | 'strength' | 'vitamins';
   setCategory: (val: 'whey' | 'strength' | 'vitamins') => void;
-  sizes?: ProductSize[];
   badge: string;
   setBadge: (val: string) => void;
   defaultImage: string;
@@ -33,7 +31,6 @@ export function ProductFormGeneral({
   setBrand,
   category,
   setCategory,
-  sizes = [],
   badge,
   setBadge,
   defaultImage,
@@ -108,27 +105,6 @@ export function ProductFormGeneral({
             <option value="vitamins">Vitamins & Khoáng Chất</option>
           </select>
         </div>
-      </div>
-
-      {/* Thông tin giá bán quản lý theo Kích Cỡ */}
-      <div className="p-3.5 rounded-2xl bg-blue-50/70 border border-blue-100 flex items-center justify-between">
-        <div className="space-y-0.5">
-          <p className="font-bold text-slate-900 text-xs">
-            💰 Giá bán sản phẩm được quản lý theo Kích Cỡ
-          </p>
-          <p className="text-[11px] text-slate-500">
-            {sizes && sizes.length > 0 ? (
-              <>
-                Giá hiển thị chính: <strong className="text-blue-600 font-bold">{formatPrice(sizes[0].price)}</strong> (theo size mặc định: <em>{sizes[0].name}</em>)
-              </>
-            ) : (
-              'Chưa có kích cỡ nào. Vui lòng thiết lập giá bán chi tiết tại tab "Kích Cỡ & Giá".'
-            )}
-          </p>
-        </div>
-        <span className="text-[10px] font-bold text-blue-700 bg-white border border-blue-200 px-2.5 py-1 rounded-full shadow-2xs">
-          {sizes?.length || 0} Kích Cỡ
-        </span>
       </div>
 
       <div>

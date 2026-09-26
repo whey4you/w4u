@@ -22,10 +22,12 @@ export function ProductTable({ products, onRefresh }: ProductTableProps) {
   const handleToggleStock = async (product: Product) => {
     setLoadingId(product.id);
     const newStatus = !product.inStock;
-    const ok = await toggleProductStock(product.id, newStatus);
+    const res = await toggleProductStock(product.id, newStatus);
     setLoadingId(null);
-    if (ok) {
+    if (res.success) {
       onRefresh();
+    } else {
+      alert(res.error || 'Không thể cập nhật trạng thái kho.');
     }
   };
 

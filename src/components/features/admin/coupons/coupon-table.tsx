@@ -107,19 +107,27 @@ export function CouponTable({ coupons, onRefresh, onEdit }: CouponTableProps) {
 
                   <td className="py-3.5 px-4">
                     {c.tiers && c.tiers.length > 0 ? (
-                      <div>
-                        <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200">
+                      <div className="space-y-0.5">
+                        <span className="inline-flex items-center px-1.5 py-0.2 rounded text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200">
                           Đa bậc ({c.tiers.length} bậc)
                         </span>
-                        <p className="text-[11px] text-emerald-700 font-semibold mt-0.5">
-                          {c.tiers
-                            .map((t) =>
-                              t.discount_type === 'percent'
-                                ? `-${t.discount_value}%`
-                                : `-${formatPrice(t.discount_value)}`
-                            )
-                            .join(' | ')}
-                        </p>
+                        <div className="space-y-0.5 mt-0.5">
+                          {c.tiers.map((t, idx) => (
+                            <div key={t.id || idx} className="text-[10px] text-slate-600 flex items-center gap-1.5">
+                              <span className="font-semibold text-slate-400">B{idx + 1}:</span>
+                              <span>
+                                {t.max_order_value
+                                  ? `${formatPrice(t.min_order_value)} - ${formatPrice(t.max_order_value)}`
+                                  : `Từ ${formatPrice(t.min_order_value)}`}
+                              </span>
+                              <span className="font-bold text-emerald-700 ml-auto pl-1">
+                                {t.discount_type === 'percent'
+                                  ? `-${t.discount_value}%`
+                                  : `-${formatPrice(t.discount_value)}`}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     ) : (
                       <span className="font-bold text-emerald-700">

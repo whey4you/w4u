@@ -63,7 +63,7 @@ export function ProductSizeEditInline({ size, flavors = [], onSave, onCancel }: 
         <button
           type="button"
           onClick={onCancel}
-          className="text-slate-400 hover:text-slate-600 p-0.5 rounded"
+          className="text-slate-400 hover:text-slate-600 p-0.5 rounded cursor-pointer"
           title="Đóng chế độ sửa"
         >
           <X className="w-3.5 h-3.5" />
@@ -140,14 +140,14 @@ export function ProductSizeEditInline({ size, flavors = [], onSave, onCancel }: 
         <button
           type="button"
           onClick={onCancel}
-          className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-200/60 rounded-lg transition-colors"
+          className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-200/60 rounded-lg transition-colors cursor-pointer"
         >
           Hủy
         </button>
         <button
           type="button"
           onClick={handleSave}
-          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg shadow-2xs transition-colors"
+          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg shadow-2xs transition-colors cursor-pointer"
         >
           <Check className="w-3.5 h-3.5" />
           <span>Lưu Thay Đổi</span>

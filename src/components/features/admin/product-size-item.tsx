@@ -122,7 +122,7 @@ export function ProductSizeItem({
         <button
           type="button"
           onClick={() => setIsEditing(true)}
-          className="p-1 text-slate-400 hover:text-blue-600 hover:bg-white rounded ml-0.5"
+          className="p-1 text-slate-400 hover:text-blue-600 hover:bg-white rounded ml-0.5 cursor-pointer"
           title="Chỉnh sửa kích cỡ & giá này"
         >
           <Pencil className="w-3.5 h-3.5" />

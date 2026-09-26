@@ -5,6 +5,7 @@ import { X, Tag, Loader2, Save } from 'lucide-react';
 import { Coupon, DiscountType, CreateCouponInput, CouponTier } from '@/types/coupon';
 import { updateCouponAction } from '@/app/actions/coupon.actions';
 import { CouponTierEditor } from './coupon-tier-editor';
+import { PriceInput } from '@/components/ui/price-input';
 
 interface CouponEditModalProps {
   isOpen: boolean;
@@ -114,21 +115,21 @@ export function CouponEditModal({ isOpen, onClose, coupon, onSuccess }: CouponEd
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200">
-      <div className="bg-white w-full max-w-lg rounded-2xl shadow-xl border border-slate-200 overflow-hidden max-h-[90vh] flex flex-col">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200">
+      <div className="bg-white w-full max-w-lg rounded-2xl shadow-xl border border-slate-200 overflow-hidden max-h-[92vh] sm:max-h-[90vh] flex flex-col">
         {/* Header */}
-        <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+        <div className="px-4 py-3 sm:px-6 sm:py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
           <div className="flex items-center gap-2">
             <Tag className="w-4 h-4 text-blue-600" />
-            <h2 className="text-sm font-bold text-slate-900">Chỉnh Sửa Mã Giảm Giá ({coupon.code})</h2>
+            <h2 className="text-sm font-bold text-slate-900 truncate">Sửa Mã Giảm Giá ({coupon.code})</h2>
           </div>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 p-1 rounded-lg">
+          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100 transition-colors">
             <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Form Body */}
-        <form onSubmit={handleSubmit} className="p-6 overflow-y-auto space-y-4 text-xs flex-1">
+        <form onSubmit={handleSubmit} className="p-4 sm:p-6 overflow-y-auto space-y-3.5 sm:space-y-4 text-xs flex-1">
           {errorMsg && (
             <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700">
               {errorMsg}
@@ -186,7 +187,7 @@ export function CouponEditModal({ isOpen, onClose, coupon, onSuccess }: CouponEd
                       },
                       {
                         id: `tier_${Date.now()}_2`,
-                        min_order_value: 500000,
+                        min_order_value: 500001,
                         max_order_value: 1000000,
                         discount_type: 'fixed',
                         discount_value: 20000,
@@ -223,40 +224,53 @@ export function CouponEditModal({ isOpen, onClose, coupon, onSuccess }: CouponEd
                     <label className="font-bold text-slate-700 block mb-1">
                       Giá trị giảm ({discountType === 'fixed' ? 'VNĐ' : '%'}) *
                     </label>
-                    <input
-                      type="number"
-                      min="1"
-                      value={discountValue}
-                      onChange={(e) => setDiscountValue(Number(e.target.value))}
-                      className="w-full px-3 py-2 border border-slate-200 rounded-xl bg-white focus:outline-none focus:border-slate-900"
-                      required
-                    />
+                    {discountType === 'fixed' ? (
+                      <PriceInput
+                        value={discountValue}
+                        onChange={(raw) => setDiscountValue(Number(raw) || 0)}
+                        placeholder="50,000"
+                        hideWordsText
+                        className="bg-white"
+                      />
+                    ) : (
+                      <div className="relative">
+                        <input
+                          type="number"
+                          min="1"
+                          max="100"
+                          value={discountValue}
+                          onChange={(e) => setDiscountValue(Number(e.target.value))}
+                          className="w-full px-3 py-2 pr-8 border border-slate-200 rounded-xl bg-white focus:outline-none focus:border-slate-900"
+                          required
+                        />
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-xs pointer-events-none">
+                          %
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="font-bold text-slate-700 block mb-1">Đơn tối thiểu (VNĐ)</label>
-                    <input
-                      type="number"
-                      min="0"
-                      step="10000"
+                    <PriceInput
                       value={minOrderValue}
-                      onChange={(e) => setMinOrderValue(Number(e.target.value))}
-                      className="w-full px-3 py-2 border border-slate-200 rounded-xl bg-white focus:outline-none focus:border-slate-900"
+                      onChange={(raw) => setMinOrderValue(Number(raw) || 0)}
+                      placeholder="0"
+                      hideWordsText
+                      className="bg-white"
                     />
                   </div>
                   <div>
                     <label className="font-bold text-slate-700 block mb-1">Giảm tối đa (VNĐ)</label>
-                    <input
-                      type="number"
-                      min="0"
-                      step="10000"
-                      disabled={discountType !== 'percent'}
+                    <PriceInput
                       value={maxDiscountAmount}
-                      onChange={(e) => setMaxDiscountAmount(e.target.value === '' ? '' : Number(e.target.value))}
+                      onChange={(raw) => setMaxDiscountAmount(raw === '' ? '' : Number(raw))}
+                      disabled={discountType !== 'percent'}
                       placeholder={discountType === 'percent' ? 'Không giới hạn' : 'Chỉ áp dụng với %'}
-                      className="w-full px-3 py-2 border border-slate-200 rounded-xl bg-white focus:outline-none focus:border-slate-900 disabled:bg-slate-100 disabled:text-slate-400"
+                      hideWordsText
+                      className="bg-white"
                     />
                   </div>
                 </div>
@@ -264,7 +278,7 @@ export function CouponEditModal({ isOpen, onClose, coupon, onSuccess }: CouponEd
             )}
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="font-bold text-slate-700 block mb-1">Giới hạn số lần dùng</label>
               <input
@@ -273,7 +287,7 @@ export function CouponEditModal({ isOpen, onClose, coupon, onSuccess }: CouponEd
                 value={usageLimit}
                 onChange={(e) => setUsageLimit(e.target.value === '' ? '' : Number(e.target.value))}
                 placeholder="Không giới hạn"
-                className="w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:border-slate-900"
+                className="w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:border-slate-900 bg-white"
               />
             </div>
             <div>
@@ -282,7 +296,7 @@ export function CouponEditModal({ isOpen, onClose, coupon, onSuccess }: CouponEd
                 type="datetime-local"
                 value={expiresAt}
                 onChange={(e) => setExpiresAt(e.target.value)}
-                className="w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:border-slate-900"
+                className="w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:border-slate-900 bg-white"
               />
             </div>
           </div>

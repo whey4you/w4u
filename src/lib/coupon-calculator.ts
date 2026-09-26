@@ -37,7 +37,7 @@ export function findMatchingTier(
     const maxVal = tier.max_order_value !== null && tier.max_order_value !== undefined ? Number(tier.max_order_value) : null;
 
     if (subtotal >= minVal) {
-      if (maxVal === null || maxVal === 0 || subtotal < maxVal) {
+      if (maxVal === null || maxVal === 0 || subtotal <= maxVal) {
         matched = tier;
       }
     }
