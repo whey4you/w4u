@@ -39,12 +39,12 @@ export function AppleFooter() {
           </div>
 
           <div className="space-y-2.5">
-            <h4 className="font-semibold text-apple-dark">Dịch Vụ & Cam Kết</h4>
+            <h4 className="font-semibold text-apple-dark">Chính Sách & Hỗ Trợ</h4>
             <ul className="space-y-2">
-              <li><span className="text-apple-dark">100% Sản Phẩm Nhập Khẩu</span></li>
-              <li><span className="text-apple-dark">Tư Vấn Thể Hình Chuyên Sâu</span></li>
-              <li><span className="text-apple-dark">Giao Hỏa Tốc & Toàn Quốc</span></li>
-              <li><span className="text-apple-dark">Hỗ Trợ Đổi Trả Uy Tín</span></li>
+              <li><Link href="/policy/chinh-sach-doi-tra" className="hover:text-apple-dark hover:underline">Đổi Trả & Video Mở Hàng</Link></li>
+              <li><Link href="/policy/chinh-sach-giao-hang" className="hover:text-apple-dark hover:underline">Giao Hàng & Đồng Kiểm</Link></li>
+              <li><Link href="/policy/dieu-khoan-dich-vu" className="hover:text-apple-dark hover:underline">Điều Khoản Dịch Vụ</Link></li>
+              <li><Link href="/policy/chinh-sach-bao-mat" className="hover:text-apple-dark hover:underline">Chính Sách Bảo Mật</Link></li>
             </ul>
           </div>
 
@@ -62,12 +62,14 @@ export function AppleFooter() {
         {/* Bottom copyright */}
         <div className="border-t border-black/[0.08] pt-4 flex flex-col sm:flex-row items-center justify-between gap-2 text-apple-subhead">
           <p>© {new Date().getFullYear()} WHEY4YOU Inc. Bản quyền được bảo lưu.</p>
-          <div className="flex gap-4 text-[11px] text-slate-500">
-            <span>Chính Hãng 100%</span>
+          <div className="flex flex-wrap items-center gap-3 text-[11px] text-slate-500">
+            <Link href="/policy/chinh-sach-doi-tra" className="hover:text-apple-dark hover:underline">Đổi Trả</Link>
             <span>•</span>
-            <span>Tư Vấn Khoa Học</span>
+            <Link href="/policy/chinh-sach-giao-hang" className="hover:text-apple-dark hover:underline">Giao Nhận</Link>
             <span>•</span>
-            <span>Giao Hàng Toàn Quốc</span>
+            <Link href="/policy/dieu-khoan-dich-vu" className="hover:text-apple-dark hover:underline">Điều Khoản</Link>
+            <span>•</span>
+            <Link href="/policy/chinh-sach-bao-mat" className="hover:text-apple-dark hover:underline">Bảo Mật</Link>
           </div>
         </div>
       </Container>

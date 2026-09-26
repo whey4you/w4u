@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Link from 'next/link';
 import { Loader2, QrCode, Truck } from 'lucide-react';
 import { PaymentMethod } from '@/types/checkout';
 
@@ -103,7 +104,10 @@ export function CheckoutStepPayment({
         </button>
 
         <p className="text-[11px] text-neutral-500 pt-1">
-          ✓ Quý khách được quyền đồng kiểm, mở gói hàng kiểm tra tem niêm phong cùng shipper trước khi thanh toán.
+          ✓ Đồng kiểm ngoại quan cùng shipper. Đổi trả yêu cầu bắt buộc có{' '}
+          <Link href="/policy/chinh-sach-doi-tra" target="_blank" className="font-semibold text-neutral-800 underline underline-offset-2">
+            video quay khui hàng
+          </Link>.
         </p>
 
         {errorMsg && (
@@ -129,6 +133,18 @@ export function CheckoutStepPayment({
           <span>Đặt hàng & Xuất hóa đơn VietQR</span>
         )}
       </button>
+
+      <p className="text-center text-[11px] text-neutral-400 mt-3 leading-relaxed">
+        Bằng việc nhấn đặt hàng, Quý khách đồng ý với{' '}
+        <Link href="/policy/dieu-khoan-dich-vu" target="_blank" className="text-neutral-600 underline underline-offset-2">
+          Điều khoản dịch vụ
+        </Link>{' '}
+        &{' '}
+        <Link href="/policy/chinh-sach-doi-tra" target="_blank" className="text-neutral-600 underline underline-offset-2">
+          Quy định đổi trả
+        </Link>{' '}
+        của Whey4You.
+      </p>
     </div>
   );
 }

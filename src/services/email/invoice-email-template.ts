@@ -210,7 +210,13 @@ export function renderInvoiceEmailHtml(data: InvoiceEmailData): string {
     <!-- FOOTER (Apple Minimalist) -->
     <div style="background-color: #f5f5f7; border-top: 1px solid #e5e5ea; padding: 24px 32px; text-align: center; font-size: 12px; color: #86868b; line-height: 1.6;">
       <p style="margin: 0 0 6px; font-weight: 700; color: #1d1d1f;">WHEY4YOU - CAM KẾT 100% CHÍNH HÃNG</p>
-      <p style="margin: 0 0 10px;">Quý khách được quyền đồng kiểm cùng shipper · Bảo hành đổi trả trong 7 ngày</p>
+      <p style="margin: 0 0 8px; font-size: 11px; color: #555558; line-height: 1.5;">
+        Đồng kiểm ngoại quan cùng bưu tá · <strong>Lưu ý:</strong> Quý khách vui lòng <strong>quay video liền mạch khi mở kiện hàng</strong> để được hỗ trợ đổi trả 100% nếu có sự cố.
+      </p>
+      <p style="margin: 0 0 10px; font-size: 11px;">
+        <a href="${baseUrl}/policy/chinh-sach-doi-tra" target="_blank" style="color: #0066cc; text-decoration: underline; font-weight: 600; margin: 0 4px;">Chính sách đổi trả & Video mở hàng</a> ·
+        <a href="${baseUrl}/policy/chinh-sach-giao-hang" target="_blank" style="color: #0066cc; text-decoration: underline; font-weight: 600; margin: 0 4px;">Quy định đồng kiểm</a>
+      </p>
       <p style="margin: 0; color: #86868b;">
         <a href="https://zalo.me/g/hqwqsqcnpgik9n3zo0nk" target="_blank" style="color: #0068ff; text-decoration: none; font-weight: 600; margin: 0 6px;">Cộng đồng Zalo</a> ·
         <a href="https://www.facebook.com/people/Whey4You/61563177707517/" target="_blank" style="color: #1877f2; text-decoration: none; font-weight: 600; margin: 0 6px;">Facebook Whey4You</a> ·

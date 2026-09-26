@@ -6,6 +6,7 @@ import { BlogReadingProgress } from '@/components/features/blog/blog-reading-pro
 import { BlogHeader } from '@/components/features/blog/blog-header';
 import { BlogDetailLayout } from '@/components/features/blog/blog-detail-layout';
 import { BlogRelatedPosts } from '@/components/features/blog/blog-related-posts';
+import { ArticleSchema } from '@/components/seo/article-schema';
 
 interface BlogPostPageProps {
   params: Promise<{ slug: string }>;
@@ -21,13 +22,35 @@ export async function generateMetadata({ params }: BlogPostPageProps) {
     };
   }
 
+  const blogUrl = `/blog/${post.slug || slug}`;
+
   return {
     title: `${post.title} | WHEY4YOU`,
     description: post.excerpt,
+    alternates: {
+      canonical: blogUrl,
+    },
     openGraph: {
+      title: `${post.title} | WHEY4YOU`,
+      description: post.excerpt,
+      url: blogUrl,
+      siteName: 'WHEY4YOU',
+      locale: 'vi_VN',
+      type: 'article',
+      publishedTime: post.date,
+      authors: [post.author?.name || 'Đội ngũ Dinh Dưỡng WHEY4YOU'],
+      images: [
+        {
+          url: post.image,
+          alt: post.title,
+        },
+      ],
+    },
+    twitter: {
+      card: 'summary_large_image',
       title: post.title,
       description: post.excerpt,
-      images: [{ url: post.image }],
+      images: [post.image],
     },
   };
 }
@@ -45,6 +68,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
 
   return (
     <>
+      <ArticleSchema post={post} />
       <BlogReadingProgress />
       <div className="bg-[#fbfbfd] min-h-screen pb-28 sm:pb-24">
         <Container>

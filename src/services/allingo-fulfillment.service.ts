@@ -61,8 +61,8 @@ export async function fulfillOrderWithAllinGo(orderId: string): Promise<{ succes
     }
 
     const parsedNotes = parseAddressFromNotes(ord.notes || '');
-    const provinceCode = ord.province_code || ord.city_id || parsedNotes.provinceCode || process.env.ALLINGO_FROM_PROVINCE || '79';
-    const districtCode = ord.district_code || ord.district_id || parsedNotes.districtCode || process.env.ALLINGO_FROM_DISTRICT || '760';
+    const provinceCode = ord.province_code || ord.city_id || parsedNotes.provinceCode || '79';
+    const districtCode = ord.district_code || ord.district_id || parsedNotes.districtCode || '760';
     const wardCode = ord.ward_code || ord.ward_id || parsedNotes.wardCode;
     const weightGrams = Number(ord.total_weight_grams) || Number(parsedNotes.weightGrams) || 1000;
 

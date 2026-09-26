@@ -5,6 +5,7 @@ import { ChevronRight, Home, Package } from 'lucide-react';
 import { Container } from '@/components/ui/container';
 import { getProductBySlug } from '@/services/product.service';
 import { ProductDetailHero } from '@/components/features/products/product-detail/product-detail-hero';
+import { ProductSchema } from '@/components/seo/product-schema';
 
 interface ProductDetailPageProps {
   params: Promise<{ slug: string }>;
@@ -20,13 +21,31 @@ export async function generateMetadata({ params }: ProductDetailPageProps) {
     };
   }
 
+  const productUrl = `/products/${product.slug || slug}`;
+  const images = product.images && product.images.length > 0
+    ? product.images.map((img) => ({ url: img, alt: product.name }))
+    : [{ url: product.defaultImage, alt: product.name }];
+
   return {
     title: `${product.name} Chính Hãng Giá Tốt | WHEY4YOU`,
-    description: product.description || `Khám phá thông tin, kích cỡ và hương vị của ${product.name}.`,
+    description: product.description || `Khám phá thông tin, kích cỡ, hương vị và bảng thành phần dinh dưỡng của ${product.name}.`,
+    alternates: {
+      canonical: productUrl,
+    },
     openGraph: {
-      title: product.name,
+      title: `${product.name} Chính Hãng | WHEY4YOU`,
+      description: product.description || `Khám phá ${product.name} chính hãng tại Whey4You.`,
+      url: productUrl,
+      siteName: 'WHEY4YOU',
+      locale: 'vi_VN',
+      type: 'website',
+      images,
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: `${product.name} Chính Hãng | WHEY4YOU`,
       description: product.description,
-      images: [{ url: product.defaultImage }],
+      images: [product.defaultImage],
     },
   };
 }
@@ -41,6 +60,7 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
 
   return (
     <div className="min-h-screen bg-slate-50/50 pb-6 sm:pb-8 lg:pb-12 pt-3 sm:pt-4">
+      <ProductSchema product={product} />
       <Container className="max-w-[1400px]">
         {/* Crisp MyProtein-style Breadcrumbs */}
         <nav

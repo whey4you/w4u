@@ -15,6 +15,7 @@ import {
   Loader2,
   Images,
   Tag,
+  Truck,
 } from 'lucide-react';
 import { logoutAdminAction } from '@/app/actions/admin-auth';
 
@@ -26,6 +27,7 @@ const NAV_ITEMS = [
   { href: '/admin/orders', label: 'Quản Lý Đơn Hàng', icon: ShoppingBag, exact: false },
   { href: '/admin/coupons', label: 'Mã Giảm Giá', icon: Tag, exact: false },
   { href: '/admin/blogs', label: 'Quản Lý Blog', icon: BookOpen, exact: false },
+  { href: '/admin/settings', label: 'Cấu Hình Kho Hàng', icon: Truck, exact: false },
 ];
 
 export function AdminSidebar() {

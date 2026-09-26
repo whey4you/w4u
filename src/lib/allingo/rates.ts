@@ -1,6 +1,7 @@
 import { allingoFetch } from './client';
 import { getCentroidByLocation } from './centroids';
 import { AllinGoInquiriesResponse, AllinGoQuote } from './types';
+import { getWarehouseConfig } from '@/services/store-settings.service';
 
 export interface RateInquiryParams {
   provinceCode: string;
@@ -27,8 +28,8 @@ export interface BestRateResult {
 }
 
 export async function getAllinGoQuotes(params: RateInquiryParams): Promise<AllinGoQuote[]> {
-  const fromProvince = process.env.ALLINGO_FROM_PROVINCE || '79'; // TP.HCM
-  const fromDistrict = process.env.ALLINGO_FROM_DISTRICT || '760'; // Quận 1
+  const warehouse = await getWarehouseConfig();
+  const fromProvince = warehouse.province_code || '79';
   const fromCoords = getCentroidByLocation(fromProvince);
   const toCoords = getCentroidByLocation(params.provinceCode);
 
@@ -36,11 +37,12 @@ export async function getAllinGoQuotes(params: RateInquiryParams): Promise<Allin
 
   const payload = {
     pickup: {
-      contact_name: process.env.ALLINGO_FROM_NAME || 'Whey4You Warehouse',
-      contact_phone: process.env.ALLINGO_FROM_PHONE || '0987654321',
-      address_line: process.env.ALLINGO_FROM_STREET || '123 Nguyễn Thị Minh Khai',
-      province: 'Thành phố Hồ Chí Minh',
-      district: 'Quận 1',
+      contact_name: warehouse.sender_name,
+      contact_phone: warehouse.sender_phone,
+      address_line: warehouse.street_address,
+      province: warehouse.province_name,
+      district: warehouse.district_name,
+      ward: warehouse.ward_name,
       location: fromCoords,
     },
     dropoff: {

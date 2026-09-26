@@ -5,6 +5,10 @@ import { AdminSidebar } from '@/components/features/admin/admin-sidebar';
 export const metadata = {
   title: 'Admin Control Center | WHEY4YOU',
   description: 'Trang quản trị nội bộ hệ thống thực phẩm thể hình WHEY4YOU.',
+  robots: {
+    index: false,
+    follow: false,
+  },
 };
 
 export default async function AdminLayout({
