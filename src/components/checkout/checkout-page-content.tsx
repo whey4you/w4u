@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { ArrowLeft, ShoppingBag } from 'lucide-react';
@@ -13,10 +13,12 @@ import { CheckoutStepDelivery } from './checkout-step-delivery';
 import { CheckoutStepPayment } from './checkout-step-payment';
 import { CheckoutSummarySidebar } from './checkout-summary-sidebar';
 import { CheckoutBillReceipt } from './checkout-bill-receipt';
+import { CheckoutMobileOrderSummary } from './checkout-mobile-order-summary';
 
 export function CheckoutPageContent() {
   const { items, totalAmount, clearCart, appliedCoupon, discountAmount } = useCart();
   const flow = useCheckoutFlow(items, totalAmount, clearCart, appliedCoupon?.code, discountAmount);
+  const [isMobileSummaryOpen, setIsMobileSummaryOpen] = useState(false);
 
   // If cart is empty and not on step 4 (after successful order)
   if (items.length === 0 && flow.step !== 4) {
@@ -75,7 +77,7 @@ export function CheckoutPageContent() {
       </header>
 
       {/* Main Content Area */}
-      <Container className="max-w-6xl pt-8 sm:pt-10">
+      <Container className="max-w-6xl pt-6 sm:pt-10">
         {flow.step === 4 && flow.result && flow.result.success ? (
           <CheckoutBillReceipt
             result={flow.result}
@@ -90,47 +92,73 @@ export function CheckoutPageContent() {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
             {/* Left Stream: Progressive Accordion (Nike Pattern) */}
             <div className="lg:col-span-7 space-y-4">
-              {/* Step 1: Shipping Address */}
-              <CheckoutStepShipping
-                isActive={flow.step === 1}
-                isCompleted={flow.step > 1}
-                customer={flow.customer}
-                setCustomer={flow.setCustomer}
-                addressData={flow.addressData}
-                onAddressChange={flow.setAddressData}
-                onNext={flow.goToNextStep}
-                onEdit={() => flow.goToStep(1)}
-                errorMsg={flow.errorMsg}
-              />
-
-              {/* Step 2: Delivery Options */}
-              <CheckoutStepDelivery
-                isActive={flow.step === 2}
-                isCompleted={flow.step > 2}
+              {/* Mobile-Only Collapsible Order Summary Above Step 1 */}
+              <CheckoutMobileOrderSummary
+                items={items}
+                totalAmount={totalAmount}
                 shippingFee={flow.shippingFee}
                 loadingShipping={flow.loadingShipping}
-                carrierInfo={flow.carrierInfo}
-                availableRates={flow.availableRates}
-                selectedRate={flow.selectedRate}
-                onSelectRate={flow.selectRate}
-                totalWeightGrams={flow.totalWeightGrams}
-                onNext={flow.goToNextStep}
-                onEdit={() => flow.goToStep(2)}
+                paymentMethod={flow.paymentMethod}
+                carrierName={flow.carrierInfo.carrierName}
+                isOpen={isMobileSummaryOpen}
+                onToggle={() => setIsMobileSummaryOpen((prev) => !prev)}
               />
 
-              {/* Step 3: Payment Method */}
-              <CheckoutStepPayment
-                isActive={flow.step === 3}
-                paymentMethod={flow.paymentMethod}
-                setPaymentMethod={flow.setPaymentMethod}
-                submitting={flow.submitting}
-                errorMsg={flow.errorMsg}
-                onSubmit={flow.submitOrder}
-              />
+              {/* Steps container: Any interaction inside steps automatically collapses the mobile summary */}
+              <div
+                onClickCapture={() => {
+                  if (isMobileSummaryOpen) setIsMobileSummaryOpen(false);
+                }}
+                className="space-y-4"
+              >
+                {/* Step 1: Shipping Address */}
+                <CheckoutStepShipping
+                  isActive={flow.step === 1}
+                  isCompleted={flow.step > 1}
+                  customer={flow.customer}
+                  setCustomer={flow.setCustomer}
+                  addressData={flow.addressData}
+                  onAddressChange={flow.setAddressData}
+                  onNext={flow.goToNextStep}
+                  onEdit={() => {
+                    setIsMobileSummaryOpen(false);
+                    flow.goToStep(1);
+                  }}
+                  errorMsg={flow.errorMsg}
+                />
+
+                {/* Step 2: Delivery Options */}
+                <CheckoutStepDelivery
+                  isActive={flow.step === 2}
+                  isCompleted={flow.step > 2}
+                  shippingFee={flow.shippingFee}
+                  loadingShipping={flow.loadingShipping}
+                  carrierInfo={flow.carrierInfo}
+                  availableRates={flow.availableRates}
+                  selectedRate={flow.selectedRate}
+                  onSelectRate={flow.selectRate}
+                  totalWeightGrams={flow.totalWeightGrams}
+                  onNext={flow.goToNextStep}
+                  onEdit={() => {
+                    setIsMobileSummaryOpen(false);
+                    flow.goToStep(2);
+                  }}
+                />
+
+                {/* Step 3: Payment Method */}
+                <CheckoutStepPayment
+                  isActive={flow.step === 3}
+                  paymentMethod={flow.paymentMethod}
+                  setPaymentMethod={flow.setPaymentMethod}
+                  submitting={flow.submitting}
+                  errorMsg={flow.errorMsg}
+                  onSubmit={flow.submitOrder}
+                />
+              </div>
             </div>
 
-            {/* Right Sticky Summary Column */}
-            <div className="lg:col-span-5">
+            {/* Right Sticky Summary Column - Desktop Only */}
+            <div className="hidden lg:block lg:col-span-5">
               <CheckoutSummarySidebar
                 items={items}
                 totalAmount={totalAmount}

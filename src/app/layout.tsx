@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Inter, Lora, IBM_Plex_Sans } from 'next/font/google';
 import './globals.css';
 import { CartProvider } from '@/context/cart-context';
@@ -22,6 +22,14 @@ const ibmPlexSans = IBM_Plex_Sans({
   variable: '--font-invoice',
   display: 'swap',
 });
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: 'cover',
+};
 
 export const metadata: Metadata = {
   title: 'WHEY4YOU | Fuel Your Goals - Dinh Dưỡng Thể Hình Chuẩn Mực',

@@ -152,5 +152,30 @@ img.object-cover {
   }
 }
 
+/* ==========================================================================
+   Mobile & Tablet Native App Feel: Prevent Auto-Zoom on Input Focus
+   On iOS/iPadOS Safari, any input/textarea/select with font-size < 16px triggers
+   an automatic screen zoom. Enforcing min 16px on screens <= 1024px completely
+   eliminates this unwanted zoom, preserving a sleek native app experience.
+   ========================================================================== */
+@media screen and (max-width: 1024px) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="button"]):not([type="submit"]):not([type="reset"]):not([type="color"]):not([type="file"]):not([type="range"]),
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+}
+
+/* Eliminate double-tap-to-zoom delay (300ms) and accidental zooming on interactive elements */
+html,
+body,
+button,
+input,
+textarea,
+select,
+a {
+  touch-action: manipulation;
+}
+
 
 

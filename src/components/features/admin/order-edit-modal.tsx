@@ -9,6 +9,8 @@ import { AddressSelector, SelectedAddressData } from '@/components/checkout/addr
 import { updateAdminOrderAction, cancelAllinGoShipmentAction, fulfillManualOrderAction, AdminOrderItemInput } from '@/app/actions/admin-order.actions';
 import { formatPrice } from '@/lib/utils';
 import { OrderCodInput } from './order-cod-input';
+import { FormattedShippingRate } from '@/lib/allingo';
+import { OrderCarrierSelector } from './order-carrier-selector';
 
 interface OrderEditModalProps {
   isOpen: boolean;
@@ -30,6 +32,8 @@ export function OrderEditModal({ isOpen, onClose, order, products, onSuccess }: 
   const [shippingFee, setShippingFee] = useState<number>(0);
   const [carrierName, setCarrierName] = useState<string>('');
   const [expectedDelivery, setExpectedDelivery] = useState<string>('');
+  const [availableRates, setAvailableRates] = useState<FormattedShippingRate[]>([]);
+  const [selectedServiceId, setSelectedServiceId] = useState<string>('');
   const [loadingShipping, setLoadingShipping] = useState<boolean>(false);
   const [items, setItems] = useState<AdminOrderItemInput[]>([]);
 
@@ -39,6 +43,13 @@ export function OrderEditModal({ isOpen, onClose, order, products, onSuccess }: 
   const [currentTrackingCode, setCurrentTrackingCode] = useState<string | null>(order?.tracking_code || order?.allingo_track_id || null);
   const [currentAllingoOrderId, setCurrentAllingoOrderId] = useState<string | null>(order?.allingo_order_id || null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  const handleSelectRate = (rate: FormattedShippingRate) => {
+    setSelectedServiceId(rate.id);
+    setShippingFee(rate.totalFee);
+    setCarrierName(rate.carrierName);
+    setExpectedDelivery(rate.expected || '');
+  };
 
   useEffect(() => {
     if (order) {
@@ -65,6 +76,8 @@ export function OrderEditModal({ isOpen, onClose, order, products, onSuccess }: 
       setStatus(order.status || 'pending');
       setShippingFee(Number(order.shipping_fee || 0));
       setCarrierName(order.carrier_name || '');
+      const initialServiceId = order.notes?.match(/\[ServiceID:([^\]]+)\]/)?.[1] || '';
+      setSelectedServiceId(initialServiceId);
       const initialCod = order.cod_remaining !== undefined && order.cod_remaining !== null
         ? Number(order.cod_remaining)
         : (order.payment_method === 'cod' ? Math.max(0, Number(order.total_amount) - Number(order.deposit_amount || 0)) : 0);
@@ -87,7 +100,10 @@ export function OrderEditModal({ isOpen, onClose, order, products, onSuccess }: 
 
   // Tự động tra cước vận chuyển AllinGo khi thay đổi địa chỉ hoặc danh sách mặt hàng
   useEffect(() => {
-    if (!addressData?.cityId || !addressData?.districtId) return;
+    if (!addressData?.cityId || !addressData?.districtId) {
+      setAvailableRates([]);
+      return;
+    }
 
     let isMounted = true;
     setLoadingShipping(true);
@@ -108,10 +124,20 @@ export function OrderEditModal({ isOpen, onClose, order, products, onSuccess }: 
       .then((data) => {
         if (!isMounted) return;
         if (data.success && Array.isArray(data.rates) && data.rates.length > 0) {
-          const best = data.rates.find((r: any) => r.tag === 'cheapest') || data.rates[0];
-          setShippingFee(best.totalFee);
-          setCarrierName(best.carrierName);
-          setExpectedDelivery(best.expected || '');
+          const ratesList: FormattedShippingRate[] = data.rates;
+          setAvailableRates(ratesList);
+
+          const existing = ratesList.find((r) => r.id === selectedServiceId)
+            || ratesList.find((r) => r.carrierName.toLowerCase() === carrierName.toLowerCase())
+            || ratesList.find((r) => r.tag === 'cheapest')
+            || ratesList[0];
+
+          setSelectedServiceId(existing.id);
+          setShippingFee(existing.totalFee);
+          setCarrierName(existing.carrierName);
+          setExpectedDelivery(existing.expected || '');
+        } else {
+          setAvailableRates([]);
         }
       })
       .catch((err) => console.error('[Shipping Rates Error]:', err))
@@ -160,6 +186,7 @@ export function OrderEditModal({ isOpen, onClose, order, products, onSuccess }: 
       codAmount: Number(codAmount),
       shippingFee,
       carrierName,
+      shippingServiceId: selectedServiceId || undefined,
       items,
     });
 
@@ -279,29 +306,14 @@ export function OrderEditModal({ isOpen, onClose, order, products, onSuccess }: 
               />
             </div>
 
-            {/* Báo tiền ship trực tiếp */}
-            {loadingShipping ? (
-              <div className="flex items-center gap-2 p-2.5 bg-blue-50/70 border border-blue-200/80 rounded-xl text-blue-700 text-xs">
-                <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                <span>Đang tra cước vận chuyển AllinGo...</span>
-              </div>
-            ) : shippingFee > 0 ? (
-              <div className="flex items-center justify-between p-2.5 bg-emerald-50/80 border border-emerald-200 rounded-xl text-xs">
-                <div className="flex items-center gap-2">
-                  <Truck className="w-4 h-4 text-emerald-600 flex-shrink-0" />
-                  <div>
-                    <span className="font-bold text-slate-900">{carrierName || 'Vận chuyển AllinGo'}</span>
-                    {expectedDelivery && <span className="text-slate-500 ml-1.5 font-normal">({expectedDelivery})</span>}
-                  </div>
-                </div>
-                <div className="text-right">
-                  <span className="font-bold text-emerald-700 text-sm">{formatPrice(shippingFee)}</span>
-                  <span className="block text-[10px] text-slate-500">Khách trả shipper khi nhận</span>
-                </div>
-              </div>
-            ) : addressData?.cityId ? (
-              <p className="text-[11px] text-slate-400 italic">Chọn đầy đủ Quận/Huyện để tính cước AllinGo</p>
-            ) : null}
+            {/* Danh sách toàn bộ đơn vị vận chuyển khả dụng */}
+            <OrderCarrierSelector
+              rates={availableRates}
+              selectedRateId={selectedServiceId}
+              loading={loadingShipping}
+              hasAddress={Boolean(addressData?.cityId && addressData?.districtId)}
+              onSelectRate={handleSelectRate}
+            />
           </div>
 
           {/* Items Selector */}

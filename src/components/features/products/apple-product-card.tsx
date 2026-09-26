@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
 import { Check, Plus } from 'lucide-react';
 import { Product, ProductFlavor, ProductSize } from '@/types/product';
@@ -10,6 +9,7 @@ import { formatPrice } from '@/lib/utils';
 import { AppleButton } from '@/components/ui/apple-button';
 import { getProductHUDStats } from '@/lib/nutrition-helpers';
 import { ProductCardOptions } from './product-card-options';
+import { ProductFlavorImageSwiper } from './product-flavor-image-swiper';
 import { getVariantPrice } from '@/lib/product-pricing';
 
 interface AppleProductCardProps {
@@ -47,7 +47,6 @@ export function AppleProductCard({ product }: AppleProductCardProps) {
 
   const [isAdded, setIsAdded] = useState(false);
   const hudStats = getProductHUDStats(product);
-  const currentImage = selectedFlavor.image || product.defaultImage;
 
   const variantPricing = getVariantPrice(product, selectedSize, selectedFlavor.id);
   const price = variantPricing.price;
@@ -87,27 +86,16 @@ export function AppleProductCard({ product }: AppleProductCardProps) {
           )}
         </div>
 
-        {/* Product Image */}
-        <Link
-          href={productUrl}
-          className="relative h-36 sm:h-52 lg:h-56 w-full my-1 sm:my-2 flex items-center justify-center block group/img cursor-pointer"
-        >
-          <div className="relative h-full w-full group-hover/img:scale-105 transition-transform duration-300">
-            <Image
-              src={currentImage}
-              alt={`${product.name} - ${selectedFlavor.name}`}
-              fill
-              quality={85}
-              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 300px"
-              className={`object-contain transition-opacity duration-200 ${!product.inStock ? 'opacity-50 grayscale-20' : ''}`}
-            />
-          </div>
-          {!product.inStock && (
-            <span className="absolute px-2.5 py-0.5 sm:px-3 sm:py-1 bg-slate-900/80 text-white text-[10px] sm:text-[11px] font-bold rounded-full backdrop-blur-xs whitespace-nowrap">
-              Tạm Hết Hàng
-            </span>
-          )}
-        </Link>
+        {/* Product Image Swiper */}
+        <ProductFlavorImageSwiper
+          productName={product.name}
+          defaultImage={product.defaultImage}
+          flavors={product.flavors}
+          selectedFlavor={selectedFlavor}
+          onSelectFlavor={setSelectedFlavor}
+          productUrl={productUrl}
+          inStock={product.inStock}
+        />
 
         {/* Title */}
         <Link href={productUrl}>

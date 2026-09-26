@@ -29,7 +29,7 @@ function parseAddressFromNotes(notes: string = ''): { provinceCode?: string; dis
   const districtMatch = notes.match(/\[DistrictID:(\w+)\]/);
   const wardMatch = notes.match(/\[WardID:(\w+)\]/);
   const weightMatch = notes.match(/\[Weight:(\d+)g\]/);
-  const serviceMatch = notes.match(/\[ServiceID:([\w.-]+)\]/);
+  const serviceMatch = notes.match(/\[ServiceID:([^\]]+)\]/);
 
   return {
     provinceCode: cityMatch ? cityMatch[1] : undefined,

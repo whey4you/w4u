@@ -4,10 +4,12 @@ import { useState, useEffect, useCallback } from 'react';
 import { SavedDeliveryProfile } from '@/types/saved-address';
 
 const STORAGE_KEY = 'w4u_saved_delivery_profiles';
+const EMAIL_STORAGE_KEY = 'w4u_customer_email';
 const MAX_PROFILES = 5;
 
 export function useSavedAddresses() {
   const [savedProfiles, setSavedProfiles] = useState<SavedDeliveryProfile[]>([]);
+  const [storedEmail, setStoredEmail] = useState<string>('');
   const [isLoaded, setIsLoaded] = useState(false);
 
   // Load danh sách từ localStorage khi mount trên client
@@ -20,10 +22,26 @@ export function useSavedAddresses() {
           setSavedProfiles(parsed);
         }
       }
+      const rawEmail = localStorage.getItem(EMAIL_STORAGE_KEY);
+      if (rawEmail) {
+        setStoredEmail(rawEmail.trim());
+      }
     } catch (e) {
       console.error('[useSavedAddresses] Lỗi đọc localStorage:', e);
     } finally {
       setIsLoaded(true);
+    }
+  }, []);
+
+  // Lưu email khách hàng vào localStorage để tái sử dụng
+  const saveEmail = useCallback((email: string) => {
+    const trimmed = email.trim();
+    if (!trimmed) return;
+    setStoredEmail(trimmed);
+    try {
+      localStorage.setItem(EMAIL_STORAGE_KEY, trimmed);
+    } catch (e) {
+      console.error('[useSavedAddresses] Lỗi lưu email vào localStorage:', e);
     }
   }, []);
 
@@ -42,6 +60,10 @@ export function useSavedAddresses() {
     (profile: Omit<SavedDeliveryProfile, 'id' | 'updatedAt'>) => {
       if (!profile.customerName || !profile.customerPhone || !profile.addressData?.fullAddress) {
         return;
+      }
+
+      if (profile.customerEmail?.trim()) {
+        saveEmail(profile.customerEmail);
       }
 
       setSavedProfiles((prev) => {
@@ -93,7 +115,7 @@ export function useSavedAddresses() {
         return updated;
       });
     },
-    []
+    [saveEmail]
   );
 
   // Xoá một địa chỉ khỏi danh sách lưu
@@ -118,6 +140,8 @@ export function useSavedAddresses() {
     savedProfiles,
     isLoaded,
     latestProfile,
+    storedEmail,
+    saveEmail,
     saveProfile,
     deleteProfile,
   };

@@ -107,8 +107,26 @@ export function CheckoutBillReceipt({
   }, [isPaid, result.orderCode, trackingInfo?.trackingCode]);
 
   return (
-    <div className="space-y-6 max-w-2xl mx-auto print:max-w-none print:m-0 print:p-0">
-      {/* High-End Receipt Card Component */}
+    <div className="space-y-5 max-w-2xl mx-auto print:max-w-none print:m-0 print:p-0">
+      {/* 1. MÃ VIETQR THANH TOÁN (NẰM TRÊN CÙNG KHI CHƯA THANH TOÁN) */}
+      {result.payos && !isPaid && (
+        <div className="print:hidden">
+          <CheckoutBillVietQr
+            orderCode={result.orderCode}
+            payos={result.payos}
+            isPaid={isPaid}
+            onPaidSuccess={(data) => {
+              setIsPaid(true);
+              if (data?.trackingCode) {
+                setTrackingInfo(data);
+              }
+              onPaidSuccess?.();
+            }}
+          />
+        </div>
+      )}
+
+      {/* 2. HÓA ĐƠN XÁC NHẬN CHI TIẾT (NẰM BÊN DƯỚI) */}
       <CheckoutReceiptCard
         result={result}
         items={items}
@@ -121,25 +139,7 @@ export function CheckoutBillReceipt({
         trackingCode={trackingInfo?.trackingCode}
         carrierName={trackingInfo?.carrierName}
         trackingUrl={trackingInfo?.trackingUrl}
-      >
-        {/* VietQR Dynamic Section if PayOS exists & not yet paid */}
-        {result.payos && !isPaid && (
-          <div className="print:hidden pt-2">
-            <CheckoutBillVietQr
-              orderCode={result.orderCode}
-              payos={result.payos}
-              isPaid={isPaid}
-              onPaidSuccess={(data) => {
-                setIsPaid(true);
-                if (data?.trackingCode) {
-                  setTrackingInfo(data);
-                }
-                onPaidSuccess?.();
-              }}
-            />
-          </div>
-        )}
-      </CheckoutReceiptCard>
+      />
 
       {/* Action Navigation Footer - CHỈ HIỂN THỊ SAU KHI ĐÃ THANH TOÁN THÀNH CÔNG */}
       {isPaid ? (

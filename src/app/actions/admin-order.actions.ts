@@ -34,6 +34,7 @@ export interface UpdateOrderPayload {
   codRemaining?: number;
   shippingFee?: number;
   carrierName?: string;
+  shippingServiceId?: string;
   items: AdminOrderItemInput[];
 }
 
@@ -51,6 +52,7 @@ export interface CreateManualOrderPayload {
   wardCode?: string;
   shippingFee?: number;
   carrierName?: string;
+  shippingServiceId?: string;
   fulfillWithAllinGo?: boolean;
   items: AdminOrderItemInput[];
 }
@@ -75,12 +77,21 @@ export async function updateAdminOrderAction(payload: UpdateOrderPayload): Promi
     const depositAmount = isFullPaid ? totalAmount : Math.max(0, totalAmount - codAmount);
     const codRemaining = codAmount;
 
+    let updatedNotes = payload.notes?.trim() || null;
+    if (payload.shippingServiceId) {
+      if (updatedNotes && updatedNotes.includes('[ServiceID:')) {
+        updatedNotes = updatedNotes.replace(/\[ServiceID:[^\]]+\]/, `[ServiceID:${payload.shippingServiceId}]`);
+      } else {
+        updatedNotes = updatedNotes ? `${updatedNotes} | [ServiceID:${payload.shippingServiceId}]` : `[ServiceID:${payload.shippingServiceId}]`;
+      }
+    }
+
     const updateFields: Record<string, any> = {
       customer_name: payload.customerName.trim(),
       customer_phone: payload.customerPhone.trim(),
       customer_email: payload.customerEmail !== undefined ? (payload.customerEmail.trim() || null) : undefined,
       customer_address: payload.customerAddress.trim(),
-      notes: payload.notes?.trim() || null,
+      notes: updatedNotes,
       status: payload.status,
       payment_method: paymentMethod,
       total_amount: totalAmount,
@@ -240,7 +251,17 @@ export async function createManualOrderAction(payload: CreateManualOrderPayload)
       : (depositAmount > 0
         ? `[Khách đã cọc trước: ${depositAmount}đ | Thu COD tiền hàng: ${codRemaining}đ]`
         : `[Thu COD tiền hàng toàn bộ: ${codRemaining}đ]`);
-    const fullNotes = [payNote, payload.notes?.trim() || ''].filter(Boolean).join(' | ');
+    const totalWeightGrams = payload.items.reduce((sum, item) => sum + Number(item.weight_grams || 1000) * Number(item.quantity || 1), 0);
+    const extraTags = [
+      payload.provinceCode ? `[CityID:${payload.provinceCode}]` : '',
+      payload.districtCode ? `[DistrictID:${payload.districtCode}]` : '',
+      payload.wardCode ? `[WardID:${payload.wardCode}]` : '',
+      payload.shippingServiceId ? `[ServiceID:${payload.shippingServiceId}]` : '',
+      `[Weight:${Math.max(100, totalWeightGrams)}g]`,
+      typeof payload.shippingFee === 'number' ? `[ShippingFee:${payload.shippingFee}đ]` : '',
+    ].filter(Boolean).join(' ');
+
+    const fullNotes = [payNote, extraTags, payload.notes?.trim() || ''].filter(Boolean).join(' | ');
 
     const { data: createdOrder, error: orderErr } = await supabaseAdmin
       .from('orders')

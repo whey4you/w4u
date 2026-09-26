@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useTransition, useCallback } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 
 export interface LocationOption {
   id: string;
@@ -25,8 +25,6 @@ interface AddressSelectorProps {
 }
 
 export function AddressSelector({ onChange, disabled, value }: AddressSelectorProps) {
-  const [, startTransition] = useTransition();
-
   const [cities, setCities] = useState<LocationOption[]>([]);
   const [districts, setDistricts] = useState<LocationOption[]>([]);
   const [wards, setWards] = useState<LocationOption[]>([]);
@@ -40,7 +38,7 @@ export function AddressSelector({ onChange, disabled, value }: AddressSelectorPr
   const [loadingDistricts, setLoadingDistricts] = useState(false);
   const [loadingWards, setLoadingWards] = useState(false);
 
-  // 1. Tải danh sách Tỉnh / Thành phố
+  // 1. Tải danh sách Tỉnh / Thành phố khi mount
   useEffect(() => {
     let isMounted = true;
     setLoadingCities(true);
@@ -61,140 +59,177 @@ export function AddressSelector({ onChange, disabled, value }: AddressSelectorPr
     };
   }, []);
 
-  // 2. Đồng bộ khi prop `value` thay đổi từ bên ngoài (chọn địa chỉ đã lưu hoặc reset)
+  // 2. Tải danh sách Quận / Huyện khi selectedCityId thay đổi hoặc khi mount có sẵn selectedCityId
+  useEffect(() => {
+    if (!selectedCityId) {
+      setDistricts([]);
+      return;
+    }
+
+    let isMounted = true;
+    setLoadingDistricts(true);
+    fetch(`/api/shipping/districts?cityId=${selectedCityId}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (isMounted && data.success && Array.isArray(data.data)) {
+          setDistricts(data.data);
+        }
+      })
+      .catch((err) => console.error('Lỗi tải quận huyện:', err))
+      .finally(() => {
+        if (isMounted) setLoadingDistricts(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [selectedCityId]);
+
+  // 3. Tải danh sách Phường / Xã khi selectedDistrictId thay đổi hoặc khi mount có sẵn selectedDistrictId
+  useEffect(() => {
+    if (!selectedDistrictId) {
+      setWards([]);
+      return;
+    }
+
+    let isMounted = true;
+    setLoadingWards(true);
+    fetch(`/api/shipping/wards?districtId=${selectedDistrictId}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (isMounted && data.success && Array.isArray(data.data)) {
+          setWards(data.data);
+        }
+      })
+      .catch((err) => console.error('Lỗi tải phường xã:', err))
+      .finally(() => {
+        if (isMounted) setLoadingWards(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [selectedDistrictId]);
+
+  // 4. Đồng bộ state khi prop `value` thay đổi từ bên ngoài (ví dụ chọn từ sổ địa chỉ)
   useEffect(() => {
     if (!value) {
       setSelectedCityId('');
       setSelectedDistrictId('');
       setSelectedWardId('');
       setStreet('');
-      setDistricts([]);
-      setWards([]);
       return;
     }
 
-    const isDifferent =
-      value.cityId !== selectedCityId ||
-      value.districtId !== selectedDistrictId ||
-      value.wardId !== selectedWardId ||
-      value.streetAddress !== street;
-
-    if (!isDifferent) return;
-
-    setSelectedCityId(value.cityId || '');
-    setSelectedDistrictId(value.districtId || '');
-    setSelectedWardId(value.wardId || '');
-    setStreet(value.streetAddress || '');
-
-    // Nạp lại danh sách quận huyện theo cityId của profile được chọn
-    if (value.cityId) {
-      setLoadingDistricts(true);
-      fetch(`/api/shipping/districts?cityId=${value.cityId}`)
-        .then((res) => res.json())
-        .then((data) => {
-          if (data.success && Array.isArray(data.data)) {
-            setDistricts(data.data);
-          }
-        })
-        .catch((err) => console.error('Lỗi tải quận huyện:', err))
-        .finally(() => setLoadingDistricts(false));
-    } else {
-      setDistricts([]);
+    if (value.cityId !== selectedCityId) {
+      setSelectedCityId(value.cityId || '');
     }
-
-    // Nạp lại danh sách phường xã theo districtId của profile được chọn
-    if (value.districtId) {
-      setLoadingWards(true);
-      fetch(`/api/shipping/wards?districtId=${value.districtId}`)
-        .then((res) => res.json())
-        .then((data) => {
-          if (data.success && Array.isArray(data.data)) {
-            setWards(data.data);
-          }
-        })
-        .catch((err) => console.error('Lỗi tải phường xã:', err))
-        .finally(() => setLoadingWards(false));
-    } else {
-      setWards([]);
+    if (value.districtId !== selectedDistrictId) {
+      setSelectedDistrictId(value.districtId || '');
+    }
+    if (value.wardId !== selectedWardId) {
+      setSelectedWardId(value.wardId || '');
+    }
+    if (value.streetAddress !== street) {
+      setStreet(value.streetAddress || '');
     }
   }, [value]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // 3. Xử lý khi người dùng trực tiếp thay đổi Tỉnh / Thành
-  const handleCityChange = useCallback((newCityId: string) => {
+  // Hàm phát tán sự kiện onChange về component cha
+  const emitChange = useCallback(
+    (
+      cityId: string,
+      cityName: string,
+      districtId: string,
+      districtName: string,
+      wardId: string,
+      wardName: string,
+      streetAddress: string
+    ) => {
+      const parts = [streetAddress.trim(), wardName, districtName, cityName].filter(Boolean);
+      const fullAddress = parts.join(', ');
+
+      onChange({
+        cityId,
+        cityName,
+        districtId,
+        districtName,
+        wardId,
+        wardName,
+        streetAddress: streetAddress.trim(),
+        fullAddress,
+      });
+    },
+    [onChange]
+  );
+
+  // 5. Bổ sung tên Tỉnh/Quận/Phường nếu dữ liệu ban đầu chỉ có ID mà thiếu tên
+  useEffect(() => {
+    if (!selectedCityId || !value) return;
+    const cName = cities.find((c) => c.id === selectedCityId)?.name;
+    const dName = districts.find((d) => d.id === selectedDistrictId)?.name;
+    const wName = wards.find((w) => String(w.id) === String(selectedWardId))?.name;
+
+    const needsCityUpdate = cName && !value.cityName;
+    const needsDistrictUpdate = dName && !value.districtName;
+    const needsWardUpdate = wName && !value.wardName;
+
+    if (needsCityUpdate || needsDistrictUpdate || needsWardUpdate) {
+      emitChange(
+        selectedCityId,
+        cName || value.cityName || '',
+        selectedDistrictId,
+        dName || value.districtName || '',
+        selectedWardId,
+        wName || value.wardName || '',
+        street
+      );
+    }
+  }, [cities, districts, wards, selectedCityId, selectedDistrictId, selectedWardId, value, street, emitChange]);
+
+  const handleCityChange = (newCityId: string) => {
     setSelectedCityId(newCityId);
     setSelectedDistrictId('');
     setSelectedWardId('');
-    setWards([]);
 
-    if (!newCityId) {
-      setDistricts([]);
-      return;
-    }
+    const cityName = cities.find((c) => c.id === newCityId)?.name || '';
+    emitChange(newCityId, cityName, '', '', '', '', street);
+  };
 
-    setLoadingDistricts(true);
-    fetch(`/api/shipping/districts?cityId=${newCityId}`)
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.success && Array.isArray(data.data)) {
-          setDistricts(data.data);
-        }
-      })
-      .catch((err) => console.error('Lỗi tải quận huyện:', err))
-      .finally(() => setLoadingDistricts(false));
-  }, []);
-
-  // 4. Xử lý khi người dùng trực tiếp thay đổi Quận / Huyện
-  const handleDistrictChange = useCallback((newDistrictId: string) => {
+  const handleDistrictChange = (newDistrictId: string) => {
     setSelectedDistrictId(newDistrictId);
     setSelectedWardId('');
 
-    if (!newDistrictId) {
-      setWards([]);
-      return;
-    }
+    const cityName = cities.find((c) => c.id === selectedCityId)?.name || value?.cityName || '';
+    const districtName = districts.find((d) => d.id === newDistrictId)?.name || '';
+    emitChange(selectedCityId, cityName, newDistrictId, districtName, '', '', street);
+  };
 
-    setLoadingWards(true);
-    fetch(`/api/shipping/wards?districtId=${newDistrictId}`)
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.success && Array.isArray(data.data)) {
-          setWards(data.data);
-        }
-      })
-      .catch((err) => console.error('Lỗi tải phường xã:', err))
-      .finally(() => setLoadingWards(false));
-  }, []);
+  const handleWardChange = (newWardId: string) => {
+    setSelectedWardId(newWardId);
 
-  // 5. Bắn sự kiện onChange về cha mỗi khi thông tin thay đổi
-  useEffect(() => {
+    const cityName = cities.find((c) => c.id === selectedCityId)?.name || value?.cityName || '';
+    const districtName = districts.find((d) => d.id === selectedDistrictId)?.name || value?.districtName || '';
+    const wardName = wards.find((w) => String(w.id) === String(newWardId))?.name || '';
+    emitChange(selectedCityId, cityName, selectedDistrictId, districtName, newWardId, wardName, street);
+  };
+
+  const handleStreetChange = (newStreet: string) => {
+    setStreet(newStreet);
+
     const cityName = cities.find((c) => c.id === selectedCityId)?.name || value?.cityName || '';
     const districtName = districts.find((d) => d.id === selectedDistrictId)?.name || value?.districtName || '';
     const wardName = wards.find((w) => String(w.id) === String(selectedWardId))?.name || value?.wardName || '';
-
-    const parts = [street.trim(), wardName, districtName, cityName].filter(Boolean);
-    const fullAddress = parts.join(', ');
-
-    startTransition(() => {
-      onChange({
-        cityId: selectedCityId,
-        cityName,
-        districtId: selectedDistrictId,
-        districtName,
-        wardId: selectedWardId,
-        wardName,
-        streetAddress: street.trim(),
-        fullAddress,
-      });
-    });
-  }, [selectedCityId, selectedDistrictId, selectedWardId, street, cities, districts, wards, value, onChange]);
+    emitChange(selectedCityId, cityName, selectedDistrictId, districtName, selectedWardId, wardName, newStreet);
+  };
 
   const selectStyle =
-    'w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-800 shadow-sm transition-all focus:border-neutral-900 focus:outline-none focus:ring-1 focus:ring-neutral-900 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-400';
+    'w-full rounded-xl border border-neutral-300 bg-white px-3.5 py-2.5 text-sm text-neutral-900 transition-colors focus:border-neutral-900 focus:outline-none disabled:cursor-not-allowed disabled:bg-neutral-50 disabled:text-neutral-400';
 
   return (
     <div className="space-y-3">
       <div>
-        <label htmlFor="cityId" className="mb-1 block text-xs font-semibold uppercase tracking-wider text-slate-500">
+        <label htmlFor="cityId" className="block text-[11px] font-bold uppercase tracking-wider text-neutral-700 mb-1">
           Tỉnh / Thành phố <span className="text-rose-500">*</span>
         </label>
         <select
@@ -210,12 +245,15 @@ export function AddressSelector({ onChange, disabled, value }: AddressSelectorPr
           {cities.map((city) => (
             <option key={city.id} value={city.id}>{city.name}</option>
           ))}
+          {!cities.some((c) => c.id === selectedCityId) && selectedCityId && (
+            <option value={selectedCityId}>{value?.cityName || 'Đang tải tỉnh/thành...'}</option>
+          )}
         </select>
       </div>
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <div>
-          <label htmlFor="districtId" className="mb-1 block text-xs font-semibold uppercase tracking-wider text-slate-500">
+          <label htmlFor="districtId" className="block text-[11px] font-bold uppercase tracking-wider text-neutral-700 mb-1">
             Quận / Huyện <span className="text-rose-500">*</span>
           </label>
           <select
@@ -231,18 +269,21 @@ export function AddressSelector({ onChange, disabled, value }: AddressSelectorPr
             {districts.map((d) => (
               <option key={d.id} value={d.id}>{d.name}</option>
             ))}
+            {!districts.some((d) => d.id === selectedDistrictId) && selectedDistrictId && (
+              <option value={selectedDistrictId}>{value?.districtName || 'Đang tải quận/huyện...'}</option>
+            )}
           </select>
         </div>
 
         <div>
-          <label htmlFor="wardId" className="mb-1 block text-xs font-semibold uppercase tracking-wider text-slate-500">
+          <label htmlFor="wardId" className="block text-[11px] font-bold uppercase tracking-wider text-neutral-700 mb-1">
             Phường / Xã <span className="text-rose-500">*</span>
           </label>
           <select
             id="wardId"
             name="wardId"
             value={selectedWardId}
-            onChange={(e) => setSelectedWardId(e.target.value)}
+            onChange={(e) => handleWardChange(e.target.value)}
             disabled={disabled || !selectedDistrictId || loadingWards}
             className={selectStyle}
             required
@@ -251,12 +292,15 @@ export function AddressSelector({ onChange, disabled, value }: AddressSelectorPr
             {wards.map((w) => (
               <option key={w.id} value={String(w.id)}>{w.name}</option>
             ))}
+            {!wards.some((w) => String(w.id) === String(selectedWardId)) && selectedWardId && (
+              <option value={selectedWardId}>{value?.wardName || 'Đang tải phường/xã...'}</option>
+            )}
           </select>
         </div>
       </div>
 
       <div>
-        <label htmlFor="streetAddress" className="mb-1 block text-xs font-semibold uppercase tracking-wider text-slate-500">
+        <label htmlFor="streetAddress" className="block text-[11px] font-bold uppercase tracking-wider text-neutral-700 mb-1">
           Số nhà, tên đường <span className="text-rose-500">*</span>
         </label>
         <input
@@ -264,7 +308,7 @@ export function AddressSelector({ onChange, disabled, value }: AddressSelectorPr
           name="streetAddress"
           type="text"
           value={street}
-          onChange={(e) => setStreet(e.target.value)}
+          onChange={(e) => handleStreetChange(e.target.value)}
           placeholder="Ví dụ: 123 Đường Nguyễn Huệ, Chung cư Topaz căn 402"
           disabled={disabled}
           className={selectStyle}

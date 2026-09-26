@@ -19,12 +19,22 @@ interface CheckoutFormProps {
   onSuccess: () => void;
 }
 
+const EMAIL_STORAGE_KEY = 'w4u_customer_email';
+
 export function CheckoutForm({ items, onBack, onComplete, onSuccess }: CheckoutFormProps) {
   const [submitting, setSubmitting] = useState(false);
+  const [customerEmail, setCustomerEmail] = useState('');
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('payos');
   const [addressData, setAddressData] = useState<SelectedAddressData | null>(null);
   const [payosModalData, setPayosModalData] = useState<{ orderCode: string; data: PayOSPaymentData } | null>(null);
   const [result, setResult] = useState<CheckoutResult | null>(null);
+
+  useEffect(() => {
+    try {
+      const cached = localStorage.getItem(EMAIL_STORAGE_KEY);
+      if (cached) setCustomerEmail(cached.trim());
+    } catch {}
+  }, []);
 
   const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const totalWeightGrams = items.reduce((sum, item) => {
@@ -87,10 +97,17 @@ export function CheckoutForm({ items, onBack, onComplete, onSuccess }: CheckoutF
     setSubmitting(true);
     setResult(null);
     const form = new FormData(event.currentTarget);
+    const emailVal = String(form.get('customerEmail') || '').trim();
+    if (emailVal) {
+      try {
+        localStorage.setItem(EMAIL_STORAGE_KEY, emailVal);
+      } catch {}
+    }
+
     const response = await createOrderAction({
       customerName: String(form.get('customerName') || ''),
       customerPhone: String(form.get('customerPhone') || ''),
-      customerEmail: String(form.get('customerEmail') || ''),
+      customerEmail: emailVal,
       customerAddress: addressData.fullAddress,
       cityId: addressData.cityId,
       cityName: addressData.cityName,
@@ -196,7 +213,26 @@ export function CheckoutForm({ items, onBack, onComplete, onSuccess }: CheckoutF
         <div className="flex-1 space-y-4 overflow-y-auto px-4 py-5 sm:px-6">
           <Field label="Họ và tên người nhận" name="customerName" autoComplete="name" minLength={2} />
           <Field label="Số điện thoại" name="customerPhone" type="tel" autoComplete="tel" inputMode="tel" />
-          <Field label="Email nhận hóa đơn điện tử" name="customerEmail" type="email" autoComplete="email" required />
+          <Field
+            label="Email nhận hóa đơn điện tử"
+            name="customerEmail"
+            type="email"
+            autoComplete="email"
+            required
+            value={customerEmail}
+            onChange={(e) => setCustomerEmail(e.target.value)}
+            onBlur={(e) => {
+              const val = e.target.value.trim();
+              if (val && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)) {
+                try {
+                  localStorage.setItem(EMAIL_STORAGE_KEY, val);
+                } catch {}
+              }
+            }}
+          />
+          <p className="-mt-2 text-[11px] text-slate-500">
+            Vui lòng nhập mail để nhận hoá đơn điện tử
+          </p>
           
           {/* Bộ chọn địa chính 3 cấp tương thích chuẩn AllinGo */}
           <AddressSelector onChange={setAddressData} disabled={submitting} />

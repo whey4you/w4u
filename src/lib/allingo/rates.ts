@@ -113,6 +113,27 @@ export function getCarrierLogo(partnerId: string = '', partnerName: string = '')
 }
 
 /**
+ * Kiểm tra xem hiện tại có trong khung giờ phục vụ giao hàng hỏa tốc (8:00 - 22:00 giờ Việt Nam UTC+7) hay không.
+ * Ngoài khung giờ này (trước 8:00 và từ 22:00 trở đi), hệ thống ẩn toàn bộ dịch vụ hỏa tốc nội thành (Grab, Xanh SM).
+ */
+export function isInstantDeliveryTimeActive(): boolean {
+  try {
+    const formatter = new Intl.DateTimeFormat('en-US', {
+      timeZone: 'Asia/Ho_Chi_Minh',
+      hour: 'numeric',
+      hourCycle: 'h23',
+    });
+    const hour = parseInt(formatter.format(new Date()), 10);
+    return hour >= 8 && hour < 22;
+  } catch {
+    const now = new Date();
+    const utcHours = now.getUTCHours();
+    const vnHour = (utcHours + 7) % 24;
+    return vnHour >= 8 && vnHour < 22;
+  }
+}
+
+/**
  * Lấy danh sách toàn bộ các hãng vận chuyển khả dụng đã được format sạch đẹp
  */
 export async function getAllShippingQuotesFormatted(params: RateInquiryParams): Promise<FormattedShippingRate[]> {
@@ -171,10 +192,14 @@ export async function getAllShippingQuotesFormatted(params: RateInquiryParams): 
       };
     });
 
-    // Tách thành 2 nhóm và sắp xếp giá tăng dần trong từng nhóm
-    const instantList = formattedList
-      .filter((r) => r.category === 'instant')
-      .sort((a, b) => a.totalFee - b.totalFee);
+    // Tách thành 2 nhóm và sắp xếp giá tăng dần trong từng nhóm.
+    // Dịch vụ hỏa tốc (Grab, Xanh SM) chỉ hiển thị từ 8:00 đến 22:00 theo giờ Việt Nam.
+    const isInstantActive = isInstantDeliveryTimeActive();
+    const instantList = isInstantActive
+      ? formattedList
+          .filter((r) => r.category === 'instant')
+          .sort((a, b) => a.totalFee - b.totalFee)
+      : [];
     const standardList = formattedList
       .filter((r) => r.category === 'standard')
       .sort((a, b) => a.totalFee - b.totalFee);

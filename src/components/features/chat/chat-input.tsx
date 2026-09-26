@@ -69,7 +69,7 @@ export function ChatInput({ onSend, isLoading }: ChatInputProps) {
           placeholder="Hỏi về Whey, Mass, Creatine..."
           disabled={isLoading}
           rows={1}
-          className="block w-full flex-1 resize-none bg-transparent py-1 text-sm text-apple-dark placeholder:text-slate-400 focus:outline-none leading-5 disabled:opacity-60"
+          className="block w-full flex-1 resize-none bg-transparent py-1 text-base sm:text-sm text-apple-dark placeholder:text-slate-400 focus:outline-none leading-5 disabled:opacity-60"
         />
         <button
           type="submit"

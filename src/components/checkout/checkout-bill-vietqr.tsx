@@ -62,64 +62,72 @@ export function CheckoutBillVietQr({ orderCode, payos, isPaid, onPaidSuccess }: 
   const timeFormatted = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
 
   return (
-    <div className="rounded-2xl border border-neutral-200 bg-neutral-50/50 p-5 space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-neutral-200/60 pb-3">
+    <div className="rounded-2xl border-2 border-neutral-900 bg-white p-4 sm:p-6 space-y-4 shadow-md">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-neutral-200/80 pb-3">
         <div>
-          <h4 className="text-xs font-bold uppercase tracking-wider text-neutral-900">Quét mã VietQR chuyển khoản tức thì</h4>
-          <p className="text-xs text-neutral-500">Mở ứng dụng ngân hàng bất kỳ để quét mã thanh toán tự động</p>
+          <div className="flex items-center gap-1.5 mb-1">
+            <span className="inline-flex items-center text-[10px] font-extrabold uppercase tracking-wider bg-neutral-900 text-white px-2 py-0.5 rounded-full">
+              Bước 1: Quét mã QR thanh toán
+            </span>
+          </div>
+          <h3 className="text-sm sm:text-base font-bold text-neutral-900">Chuyển khoản VietQR tức thì</h3>
+          <p className="text-xs text-neutral-500">Mở app ngân hàng quét mã hoặc sao chép thông tin bên dưới</p>
         </div>
-        <div className="flex items-center gap-1.5 text-xs font-semibold text-neutral-800 bg-white px-2.5 py-1 rounded-full border border-neutral-200">
-          <Loader2 className="h-3 w-3 animate-spin text-neutral-900" />
-          <span>Hết hạn: <strong className="font-mono">{timeFormatted}</strong></span>
+        <div className="flex items-center gap-1.5 text-xs font-semibold text-neutral-800 bg-neutral-100 px-3 py-1 rounded-full border border-neutral-200">
+          <Loader2 className="h-3.5 w-3.5 animate-spin text-neutral-900" />
+          <span>Hết hạn: <strong className="font-mono text-neutral-900">{timeFormatted}</strong></span>
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-12 gap-5 items-center">
         {/* QR Code */}
-        <div className="md:col-span-5 flex flex-col items-center justify-center p-3 bg-white rounded-xl border border-neutral-200 shadow-2xs">
-          <img src={qrImageUrl} alt="Mã VietQR" className="h-44 w-44 object-contain" />
-          <span className="text-[10px] uppercase tracking-wider font-semibold text-neutral-400 mt-1.5">Hệ thống Napas247 / VietQR</span>
+        <div className="md:col-span-5 flex flex-col items-center justify-center p-3.5 bg-neutral-50 rounded-xl border border-neutral-200/90 shadow-2xs">
+          <div className="bg-white p-2 rounded-lg border border-neutral-200">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={qrImageUrl} alt="Mã VietQR" className="h-44 w-44 sm:h-48 sm:w-48 object-contain" />
+          </div>
+          <span className="text-[10px] uppercase tracking-wider font-semibold text-neutral-500 mt-2">Hệ thống Napas247 / VietQR</span>
         </div>
 
         {/* Transfer details */}
-        <div className="md:col-span-7 space-y-2 text-xs">
-          <div className="flex justify-between items-center py-1 border-b border-neutral-200/50">
+        <div className="md:col-span-7 space-y-2.5 text-xs">
+          <div className="flex justify-between items-center py-1.5 border-b border-neutral-100">
             <span className="text-neutral-500">Chủ tài khoản:</span>
-            <span className="font-bold text-neutral-900 uppercase">{payos.accountName}</span>
+            <span className="font-bold text-neutral-900 uppercase text-right">{payos.accountName}</span>
           </div>
 
-          <div className="flex justify-between items-center py-1 border-b border-neutral-200/50">
+          <div className="flex justify-between items-center py-1.5 border-b border-neutral-100">
             <span className="text-neutral-500">Số tài khoản:</span>
             <button
               type="button"
               onClick={() => handleCopy(payos.accountNumber, 'account')}
-              className="inline-flex items-center gap-1 font-mono font-bold text-neutral-900 hover:underline"
+              className="inline-flex items-center gap-1.5 font-mono font-bold text-neutral-900 bg-neutral-100 hover:bg-neutral-200 px-2.5 py-1 rounded-lg transition-colors"
             >
               <span>{payos.accountNumber}</span>
               <Copy className="h-3.5 w-3.5 text-neutral-500" />
             </button>
           </div>
 
-          <div className="flex justify-between items-center py-1 border-b border-neutral-200/50">
+          <div className="flex justify-between items-center py-1.5 border-b border-neutral-100">
             <span className="text-neutral-500">Số tiền cần chuyển:</span>
-            <span className="font-black text-neutral-900 text-sm">{formatPrice(payos.amount)}</span>
+            <span className="font-black text-rose-600 text-base tabular-nums">{formatPrice(payos.amount)}</span>
           </div>
 
-          <div className="flex justify-between items-center py-1 border-b border-neutral-200/50">
+          <div className="flex justify-between items-center py-1.5 border-b border-neutral-100">
             <span className="text-neutral-500">Nội dung chuyển:</span>
             <button
               type="button"
               onClick={() => handleCopy(payos.description, 'desc')}
-              className="inline-flex items-center gap-1 font-mono font-bold text-neutral-900 bg-white px-2 py-0.5 rounded border border-neutral-200 hover:border-black"
+              className="inline-flex items-center gap-1.5 font-mono font-bold text-neutral-900 bg-amber-50 text-amber-900 border border-amber-200/80 hover:bg-amber-100 px-2.5 py-1 rounded-lg transition-colors"
             >
               <span>{payos.description}</span>
-              <Copy className="h-3.5 w-3.5 text-neutral-500" />
+              <Copy className="h-3.5 w-3.5 text-amber-700" />
             </button>
           </div>
 
           {copiedField && (
             <p className="text-[11px] text-center text-emerald-600 font-semibold pt-1">
-              Đã sao chép {copiedField === 'account' ? 'số tài khoản' : 'nội dung chuyển tiền'}!
+              ✓ Đã sao chép {copiedField === 'account' ? 'số tài khoản' : 'nội dung chuyển tiền'}!
             </p>
           )}
 
@@ -128,7 +136,7 @@ export function CheckoutBillVietQr({ orderCode, payos, isPaid, onPaidSuccess }: 
               href={payos.checkoutUrl}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center justify-center gap-1.5 w-full rounded-full bg-neutral-900 hover:bg-black text-white text-xs font-semibold py-2.5 transition-all"
+              className="inline-flex items-center justify-center gap-2 w-full rounded-full bg-neutral-900 hover:bg-black text-white text-xs font-semibold py-3 transition-all active:scale-[0.99]"
             >
               <span>Mở cổng PayOS chuyển tiền trực tiếp</span>
               <ExternalLink className="h-3.5 w-3.5" />

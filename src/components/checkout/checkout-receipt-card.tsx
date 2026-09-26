@@ -136,7 +136,7 @@ export function CheckoutReceiptCard({
     <div className="bg-white border border-neutral-200 rounded-2xl overflow-hidden shadow-lg font-[family-name:var(--font-invoice)] print:shadow-none print:border-none print:rounded-none print:overflow-visible print:w-full">
 
       {/* ══ HEADER: Logo + Seller | Invoice Title + Meta ══ */}
-      <div className="px-6 py-5 sm:px-8 sm:py-6 flex flex-col sm:flex-row items-start justify-between gap-4 border-b border-neutral-200 print:px-0 print:py-4">
+      <div className="px-4 py-4 sm:px-8 sm:py-6 flex flex-col sm:flex-row items-start justify-between gap-4 border-b border-neutral-200 print:px-0 print:py-4">
         {/* Left: Brand identity */}
         <div className="flex items-start gap-3">
           <div className="flex-shrink-0">
@@ -183,7 +183,7 @@ export function CheckoutReceiptCard({
       </div>
 
       {/* ══ CUSTOMER & SHIPPING INFO + TRACKING ══ */}
-      <div className="px-6 sm:px-8 py-4 border-b border-neutral-100 bg-neutral-50/40 print:px-0 print:py-3 space-y-3">
+      <div className="px-4 sm:px-8 py-4 border-b border-neutral-100 bg-neutral-50/40 print:px-0 print:py-3 space-y-3">
         {/* 2-col: Buyer + Delivery */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-1.5">
@@ -263,46 +263,52 @@ export function CheckoutReceiptCard({
 
       {/* ══ PRODUCT TABLE ══ */}
       {displayItems.length > 0 && (
-        <div className="px-6 sm:px-8 py-4 border-b border-neutral-100 print:px-0 print:py-3">
-          <p className="text-[9px] font-extrabold uppercase tracking-widest text-neutral-400 mb-3">Chi Tiết Sản Phẩm</p>
-
-          {/* Column headings */}
-          <div className="grid grid-cols-[1.5rem_1fr_2.5rem_6rem_6rem] gap-x-3 text-[9px] font-extrabold uppercase tracking-widest text-neutral-400 pb-1.5 border-b border-neutral-200">
-            <span>#</span>
-            <span>Sản Phẩm</span>
-            <span className="text-center">SL</span>
-            <span className="text-right">Đơn Giá</span>
-            <span className="text-right">Thành Tiền</span>
+        <div className="px-4 sm:px-8 py-4 border-b border-neutral-100 print:px-0 print:py-3">
+          <div className="mb-2.5">
+            <p className="text-[9px] font-extrabold uppercase tracking-widest text-neutral-400">Chi Tiết Sản Phẩm</p>
           </div>
 
-          {/* Rows */}
-          <div className="divide-y divide-neutral-50">
-            {displayItems.map((item, idx) => (
-              <div
-                key={idx}
-                className="grid grid-cols-[1.5rem_1fr_2.5rem_6rem_6rem] gap-x-3 py-2.5 text-xs items-start"
-              >
-                <span className="text-neutral-400 text-[11px] pt-0.5">{idx + 1}</span>
-                <div>
-                  <p className="font-semibold text-neutral-900 leading-tight">{item.name}</p>
-                  {(item.flavorName || item.sizeName) && (
-                    <p className="text-[10px] text-neutral-400 mt-0.5">
-                      {item.flavorName ? `Vị: ${item.flavorName}` : ''}
-                      {item.sizeName ? ` · ${item.sizeName}` : ''}
-                    </p>
-                  )}
-                </div>
-                <span className="text-center font-semibold text-neutral-700">{item.quantity}</span>
-                <span className="text-right text-neutral-500 text-[11px] tabular-nums">{formatPrice(item.price)}</span>
-                <span className="text-right font-semibold text-neutral-900 tabular-nums">{formatPrice(item.price * item.quantity)}</span>
+          <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0 pb-1 scrollbar-thin">
+            <div className="min-w-[480px]">
+              {/* Column headings */}
+              <div className="grid grid-cols-[1.5rem_1fr_2.5rem_6.5rem_6.5rem] gap-x-3 text-[9px] font-extrabold uppercase tracking-widest text-neutral-400 pb-1.5 border-b border-neutral-200">
+                <span>#</span>
+                <span>Sản Phẩm</span>
+                <span className="text-center">SL</span>
+                <span className="text-right">Đơn Giá</span>
+                <span className="text-right">Thành Tiền</span>
               </div>
-            ))}
+
+              {/* Rows */}
+              <div className="divide-y divide-neutral-50">
+                {displayItems.map((item, idx) => (
+                  <div
+                    key={idx}
+                    className="grid grid-cols-[1.5rem_1fr_2.5rem_6.5rem_6.5rem] gap-x-3 py-2.5 text-xs items-start"
+                  >
+                    <span className="text-neutral-400 text-[11px] pt-0.5">{idx + 1}</span>
+                    <div className="min-w-0 pr-2">
+                      <p className="font-semibold text-neutral-900 leading-tight">{item.name}</p>
+                      {(item.flavorName || item.sizeName) && (
+                        <p className="text-[10px] text-neutral-400 mt-0.5">
+                          {item.flavorName ? `Vị: ${item.flavorName}` : ''}
+                          {item.sizeName ? ` · ${item.sizeName}` : ''}
+                        </p>
+                      )}
+                    </div>
+                    <span className="text-center font-semibold text-neutral-700">{item.quantity}</span>
+                    <span className="text-right text-neutral-500 text-[11px] tabular-nums">{formatPrice(item.price)}</span>
+                    <span className="text-right font-semibold text-neutral-900 tabular-nums">{formatPrice(item.price * item.quantity)}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       )}
 
       {/* ══ FINANCIAL SUMMARY ══ */}
-      <div className="px-6 sm:px-8 py-5 border-b border-neutral-100 print:px-0 print:py-4">
+      <div className="px-4 sm:px-8 py-5 border-b border-neutral-100 print:px-0 print:py-4">
         <div className="flex justify-end">
           <div className="w-full sm:w-72 font-[family-name:var(--font-invoice)]">
 
@@ -372,7 +378,7 @@ export function CheckoutReceiptCard({
       )}
 
       {/* ══ FOOTER: Guarantee + QR ══ */}
-      <div className="px-6 sm:px-8 py-4 print:px-0 print:py-3 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div className="px-4 sm:px-8 py-4 print:px-0 print:py-3 flex flex-col sm:flex-row items-center justify-between gap-4">
         <div className="space-y-1 text-center sm:text-left">
           <div className="flex items-center gap-1.5 justify-center sm:justify-start">
             <ShieldCheck className="h-4 w-4 text-emerald-600 flex-shrink-0" />

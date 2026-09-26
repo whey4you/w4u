@@ -4,7 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { isSupabaseAdminConfigured, supabaseAdmin } from '@/lib/supabase/server';
 import { CheckoutInput, CheckoutItemInput, CheckoutResult, PaymentMethod } from '@/types/checkout';
 import { getPayOS, isPayOSConfigured } from '@/lib/payos';
-import { getBestShippingQuote } from '@/lib/allingo';
+import { getBestShippingQuote, isInstantDeliveryTimeActive } from '@/lib/allingo';
 import { validateAndCalculateCoupon } from '@/services/coupon.service';
 import { checkRateLimit } from '@/lib/security/rate-limiter';
 import { headers } from 'next/headers';
@@ -187,6 +187,24 @@ export async function createOrderAction(input: CheckoutInput): Promise<CheckoutR
   let shippingFee = typeof input.shippingFee === 'number' && input.shippingFee > 0 ? input.shippingFee : 30000;
   let carrierName = input.carrierName?.trim() || 'Vận chuyển tiêu chuẩn';
   let shippingServiceId = input.shippingServiceId?.trim();
+
+  // Chặn nhận đơn hỏa tốc (Grab, Xanh SM) nếu khách đặt ngoài khung giờ 8:00 - 22:00 giờ Việt Nam
+  if (carrierName && !isInstantDeliveryTimeActive()) {
+    const cLower = carrierName.toLowerCase();
+    const isInstantSelected =
+      cLower.includes('grab') ||
+      cLower.includes('xanh') ||
+      cLower.includes('gsm') ||
+      cLower.includes('hỏa tốc') ||
+      cLower.includes('instant');
+
+    if (isInstantSelected) {
+      return {
+        success: false,
+        error: 'Dịch vụ giao hỏa tốc (Grab, Xanh SM) chỉ nhận đơn trong khung giờ 8:00 - 22:00. Vui lòng chọn hình thức giao tiêu chuẩn hoặc quay lại trong khung giờ phục vụ.',
+      };
+    }
+  }
 
   if (!shippingServiceId && input.cityId && input.districtId) {
     try {

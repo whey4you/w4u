@@ -8,6 +8,8 @@ import { AddressSelector, SelectedAddressData } from '@/components/checkout/addr
 import { createManualOrderAction, AdminOrderItemInput } from '@/app/actions/admin-order.actions';
 import { formatPrice } from '@/lib/utils';
 import { OrderCodInput } from './order-cod-input';
+import { FormattedShippingRate } from '@/lib/allingo';
+import { OrderCarrierSelector } from './order-carrier-selector';
 
 interface OrderCreateModalProps {
   isOpen: boolean;
@@ -25,6 +27,8 @@ export function OrderCreateModal({ isOpen, onClose, products, onSuccess }: Order
   const [shippingFee, setShippingFee] = useState<number>(0);
   const [carrierName, setCarrierName] = useState<string>('');
   const [expectedDelivery, setExpectedDelivery] = useState<string>('');
+  const [availableRates, setAvailableRates] = useState<FormattedShippingRate[]>([]);
+  const [selectedServiceId, setSelectedServiceId] = useState<string>('');
   const [loadingShipping, setLoadingShipping] = useState<boolean>(false);
   const [notes, setNotes] = useState('');
   const [items, setItems] = useState<AdminOrderItemInput[]>([]);
@@ -34,9 +38,23 @@ export function OrderCreateModal({ isOpen, onClose, products, onSuccess }: Order
 
   const subtotal = items.reduce((sum, it) => sum + Number(it.price) * Number(it.quantity), 0);
 
+  const handleSelectRate = (rate: FormattedShippingRate) => {
+    setSelectedServiceId(rate.id);
+    setShippingFee(rate.totalFee);
+    setCarrierName(rate.carrierName);
+    setExpectedDelivery(rate.expected || '');
+  };
+
   // Tự động tra cước AllinGo khi chọn địa chỉ hoặc thay đổi sản phẩm
   useEffect(() => {
-    if (!addressData?.cityId || !addressData?.districtId) return;
+    if (!addressData?.cityId || !addressData?.districtId) {
+      setAvailableRates([]);
+      setSelectedServiceId('');
+      setShippingFee(0);
+      setCarrierName('');
+      setExpectedDelivery('');
+      return;
+    }
 
     let isMounted = true;
     setLoadingShipping(true);
@@ -57,10 +75,23 @@ export function OrderCreateModal({ isOpen, onClose, products, onSuccess }: Order
       .then((data) => {
         if (!isMounted) return;
         if (data.success && Array.isArray(data.rates) && data.rates.length > 0) {
-          const best = data.rates.find((r: any) => r.tag === 'cheapest') || data.rates[0];
-          setShippingFee(best.totalFee);
-          setCarrierName(best.carrierName);
-          setExpectedDelivery(best.expected || '');
+          const ratesList: FormattedShippingRate[] = data.rates;
+          setAvailableRates(ratesList);
+
+          // Giữ lại hãng đang chọn nếu vẫn hợp lệ, hoặc chọn gói tiết kiệm nhất
+          const existing = ratesList.find((r) => r.id === selectedServiceId);
+          const chosen = existing || ratesList.find((r) => r.tag === 'cheapest') || ratesList[0];
+
+          setSelectedServiceId(chosen.id);
+          setShippingFee(chosen.totalFee);
+          setCarrierName(chosen.carrierName);
+          setExpectedDelivery(chosen.expected || '');
+        } else {
+          setAvailableRates([]);
+          setSelectedServiceId('');
+          setShippingFee(0);
+          setCarrierName('');
+          setExpectedDelivery('');
         }
       })
       .catch((err) => console.error('[Shipping Rates Error]:', err))
@@ -104,6 +135,7 @@ export function OrderCreateModal({ isOpen, onClose, products, onSuccess }: Order
       codAmount: Number(codAmount),
       shippingFee,
       carrierName,
+      shippingServiceId: selectedServiceId || undefined,
       fulfillWithAllinGo: true,
       notes,
       items,
@@ -196,29 +228,14 @@ export function OrderCreateModal({ isOpen, onClose, products, onSuccess }: Order
               />
             </div>
 
-            {/* Báo tiền ship trực tiếp */}
-            {loadingShipping ? (
-              <div className="flex items-center gap-2 p-2.5 bg-blue-50/70 border border-blue-200/80 rounded-xl text-blue-700 text-xs">
-                <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                <span>Đang tra cước vận chuyển AllinGo...</span>
-              </div>
-            ) : shippingFee > 0 ? (
-              <div className="flex items-center justify-between p-2.5 bg-emerald-50/80 border border-emerald-200 rounded-xl text-xs">
-                <div className="flex items-center gap-2">
-                  <Truck className="w-4 h-4 text-emerald-600 flex-shrink-0" />
-                  <div>
-                    <span className="font-bold text-slate-900">{carrierName || 'Vận chuyển AllinGo'}</span>
-                    {expectedDelivery && <span className="text-slate-500 ml-1.5 font-normal">({expectedDelivery})</span>}
-                  </div>
-                </div>
-                <div className="text-right">
-                  <span className="font-bold text-emerald-700 text-sm">{formatPrice(shippingFee)}</span>
-                  <span className="block text-[10px] text-slate-500">Khách trả shipper khi nhận</span>
-                </div>
-              </div>
-            ) : addressData?.cityId ? (
-              <p className="text-[11px] text-slate-400 italic">Chọn đầy đủ Quận/Huyện để tính cước AllinGo</p>
-            ) : null}
+            {/* Danh sách toàn bộ đơn vị vận chuyển khả dụng */}
+            <OrderCarrierSelector
+              rates={availableRates}
+              selectedRateId={selectedServiceId}
+              loading={loadingShipping}
+              hasAddress={Boolean(addressData?.cityId && addressData?.districtId)}
+              onSelectRate={handleSelectRate}
+            />
           </div>
 
           {/* Items Selector */}
