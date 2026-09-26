@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { renderInvoiceEmailHtml, InvoiceEmailData } from '@/services/email/invoice-email-template';
+import { renderInvoiceEmailHtml, renderInvoiceEmailPlainText, InvoiceEmailData } from '@/services/email/invoice-email-template';
 import { sendOrderInvoiceEmail } from '@/services/email/resend-email.service';
 
 describe('Invoice Email System', () => {
@@ -46,6 +46,17 @@ describe('Invoice Email System', () => {
     expect(html).toContain('WHEY10');
     expect(html).toContain('SPX Express');
     expect(html).toContain('https://whey4you.vn/orders?code=W4U-998877&amp;invoice=true'.replace('&amp;', '&'));
+  });
+
+  it('renderInvoiceEmailPlainText generates valid plain text fallback', () => {
+    const text = renderInvoiceEmailPlainText(sampleData);
+
+    expect(text).toContain('W4U-998877');
+    expect(text).toContain('Nguyễn Văn Test');
+    expect(text).toContain('Rule 1 Proteins R1 Protein 5lbs');
+    expect(text).toContain('Chocolate Fudge');
+    expect(text).toContain('WHEY10');
+    expect(text).toContain('SPX Express');
   });
 
   it('sendOrderInvoiceEmail safely rejects invalid email without crashing', async () => {

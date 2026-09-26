@@ -61,10 +61,12 @@ export function ProductPurchaseActions({
         </div>
 
         <div className="flex items-center gap-3">
-          <span className={`flex items-center gap-1.5 text-xs font-medium ${available ? 'text-emerald-700' : 'text-rose-600 font-semibold'}`}>
-            <span className={`h-2 w-2 rounded-full ${available ? 'bg-emerald-500' : 'bg-rose-500'}`} />
-            {available ? 'Còn hàng trong kho' : 'Tạm hết biến thể này'}
-          </span>
+          {available && (
+            <span className="flex items-center gap-1.5 text-xs font-medium text-emerald-700">
+              <span className="h-2 w-2 rounded-full bg-emerald-500" />
+              Còn hàng trong kho
+            </span>
+          )}
           <button
             type="button"
             onClick={() => setWishlist(!wishlist)}

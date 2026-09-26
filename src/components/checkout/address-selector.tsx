@@ -156,7 +156,7 @@ export function AddressSelector({ onChange, disabled, value }: AddressSelectorPr
         districtName,
         wardId,
         wardName,
-        streetAddress: streetAddress.trim(),
+        streetAddress,
         fullAddress,
       });
     },
@@ -309,6 +309,12 @@ export function AddressSelector({ onChange, disabled, value }: AddressSelectorPr
           type="text"
           value={street}
           onChange={(e) => handleStreetChange(e.target.value)}
+          onBlur={() => {
+            const trimmed = street.trim();
+            if (trimmed !== street) {
+              handleStreetChange(trimmed);
+            }
+          }}
           placeholder="Nhập số nhà, tên đường, căn hộ..."
           disabled={disabled}
           className={selectStyle}

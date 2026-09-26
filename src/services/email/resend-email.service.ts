@@ -1,4 +1,4 @@
-import { InvoiceEmailData, renderInvoiceEmailHtml } from './invoice-email-template';
+import { InvoiceEmailData, renderInvoiceEmailHtml, renderInvoiceEmailPlainText } from './invoice-email-template';
 import { sendGmailInvoiceEmail } from './gmail-smtp.service';
 
 export interface SendEmailResult {
@@ -47,7 +47,8 @@ export async function sendOrderInvoiceEmail(data: InvoiceEmailData): Promise<Sen
 
   try {
     const html = renderInvoiceEmailHtml(data);
-    const subject = `[Whey4You] Cảm ơn bạn! Hóa đơn xác nhận đơn hàng #${data.orderCode}`;
+    const text = renderInvoiceEmailPlainText(data);
+    const subject = `[Whey4You] Xác nhận đơn hàng #${data.orderCode}`;
 
     const res = await fetch('https://api.resend.com/emails', {
       method: 'POST',
@@ -59,6 +60,7 @@ export async function sendOrderInvoiceEmail(data: InvoiceEmailData): Promise<Sen
         from: fromEmail,
         to: [data.customerEmail.trim()],
         subject,
+        text,
         html,
       }),
     });

@@ -66,15 +66,28 @@ export function renderInvoiceEmailHtml(data: InvoiceEmailData): string {
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light dark">
+  <meta name="supported-color-schemes" content="light dark">
   <title>Hóa đơn điện tử ${data.orderCode} - Whey4You</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      supported-color-schemes: light dark;
+    }
+    @media (prefers-color-scheme: dark) {
+      .brand-card {
+        background-color: #ffffff !important;
+      }
+    }
+  </style>
 </head>
 <body style="margin: 0; padding: 0; background-color: #f5f5f7; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #1d1d1f; -webkit-font-smoothing: antialiased;">
   <div style="max-width: 600px; margin: 32px auto; background: #ffffff; border-radius: 20px; overflow: hidden; border: 1px solid #e5e5ea; box-shadow: 0 4px 24px rgba(0,0,0,0.06);">
     
     <!-- BRAND HEADER (Apple Minimalist style matching website) -->
     <div style="background-color: #ffffff; padding: 26px 32px 22px; text-align: center; border-bottom: 1px solid #f0f0f2;">
-      <div style="display: inline-block; margin-bottom: 6px;">
-        <img src="${logoSrc}" alt="Whey4You" width="170" style="display: block; margin: 0 auto; width: 170px; max-width: 100%; height: auto; border: 0;" />
+      <div class="brand-card" style="display: inline-block; background-color: #ffffff; padding: 12px 24px; border-radius: 14px; border: 1px solid #ebebed; box-shadow: 0 2px 8px rgba(0,0,0,0.04); margin-bottom: 8px;">
+        <img src="${logoSrc}" alt="Whey4You" width="165" style="display: block; margin: 0 auto; width: 165px; max-width: 100%; height: auto; border: 0; background-color: #ffffff;" />
       </div>
       <p style="margin: 0; font-size: 11px; font-weight: 600; color: #86868b; letter-spacing: 0.6px; text-transform: uppercase;">
         Thực Phẩm Bổ Sung Thể Thao Chính Hãng
@@ -228,3 +241,58 @@ export function renderInvoiceEmailHtml(data: InvoiceEmailData): string {
 </html>
   `.trim();
 }
+
+/**
+ * Tạo phiên bản plain-text chuẩn RFC multipart/alternative.
+ * Giúp email vượt qua bộ lọc SpamAssassin, Google AI Filter và cải thiện tỷ lệ vào Inbox.
+ */
+export function renderInvoiceEmailPlainText(data: InvoiceEmailData): string {
+  const baseUrl = data.appUrl || 'https://whey4you.vn';
+  const orderUrl = `${baseUrl}/orders?code=${encodeURIComponent(data.orderCode)}&invoice=true`;
+  const isCod = data.paymentMethod === 'cod';
+  const paidAmount = isCod ? (data.depositAmount || 100000) : data.totalAmount;
+  const codRemaining = isCod ? (data.codRemaining ?? Math.max(0, data.totalAmount - paidAmount)) : 0;
+
+  const itemsText = data.items
+    .map(
+      (item) =>
+        `- ${item.product_name}${item.flavor_name ? ` (Vị: ${item.flavor_name})` : ''} x${item.quantity}: ${formatPrice(item.price * item.quantity)}`
+    )
+    .join('\n');
+
+  return `
+WHEY4YOU - HÓA ĐƠN XÁC NHẬN ĐƠN HÀNG #${data.orderCode}
+--------------------------------------------------
+Chào ${data.customerName},
+Whey4You xin thông báo đơn hàng #${data.orderCode} đã được tiếp nhận và xử lý.
+
+THÔNG TIN ĐƠN HÀNG:
+- Mã đơn hàng: ${data.orderCode}
+- Thời gian: ${new Date().toLocaleString('vi-VN')}
+- Phương thức thanh toán: ${isCod ? 'COD (Đã nhận cọc 100.000đ qua VietQR)' : 'Thanh toán 100% qua VietQR'}
+- Người nhận: ${data.customerName} - ${data.customerPhone}
+- Địa chỉ giao hàng: ${data.customerAddress}
+${data.carrierName ? `- Đơn vị vận chuyển: ${data.carrierName}\n` : ''}
+CHI TIẾT SẢN PHẨM:
+${itemsText}
+
+TỔNG KẾT THANH TOÁN:
+- Tạm tính tiền hàng: ${formatPrice(data.subtotal)}
+${data.discountAmount && data.discountAmount > 0 ? `- Voucher giảm giá (${data.couponCode || 'Ưu đãi'}): -${formatPrice(data.discountAmount)}\n` : ''}- Phí vận chuyển: ${formatPrice(data.shippingFee)}
+- Tổng giá trị đơn hàng: ${formatPrice(data.totalAmount)}
+- Đã thanh toán (VietQR): -${formatPrice(paidAmount)}
+${isCod ? `- Số tiền COD còn lại khi nhận: ${formatPrice(codRemaining)}\n` : ''}
+Tra cứu đơn hàng trực tuyến & xuất hóa đơn:
+${orderUrl}
+
+LƯU Ý QUAN TRỌNG KHI NHẬN HÀNG:
+- Quý khách vui lòng đồng kiểm cùng bưu tá và QUAY VIDEO LIỀN MẠCH KHI MỞ KIỆN HÀNG để được hỗ trợ bảo hành 100%.
+- Hỗ trợ Zalo: https://zalo.me/g/hqwqsqcnpgik9n3zo0nk
+- Hotline & Fanpage: https://www.facebook.com/people/Whey4You/61563177707517/
+- Website: ${baseUrl}
+--------------------------------------------------
+Trân trọng cảm ơn quý khách!
+Đội ngũ Whey4You
+`.trim();
+}
+

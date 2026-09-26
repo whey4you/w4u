@@ -164,10 +164,10 @@ export function AppleProductCard({ product }: AppleProductCardProps) {
           size="sm"
           onClick={handleAddToCart}
           disabled={!isAvailable}
-          className="px-2.5 sm:px-4 py-1 h-8 sm:h-9 min-h-0 flex-shrink-0"
+          className="px-2.5 sm:px-3.5 py-1 h-8 sm:h-9 min-h-0 flex-shrink-0"
         >
           {!isAvailable ? (
-            <span className="text-slate-400 text-[10px] sm:text-xs">Hết</span>
+            <span className="text-slate-400 text-[10px] sm:text-xs font-medium whitespace-nowrap">Tạm hết hàng</span>
           ) : isAdded ? (
             <span className="inline-flex items-center gap-1 text-[11px] sm:text-xs">
               <Check className="h-3.5 w-3.5" />

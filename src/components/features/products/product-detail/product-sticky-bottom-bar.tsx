@@ -64,7 +64,7 @@ export function ProductStickyBottomBar({
           )}
         >
           {added ? <Check className="mr-1.5 h-4 w-4" /> : <ShoppingBag className="mr-1.5 h-4 w-4" />}
-          <span>{added ? 'Đã thêm vào giỏ!' : 'Thêm vào giỏ hàng'}</span>
+          <span>{added ? 'Đã thêm vào giỏ!' : !available ? 'Tạm hết hàng' : 'Thêm vào giỏ hàng'}</span>
         </Button>
       </div>
     </aside>

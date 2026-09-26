@@ -101,9 +101,6 @@ export function ProductCardOptions({
             title={selectedFlavor.name}
           >
             {selectedFlavor.name}
-            {!isFlavorInStock(product, selectedFlavor, selectedSize) && (
-              <span className="text-rose-500 font-normal ml-1">(Hết)</span>
-            )}
           </span>
         </div>
       )}

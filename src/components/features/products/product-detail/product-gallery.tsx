@@ -48,10 +48,10 @@ export function ProductGallery({
   };
 
   return (
-    <div className="flex flex-col-reverse gap-4 sm:flex-row sm:items-start">
+    <div className="flex flex-col-reverse gap-4 sm:flex-row sm:items-start w-full">
       {/* Vertical Thumbnails List */}
       {images.length > 1 && (
-        <div className="flex flex-row gap-2 overflow-x-auto sm:w-20 sm:flex-col sm:overflow-y-auto pb-1 sm:pb-0 scrollbar-none" aria-label="Danh sách ảnh">
+        <div className="flex flex-row justify-center sm:justify-start gap-2 overflow-x-auto sm:w-20 sm:flex-col sm:overflow-y-auto pb-1 sm:pb-0 scrollbar-none w-full sm:w-auto" aria-label="Danh sách ảnh">
           {images.map((image, index) => (
             <button
               key={image}
@@ -71,7 +71,7 @@ export function ProductGallery({
       )}
 
       {/* Main Image Display */}
-      <figure className="relative aspect-square sm:aspect-square lg:aspect-[4/5] flex-1 overflow-hidden rounded-2xl bg-white max-h-[350px] sm:max-h-[520px] lg:max-h-[620px]">
+      <figure className="relative w-full aspect-square sm:aspect-square lg:aspect-[4/5] flex-1 overflow-hidden rounded-2xl bg-white sm:max-h-[520px] lg:max-h-[620px] mx-auto">
         {badge && (
           <span className="absolute left-3 top-3 sm:left-4 sm:top-4 z-10 rounded-full bg-apple-blue px-2.5 py-0.5 sm:px-3 sm:py-1 text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider text-white shadow-sm">
             {badge}
